@@ -35,7 +35,9 @@
 				A5261D182EFC1AA700AABD5D /* NammaMeter */,
 				A5261D172EFC1AA700AABD5D /* Products */,
 			);
+			indentWidth = 2;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		A5261D172EFC1AA700AABD5D /* Products */ = {
 			isa = PBXGroup;
