@@ -2,7 +2,8 @@ import Combine
 import CoreLocation
 import Foundation
 
-final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
+@MainActor
+final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate {
   @Published var isOnTrip = false
   @Published var distanceMeters: Double = 0
   @Published var elapsed: TimeInterval = 0
@@ -22,7 +23,8 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
   }
 
   private let locationManager: CLLocationManager
-  private var timer: Timer?
+  private var tickTask: Task<Void, Never>?
+  private let clock = ContinuousClock()
   private var startDate: Date?
   private var lastLocation: CLLocation?
   private var currentSettings: MeterSettings?
@@ -70,7 +72,7 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
     locationManager.requestAlwaysAuthorization()
     locationManager.startUpdatingLocation()
     updateBackgroundLocationState()
-    startTimer()
+    startTicking()
   }
 
   func stopTrip(tripStore: TripStore) {
@@ -79,7 +81,7 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
     stopWaiting()
     locationManager.stopUpdatingLocation()
     updateBackgroundLocationState()
-    stopTimer()
+    stopTicking()
 
     let endDate = Date()
     let snapshot = rateSnapshot ?? RateSnapshot(settings: currentSettings ?? .bengaluruDefault)
@@ -97,20 +99,24 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
       waitingDuration: waitingDuration
     )
     tripStore.add(trip)
-    tripStore.resolveStartLocation(for: trip)
+    Task { await tripStore.resolveStartLocation(for: trip) }
     currentSettings = nil
   }
 
-  private func startTimer() {
-    timer?.invalidate()
-    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-      self?.tick()
+  private func startTicking() {
+    tickTask?.cancel()
+    tickTask = Task { [weak self] in
+      guard let self else { return }
+      while !Task.isCancelled, self.isOnTrip {
+        self.tick()
+        try? await clock.sleep(for: .seconds(1))
+      }
     }
   }
 
-  private func stopTimer() {
-    timer?.invalidate()
-    timer = nil
+  private func stopTicking() {
+    tickTask?.cancel()
+    tickTask = nil
   }
 
   private func tick() {
@@ -151,26 +157,23 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
     let filtered = locations.filter { $0.horizontalAccuracy >= 0 && $0.horizontalAccuracy <= 40 }
     guard !filtered.isEmpty else { return }
 
-    DispatchQueue.main.async { [weak self] in
-      guard let self else { return }
-      for location in filtered {
-        currentSpeedKph = max(location.speed, 0) * 3.6
-        let point = TripPoint(location: location)
-        points.append(point)
+    for location in filtered {
+      currentSpeedKph = max(location.speed, 0) * 3.6
+      let point = TripPoint(location: location)
+      points.append(point)
 
-        if let lastLocation {
-          let delta = location.distance(from: lastLocation)
-          if isWaiting && (location.speed >= 1.0 || delta > 8) {
-            stopWaiting()
-          }
-          if delta > 2 {
-            distanceMeters += delta
-          }
+      if let lastLocation {
+        let delta = location.distance(from: lastLocation)
+        if isWaiting && (location.speed >= 1.0 || delta > 8) {
+          stopWaiting()
         }
-        lastLocation = location
+        if delta > 2 {
+          distanceMeters += delta
+        }
       }
-      recalcFare()
+      lastLocation = location
     }
+    recalcFare()
   }
 
   func toggleWaiting() {

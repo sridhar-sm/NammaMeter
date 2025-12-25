@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class SettingsStore: ObservableObject {
   @Published var settings: MeterSettings {
     didSet {
@@ -34,7 +35,7 @@ final class SettingsStore: ObservableObject {
     try? data.write(to: fileURL, options: [.atomic])
   }
 
-  private static var defaultURL: URL {
+  nonisolated static var defaultURL: URL {
     FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
       .appendingPathComponent("settings.json")
   }

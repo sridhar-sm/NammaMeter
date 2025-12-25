@@ -2,6 +2,7 @@ import Combine
 import CoreLocation
 import Foundation
 
+@MainActor
 final class TripStore: ObservableObject {
   @Published private(set) var trips: [Trip] = [] {
     didSet {
@@ -50,19 +51,20 @@ final class TripStore: ObservableObject {
     trips.first(where: { $0.id == tripId })
   }
 
-  func resolveStartLocation(for trip: Trip) {
+  func resolveStartLocation(for trip: Trip) async {
     guard trip.startLocationName == nil else { return }
     guard let start = trip.points.first else { return }
     let location = CLLocation(latitude: start.latitude, longitude: start.longitude)
-    geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
-      guard let placemark = placemarks?.first else { return }
+    do {
+      let placemarks = try await geocoder.reverseGeocodeLocation(location)
+      guard let placemark = placemarks.first else { return }
       let city = placemark.locality
         ?? placemark.subAdministrativeArea
         ?? placemark.administrativeArea
       guard let city, !city.isEmpty else { return }
-      DispatchQueue.main.async {
-        self?.update(trip.id) { $0.startLocationName = city }
-      }
+      update(trip.id) { $0.startLocationName = city }
+    } catch {
+      return
     }
   }
 
@@ -81,7 +83,7 @@ final class TripStore: ObservableObject {
     try? data.write(to: fileURL, options: [.atomic])
   }
 
-  private static var defaultURL: URL {
+  nonisolated static var defaultURL: URL {
     FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
       .appendingPathComponent("trips.json")
   }

@@ -7,7 +7,7 @@ struct TripDetailView: View {
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var replayIndex: Int = 0
   @State private var isPlaying = false
-  @State private var timer: Timer?
+  @State private var replayTask: Task<Void, Never>?
 
   var body: some View {
     if let trip = tripStore.trip(for: tripId) {
@@ -230,18 +230,24 @@ struct TripDetailView: View {
       replayIndex = 0
     }
     isPlaying = true
-    timer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
-      if replayIndex < count - 1 {
-        replayIndex += 1
-      } else {
-        stopReplay()
+    replayTask = Task { @MainActor in
+      let clock = ContinuousClock()
+      while !Task.isCancelled {
+        try? await clock.sleep(for: .milliseconds(400))
+        if replayIndex < count - 1 {
+          replayIndex += 1
+        } else {
+          isPlaying = false
+          replayTask = nil
+          break
+        }
       }
     }
   }
 
   private func stopReplay() {
-    timer?.invalidate()
-    timer = nil
+    replayTask?.cancel()
+    replayTask = nil
     isPlaying = false
   }
 }
