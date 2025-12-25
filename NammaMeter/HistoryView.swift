@@ -1,90 +1,110 @@
 import SwiftUI
 
 struct HistoryView: View {
-  @Environment(TripStore.self) private var tripStore
-  @Environment(\.editMode) private var editMode
   @State private var searchText = ""
   @State private var selection = Set<UUID>()
 
   var body: some View {
     NavigationStack {
-      ZStack {
-        NammaBackground()
-        List(selection: $selection) {
-          if tripStore.trips.isEmpty {
-            VStack(alignment: .center, spacing: 12) {
-              Text("No trips yet")
-                .font(.nammaDisplay(16))
-                .foregroundStyle(Theme.ink)
-              Text("ಯಾವುದೇ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
-                .font(.nammaBody(12))
-                .foregroundStyle(Theme.ink.opacity(0.7))
-            }
-            .frame(maxWidth: .infinity, minHeight: 120)
-            .listRowBackground(Color.clear)
-          } else if filteredTrips.isEmpty {
-            VStack(alignment: .center, spacing: 12) {
-              Text("No matching trips")
-                .font(.nammaDisplay(16))
-                .foregroundStyle(Theme.ink)
-              Text("ಹೊಂದುವ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
-                .font(.nammaBody(12))
-                .foregroundStyle(Theme.ink.opacity(0.7))
-            }
-            .frame(maxWidth: .infinity, minHeight: 120)
-            .listRowBackground(Color.clear)
-          } else {
-            ForEach(filteredTrips) { trip in
-              if editMode?.wrappedValue == .active {
-                TripRow(trip: trip)
-                  .tag(trip.id)
-                  .listRowBackground(Theme.card)
-              } else {
-                NavigationLink {
-                  TripDetailView(tripId: trip.id)
-                } label: {
-                  TripRow(trip: trip)
-                }
+      HistoryContentView(searchText: $searchText, selection: $selection)
+    }
+  }
+}
+
+private struct HistoryContentView: View {
+  @Environment(TripStore.self) private var tripStore
+  @Environment(\.editMode) private var editMode
+  @Binding var searchText: String
+  @Binding var selection: Set<UUID>
+  @FocusState private var searchFocused: Bool
+
+  var body: some View {
+    ZStack {
+      NammaBackground()
+      List(selection: $selection) {
+        if tripStore.trips.isEmpty {
+          VStack(alignment: .center, spacing: 12) {
+            Text("No trips yet")
+              .font(.nammaDisplay(16))
+              .foregroundStyle(Theme.ink)
+            Text("ಯಾವುದೇ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
+              .font(.nammaBody(12))
+              .foregroundStyle(Theme.ink.opacity(0.7))
+          }
+          .frame(maxWidth: .infinity, minHeight: 120)
+          .listRowBackground(Color.clear)
+        } else if filteredTrips.isEmpty {
+          VStack(alignment: .center, spacing: 12) {
+            Text("No matching trips")
+              .font(.nammaDisplay(16))
+              .foregroundStyle(Theme.ink)
+            Text("ಹೊಂದುವ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
+              .font(.nammaBody(12))
+              .foregroundStyle(Theme.ink.opacity(0.7))
+          }
+          .frame(maxWidth: .infinity, minHeight: 120)
+          .listRowBackground(Color.clear)
+        } else {
+          ForEach(filteredTrips) { trip in
+            if editMode?.wrappedValue == .active {
+              TripRow(trip: trip)
                 .tag(trip.id)
                 .listRowBackground(Theme.card)
+            } else {
+              NavigationLink {
+                TripDetailView(tripId: trip.id)
+              } label: {
+                TripRow(trip: trip)
               }
-            }
-            .onDelete(perform: deleteFiltered)
-          }
-        }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-      }
-      .toolbar {
-        ToolbarItem(placement: .principal) {
-          VStack(spacing: 2) {
-            Text("Trips")
-              .font(.nammaDisplay(18))
-            Text("ಪ್ರಯಾಣಗಳು")
-              .font(.nammaBody(12))
-          }
-        }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-          if !selection.isEmpty {
-            Button(role: .destructive) {
-              deleteSelected()
-            } label: {
-              Image(systemName: "trash")
+              .tag(trip.id)
+              .listRowBackground(Theme.card)
             }
           }
-          EditButton()
+          .onDelete(perform: deleteFiltered)
         }
       }
-      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-      .onChange(of: editMode?.wrappedValue) { _, newValue in
-        if newValue != .active {
-          selection.removeAll()
+      .listStyle(.plain)
+      .scrollContentBackground(.hidden)
+      .safeAreaInset(edge: .top, spacing: 0) {
+        searchBar
+          .padding(.horizontal, 16)
+          .padding(.top, 8)
+          .padding(.bottom, 6)
+      }
+    }
+    .toolbar {
+      ToolbarItem(placement: .principal) {
+        VStack(spacing: 2) {
+          Text("Trips")
+            .font(.nammaDisplay(18))
+          Text("ಪ್ರಯಾಣಗಳು")
+            .font(.nammaBody(12))
         }
       }
-      .onChange(of: searchText) { _, _ in
-        if editMode?.wrappedValue != .active {
-          selection.removeAll()
+      ToolbarItemGroup(placement: .topBarLeading) {
+        if isEditing && !filteredTrips.isEmpty {
+          selectAllButton
         }
+      }
+      ToolbarItemGroup(placement: .topBarTrailing) {
+        if !selection.isEmpty {
+          Button(role: .destructive) {
+            deleteSelected()
+          } label: {
+            Image(systemName: "trash")
+          }
+        }
+        EditButton()
+      }
+    }
+    .onChange(of: editMode?.wrappedValue) { _, newValue in
+      if newValue != .active {
+        selection.removeAll()
+      }
+    }
+    .onChange(of: searchText) { _, _ in
+      if editMode?.wrappedValue != .active {
+        selection.removeAll()
       }
     }
   }
@@ -94,6 +114,67 @@ struct HistoryView: View {
     guard !trimmed.isEmpty else { return tripStore.trips }
     let query = trimmed.lowercased()
     return tripStore.trips.filter { tripSearchText($0).contains(query) }
+  }
+
+  private var isEditing: Bool {
+    editMode?.wrappedValue == .active
+  }
+
+  private var filteredTripIds: Set<UUID> {
+    Set(filteredTrips.map(\.id))
+  }
+
+  private var isAllSelected: Bool {
+    !filteredTripIds.isEmpty && selection == filteredTripIds
+  }
+
+  private var selectAllButton: some View {
+    Button(isAllSelected ? "Deselect All" : "Select All") {
+      toggleSelectAll()
+    }
+    .accessibilityLabel(isAllSelected ? "Deselect All" : "Select All")
+  }
+
+  private var searchBar: some View {
+    HStack(spacing: 12) {
+      Image(systemName: "magnifyingglass")
+        .foregroundStyle(Color(uiColor: .secondaryLabel))
+      TextField("Search trips · ಹುಡುಕಿ", text: $searchText)
+        .font(.system(size: 16))
+        .foregroundStyle(Color(uiColor: .label))
+        .textInputAutocapitalization(.never)
+        .disableAutocorrection(true)
+        .focused($searchFocused)
+        .submitLabel(.search)
+      if !searchText.isEmpty {
+        Button {
+          searchText = ""
+          searchFocused = false
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Clear search")
+      } else if searchFocused {
+        Button {
+          searchFocused = false
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Cancel search")
+      }
+    }
+    .padding(.horizontal, 10)
+    .padding(.vertical, 8)
+    .background(Color(uiColor: .systemGray6))
+    .overlay(
+      RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .stroke(Color(uiColor: .systemGray4), lineWidth: 0.5)
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
   }
 
   private func tripSearchText(_ trip: Trip) -> String {
@@ -120,6 +201,14 @@ struct HistoryView: View {
   private func deleteSelected() {
     tripStore.delete(ids: selection)
     selection.removeAll()
+  }
+
+  private func toggleSelectAll() {
+    if isAllSelected {
+      selection.removeAll()
+    } else {
+      selection = filteredTripIds
+    }
   }
 }
 
