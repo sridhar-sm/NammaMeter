@@ -99,4 +99,70 @@ struct Trip: Codable, Identifiable {
   let conditions: TripConditions
   let rateSnapshot: RateSnapshot
   let multiplier: Double
+  var name: String?
+  var startLocationName: String?
+  var waitingDuration: TimeInterval
+
+  init(
+    id: UUID,
+    startDate: Date,
+    endDate: Date,
+    distanceMeters: Double,
+    duration: TimeInterval,
+    fare: Double,
+    points: [TripPoint],
+    conditions: TripConditions,
+    rateSnapshot: RateSnapshot,
+    multiplier: Double,
+    name: String? = nil,
+    startLocationName: String? = nil,
+    waitingDuration: TimeInterval = 0
+  ) {
+    self.id = id
+    self.startDate = startDate
+    self.endDate = endDate
+    self.distanceMeters = distanceMeters
+    self.duration = duration
+    self.fare = fare
+    self.points = points
+    self.conditions = conditions
+    self.rateSnapshot = rateSnapshot
+    self.multiplier = multiplier
+    self.name = name
+    self.startLocationName = startLocationName
+    self.waitingDuration = waitingDuration
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case id
+    case startDate
+    case endDate
+    case distanceMeters
+    case duration
+    case fare
+    case points
+    case conditions
+    case rateSnapshot
+    case multiplier
+    case name
+    case startLocationName
+    case waitingDuration
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(UUID.self, forKey: .id)
+    startDate = try container.decode(Date.self, forKey: .startDate)
+    endDate = try container.decode(Date.self, forKey: .endDate)
+    distanceMeters = try container.decode(Double.self, forKey: .distanceMeters)
+    duration = try container.decode(TimeInterval.self, forKey: .duration)
+    fare = try container.decode(Double.self, forKey: .fare)
+    points = try container.decode([TripPoint].self, forKey: .points)
+    conditions = try container.decode(TripConditions.self, forKey: .conditions)
+    rateSnapshot = try container.decode(RateSnapshot.self, forKey: .rateSnapshot)
+    multiplier = try container.decode(Double.self, forKey: .multiplier)
+    name = try container.decodeIfPresent(String.self, forKey: .name)
+    startLocationName = try container.decodeIfPresent(String.self, forKey: .startLocationName)
+    waitingDuration = try container.decodeIfPresent(TimeInterval.self, forKey: .waitingDuration) ?? 0
+  }
 }

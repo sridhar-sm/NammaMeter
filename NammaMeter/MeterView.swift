@@ -85,6 +85,7 @@ struct MeterView: View {
     HStack(alignment: .bottom, spacing: 8) {
       settingsButton
       tripToggleButton
+      waitToggleButton
       meterControlCluster
     }
   }
@@ -130,10 +131,34 @@ struct MeterView: View {
     .buttonStyle(.plain)
   }
 
+  private var waitToggleButton: some View {
+    Button {
+      meterStore.toggleWaiting()
+    } label: {
+      VStack(spacing: 2) {
+        Image(systemName: meterStore.isWaiting ? "pause.circle.fill" : "pause.circle")
+          .font(.system(size: 16, weight: .semibold))
+        Text("Wait")
+          .font(.nammaBody(8))
+        Text("ನಿಲ್ಲಿಕೆ")
+          .font(.nammaBody(7))
+      }
+      .foregroundStyle(Theme.ink)
+      .frame(width: 64, height: 48)
+      .background(meterStore.isWaiting ? Theme.coral.opacity(0.8) : Theme.card.opacity(0.9))
+      .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+      .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
+    }
+    .buttonStyle(.plain)
+    .disabled(!meterStore.isOnTrip)
+    .opacity(meterStore.isOnTrip ? 1 : 0.6)
+  }
+
   private var meterControlCluster: some View {
     let details: [(String, String)] = [
       ((meterStore.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km", "Distance · ದೂರ"),
       (formattedElapsed(meterStore.elapsed), "Time · ಸಮಯ"),
+      (formattedElapsed(meterStore.waitingDuration), "Wait · ನಿಲ್ಲಿಕೆ"),
       (meterStore.currentSpeedKph.formatted(.number.precision(.fractionLength(1))) + " km/h", "Speed · ವೇಗ")
     ]
     let expandedHeight = (fareTileSize.height * CGFloat(details.count + 1)) + (fareTileSpacing * CGFloat(details.count))

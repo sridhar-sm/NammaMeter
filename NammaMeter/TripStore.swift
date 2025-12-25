@@ -1,4 +1,5 @@
 import Combine
+import CoreLocation
 import Foundation
 
 final class TripStore: ObservableObject {
@@ -11,6 +12,7 @@ final class TripStore: ObservableObject {
 
   private let fileURL: URL
   private var isLoaded = false
+  private let geocoder = CLGeocoder()
 
   init(fileURL: URL = TripStore.defaultURL) {
     self.fileURL = fileURL
@@ -28,8 +30,40 @@ final class TripStore: ObservableObject {
     }
   }
 
+  func delete(ids: Set<UUID>) {
+    guard !ids.isEmpty else { return }
+    trips.removeAll { ids.contains($0.id) }
+  }
+
   func deleteAll() {
     trips.removeAll()
+  }
+
+  func update(_ tripId: UUID, mutate: (inout Trip) -> Void) {
+    guard let index = trips.firstIndex(where: { $0.id == tripId }) else { return }
+    var updated = trips[index]
+    mutate(&updated)
+    trips[index] = updated
+  }
+
+  func trip(for tripId: UUID) -> Trip? {
+    trips.first(where: { $0.id == tripId })
+  }
+
+  func resolveStartLocation(for trip: Trip) {
+    guard trip.startLocationName == nil else { return }
+    guard let start = trip.points.first else { return }
+    let location = CLLocation(latitude: start.latitude, longitude: start.longitude)
+    geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
+      guard let placemark = placemarks?.first else { return }
+      let city = placemark.locality
+        ?? placemark.subAdministrativeArea
+        ?? placemark.administrativeArea
+      guard let city, !city.isEmpty else { return }
+      DispatchQueue.main.async {
+        self?.update(trip.id) { $0.startLocationName = city }
+      }
+    }
   }
 
   private func load() {

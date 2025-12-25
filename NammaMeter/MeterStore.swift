@@ -9,6 +9,8 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
   @Published var fare: Double = 0
   @Published var points: [TripPoint] = []
   @Published var currentSpeedKph: Double = 0
+  @Published var isWaiting = false
+  @Published var waitingDuration: TimeInterval = 0
   @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
   @Published var locationError: String?
   @Published var conditions: TripConditions = .clear {
@@ -26,6 +28,8 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
   private var currentSettings: MeterSettings?
   private var rateSnapshot: RateSnapshot?
   private var multiplier: Double = 1
+  private var waitingStartedAt: Date?
+  private var waitingAccumulated: TimeInterval = 0
 
   override init() {
     locationManager = CLLocationManager()
@@ -54,6 +58,10 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
     elapsed = 0
     fare = settings.minFare
     currentSpeedKph = 0
+    isWaiting = false
+    waitingDuration = 0
+    waitingAccumulated = 0
+    waitingStartedAt = nil
     startDate = Date()
     lastLocation = nil
     locationError = nil
@@ -68,6 +76,7 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
   func stopTrip(tripStore: TripStore) {
     guard isOnTrip else { return }
     isOnTrip = false
+    stopWaiting()
     locationManager.stopUpdatingLocation()
     updateBackgroundLocationState()
     stopTimer()
@@ -84,9 +93,11 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
       points: points,
       conditions: conditions,
       rateSnapshot: snapshot,
-      multiplier: multiplier
+      multiplier: multiplier,
+      waitingDuration: waitingDuration
     )
     tripStore.add(trip)
+    tripStore.resolveStartLocation(for: trip)
     currentSettings = nil
   }
 
@@ -106,6 +117,7 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
     guard isOnTrip else { return }
     let now = Date()
     refreshTimeBasedConditions(reference: now)
+    updateWaitingDuration(now)
     if let startDate {
       elapsed = now.timeIntervalSince(startDate)
     }
@@ -117,8 +129,8 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
     let distanceKm = distanceMeters / 1000
     let includedKm = 2.0
     let chargeableDistanceKm = max(0, distanceKm - includedKm)
-    let minutes = elapsed / 60
-    let rawFare = settings.baseFare + (chargeableDistanceKm * settings.perKmRate) + (minutes * settings.perMinuteRate)
+    let waitingMinutes = waitingDuration / 60
+    let rawFare = settings.baseFare + (chargeableDistanceKm * settings.perKmRate) + (waitingMinutes * settings.perMinuteRate)
     let adjusted = rawFare * multiplier
     fare = max(settings.minFare, adjusted)
   }
@@ -148,6 +160,9 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         if let lastLocation {
           let delta = location.distance(from: lastLocation)
+          if isWaiting && (location.speed >= 1.0 || delta > 8) {
+            stopWaiting()
+          }
           if delta > 2 {
             distanceMeters += delta
           }
@@ -155,6 +170,35 @@ final class MeterStore: NSObject, ObservableObject, CLLocationManagerDelegate {
         lastLocation = location
       }
       recalcFare()
+    }
+  }
+
+  func toggleWaiting() {
+    guard isOnTrip else { return }
+    isWaiting ? stopWaiting() : startWaiting()
+  }
+
+  private func startWaiting() {
+    guard isOnTrip, !isWaiting else { return }
+    isWaiting = true
+    waitingStartedAt = Date()
+  }
+
+  private func stopWaiting() {
+    guard isWaiting else { return }
+    if let waitingStartedAt {
+      waitingAccumulated += Date().timeIntervalSince(waitingStartedAt)
+    }
+    waitingStartedAt = nil
+    isWaiting = false
+    waitingDuration = waitingAccumulated
+  }
+
+  private func updateWaitingDuration(_ now: Date) {
+    if isWaiting, let waitingStartedAt {
+      waitingDuration = waitingAccumulated + now.timeIntervalSince(waitingStartedAt)
+    } else {
+      waitingDuration = waitingAccumulated
     }
   }
 

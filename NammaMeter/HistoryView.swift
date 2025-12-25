@@ -2,12 +2,15 @@ import SwiftUI
 
 struct HistoryView: View {
   @EnvironmentObject var tripStore: TripStore
+  @Environment(\.editMode) private var editMode
+  @State private var searchText = ""
+  @State private var selection = Set<UUID>()
 
   var body: some View {
     NavigationStack {
       ZStack {
         NammaBackground()
-        List {
+        List(selection: $selection) {
           if tripStore.trips.isEmpty {
             VStack(alignment: .center, spacing: 12) {
               Text("No trips yet")
@@ -19,16 +22,34 @@ struct HistoryView: View {
             }
             .frame(maxWidth: .infinity, minHeight: 120)
             .listRowBackground(Color.clear)
-          } else {
-            ForEach(tripStore.trips) { trip in
-              NavigationLink {
-                TripDetailView(trip: trip)
-              } label: {
-                TripRow(trip: trip)
-              }
-              .listRowBackground(Theme.card)
+          } else if filteredTrips.isEmpty {
+            VStack(alignment: .center, spacing: 12) {
+              Text("No matching trips")
+                .font(.nammaDisplay(16))
+                .foregroundStyle(Theme.ink)
+              Text("ಹೊಂದುವ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
+                .font(.nammaBody(12))
+                .foregroundStyle(Theme.ink.opacity(0.7))
             }
-            .onDelete(perform: tripStore.delete)
+            .frame(maxWidth: .infinity, minHeight: 120)
+            .listRowBackground(Color.clear)
+          } else {
+            ForEach(filteredTrips) { trip in
+              if editMode?.wrappedValue == .active {
+                TripRow(trip: trip)
+                  .tag(trip.id)
+                  .listRowBackground(Theme.card)
+              } else {
+                NavigationLink {
+                  TripDetailView(tripId: trip.id)
+                } label: {
+                  TripRow(trip: trip)
+                }
+                .tag(trip.id)
+                .listRowBackground(Theme.card)
+              }
+            }
+            .onDelete(perform: deleteFiltered)
           }
         }
         .listStyle(.plain)
@@ -43,9 +64,70 @@ struct HistoryView: View {
               .font(.nammaBody(12))
           }
         }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+          if !selection.isEmpty {
+            Button(role: .destructive) {
+              deleteSelected()
+            } label: {
+              Image(systemName: "trash")
+            }
+          }
+          EditButton()
+        }
+      }
+      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+      .onChange(of: editMode?.wrappedValue) { _, newValue in
+        if newValue != .active {
+          selection.removeAll()
+        }
+      }
+      .onChange(of: searchText) { _, _ in
+        if editMode?.wrappedValue != .active {
+          selection.removeAll()
+        }
       }
     }
   }
+
+  private var filteredTrips: [Trip] {
+    let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return tripStore.trips }
+    let query = trimmed.lowercased()
+    return tripStore.trips.filter { tripSearchText($0).contains(query) }
+  }
+
+  private func tripSearchText(_ trip: Trip) -> String {
+    let dateText = Self.searchFormatter.string(from: trip.startDate)
+    let durationText = formattedElapsed(trip.duration)
+    let distanceText = (trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
+    return [
+      trip.name,
+      trip.startLocationName,
+      dateText,
+      durationText,
+      distanceText
+    ]
+    .compactMap { $0 }
+    .joined(separator: " ")
+    .lowercased()
+  }
+
+  private func deleteFiltered(at offsets: IndexSet) {
+    let ids = offsets.map { filteredTrips[$0].id }
+    tripStore.delete(ids: Set(ids))
+  }
+
+  private func deleteSelected() {
+    tripStore.delete(ids: selection)
+    selection.removeAll()
+  }
+
+  private static let searchFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .short
+    return formatter
+  }()
 }
 
 struct TripRow: View {
@@ -54,24 +136,41 @@ struct TripRow: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack {
-        Text(trip.startDate, format: .dateTime.day().month().hour().minute())
-          .font(.nammaDisplay(14))
+        if let name = trip.name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          Text(name)
+            .font(.nammaDisplay(14))
+        } else {
+          Text(trip.startDate, format: .dateTime.day().month().hour().minute())
+            .font(.nammaDisplay(14))
+        }
         Spacer()
         Text(trip.fare, format: .currency(code: "INR"))
           .font(.nammaDisplay(14))
       }
 
+      if let name = trip.name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        Text(trip.startDate, format: .dateTime.day().month().year().hour().minute())
+          .font(.nammaBody(11))
+          .foregroundStyle(Theme.ink.opacity(0.7))
+      }
+
       HStack(spacing: 12) {
         Label {
-          Text("\((trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2)))) km")
+          Text(trip.startLocationName ?? "Locating...")
         } icon: {
-          Image(systemName: "map")
+          Image(systemName: "mappin.and.ellipse")
         }
 
         Label {
           Text(formattedElapsed(trip.duration))
         } icon: {
           Image(systemName: "clock")
+        }
+
+        Label {
+          Text("\((trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2)))) km")
+        } icon: {
+          Image(systemName: "map")
         }
       }
       .font(.nammaBody(11))

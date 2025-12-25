@@ -2,25 +2,42 @@ import MapKit
 import SwiftUI
 
 struct TripDetailView: View {
-  let trip: Trip
+  @EnvironmentObject var tripStore: TripStore
+  let tripId: UUID
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var replayIndex: Int = 0
   @State private var isPlaying = false
   @State private var timer: Timer?
 
-  private var coordinates: [CLLocationCoordinate2D] {
-    trip.points.map { $0.coordinate }
+  var body: some View {
+    if let trip = tripStore.trip(for: tripId) {
+      content(for: trip)
+        .onAppear {
+          if let region = trip.points.coordinateRegion() {
+            cameraPosition = .region(region)
+          }
+        }
+        .onDisappear {
+          stopReplay()
+        }
+    } else {
+      Text("Trip not found")
+        .font(.nammaDisplay(16))
+        .foregroundStyle(Theme.ink)
+    }
   }
 
-  var body: some View {
-    ZStack {
+  private func content(for trip: Trip) -> some View {
+    let coordinates = trip.points.map { $0.coordinate }
+
+    return ZStack {
       NammaBackground()
       ScrollView {
         VStack(spacing: 20) {
-          tripSummary
-          routeMap
-          replayControls
-          rateSnapshot
+          tripSummary(for: trip)
+          routeMap(for: trip, coordinates: coordinates)
+          replayControls(for: trip, coordinates: coordinates)
+          rateSnapshot(for: trip)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 32)
@@ -36,23 +53,39 @@ struct TripDetailView: View {
         }
       }
     }
-    .onAppear {
-      if let region = trip.points.coordinateRegion() {
-        cameraPosition = .region(region)
-      }
-    }
-    .onDisappear {
-      stopReplay()
-    }
   }
 
-  private var tripSummary: some View {
+  private var nameBinding: Binding<String> {
+    Binding(
+      get: { tripStore.trip(for: tripId)?.name ?? "" },
+      set: { newValue in
+        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        tripStore.update(tripId) { $0.name = trimmed.isEmpty ? nil : trimmed }
+      }
+    )
+  }
+
+  private func tripSummary(for trip: Trip) -> some View {
     VStack(alignment: .leading, spacing: 12) {
+      VStack(alignment: .leading, spacing: 6) {
+        Text("Trip Name")
+          .font(.nammaDisplay(12))
+        Text("ಪ್ರಯಾಣ ಹೆಸರು")
+          .font(.nammaBody(10))
+          .foregroundStyle(Theme.ink.opacity(0.7))
+
+        TextField("Add a name", text: nameBinding)
+          .font(.nammaDisplay(16))
+          .padding(10)
+          .background(Color.white.opacity(0.9))
+          .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+      }
+
       VStack(alignment: .leading, spacing: 4) {
         Text(trip.startDate, format: .dateTime.day().month().year().hour().minute())
-          .font(.nammaDisplay(16))
-        Text("ಪ್ರಯಾಣ ವಿವರ")
-          .font(.nammaBody(12))
+          .font(.nammaDisplay(15))
+        Text(trip.startLocationName ?? "Locating...")
+          .font(.nammaBody(11))
           .foregroundStyle(Theme.ink.opacity(0.7))
       }
 
@@ -60,6 +93,10 @@ struct TripDetailView: View {
         SummaryChip(title: "Fare", value: trip.fare.formatted(.currency(code: "INR")))
         SummaryChip(title: "Distance", value: "\((trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2)))) km")
         SummaryChip(title: "Time", value: formattedElapsed(trip.duration))
+      }
+
+      if trip.waitingDuration > 0 {
+        SummaryChip(title: "Wait", value: formattedElapsed(trip.waitingDuration))
       }
 
       HStack(spacing: 8) {
@@ -71,7 +108,7 @@ struct TripDetailView: View {
     .cardStyle()
   }
 
-  private var routeMap: some View {
+  private func routeMap(for trip: Trip, coordinates: [CLLocationCoordinate2D]) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         VStack(alignment: .leading, spacing: 2) {
@@ -95,13 +132,9 @@ struct TripDetailView: View {
         if let end = coordinates.last {
           Marker("End", coordinate: end)
         }
-        if let replayCoordinate = replayCoordinate {
-          Annotation("Replay", coordinate: replayCoordinate) {
-            Image(systemName: "car.fill")
-              .foregroundStyle(Theme.coral)
-              .padding(6)
-              .background(Color.white.opacity(0.9))
-              .clipShape(Circle())
+        if let replayCoordinate = replayCoordinate(in: coordinates) {
+          Annotation("Replay", coordinate: replayCoordinate, anchor: .bottom) {
+            AutoLocationMarker()
           }
         }
       }
@@ -111,7 +144,7 @@ struct TripDetailView: View {
     .cardStyle()
   }
 
-  private var replayControls: some View {
+  private func replayControls(for trip: Trip, coordinates: [CLLocationCoordinate2D]) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         VStack(alignment: .leading, spacing: 2) {
@@ -123,7 +156,7 @@ struct TripDetailView: View {
         }
         Spacer()
         Button {
-          isPlaying ? stopReplay() : startReplay()
+          isPlaying ? stopReplay() : startReplay(count: coordinates.count)
         } label: {
           Text(isPlaying ? "Pause" : "Play")
             .font(.nammaDisplay(14))
@@ -154,7 +187,7 @@ struct TripDetailView: View {
     .cardStyle()
   }
 
-  private var rateSnapshot: some View {
+  private func rateSnapshot(for trip: Trip) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         VStack(alignment: .leading, spacing: 2) {
@@ -178,27 +211,27 @@ struct TripDetailView: View {
         RateLine(title: "Per Km", subtitle: "ಪ್ರತಿ ಕಿಮೀ", value: trip.rateSnapshot.perKmRate)
       }
       HStack {
-        RateLine(title: "Per Minute", subtitle: "ಪ್ರತಿ ನಿಮಿಷ", value: trip.rateSnapshot.perMinuteRate)
+        RateLine(title: "Wait Per Minute", subtitle: "ನಿಲ್ಲಿಕೆ ಪ್ರತಿ ನಿಮಿಷ", value: trip.rateSnapshot.perMinuteRate)
         RateLine(title: "Min Fare", subtitle: "ಕನಿಷ್ಠ ಬಾಡಿಗೆ", value: trip.rateSnapshot.minFare)
       }
     }
     .cardStyle()
   }
 
-  private var replayCoordinate: CLLocationCoordinate2D? {
+  private func replayCoordinate(in coordinates: [CLLocationCoordinate2D]) -> CLLocationCoordinate2D? {
     guard coordinates.indices.contains(replayIndex) else { return nil }
     return coordinates[replayIndex]
   }
 
-  private func startReplay() {
+  private func startReplay(count: Int) {
     stopReplay()
-    guard coordinates.count > 1 else { return }
-    if replayIndex >= coordinates.count - 1 {
+    guard count > 1 else { return }
+    if replayIndex >= count - 1 {
       replayIndex = 0
     }
     isPlaying = true
     timer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
-      if replayIndex < coordinates.count - 1 {
+      if replayIndex < count - 1 {
         replayIndex += 1
       } else {
         stopReplay()
@@ -279,7 +312,9 @@ extension Collection {
 }
 
 #Preview {
-  TripDetailView(trip: Trip(
+  let previewURL = FileManager.default.temporaryDirectory.appendingPathComponent("preview-trips.json")
+  let store = TripStore(fileURL: previewURL)
+  let trip = Trip(
     id: UUID(),
     startDate: .now,
     endDate: .now,
@@ -289,6 +324,14 @@ extension Collection {
     points: [],
     conditions: .clear,
     rateSnapshot: RateSnapshot(settings: .bengaluruDefault),
-    multiplier: 1.0
-  ))
+    multiplier: 1.0,
+    name: "MG Road to Indiranagar",
+    startLocationName: "Bengaluru",
+    waitingDuration: 140
+  )
+  store.deleteAll()
+  store.add(trip)
+
+  return TripDetailView(tripId: trip.id)
+    .environmentObject(store)
 }

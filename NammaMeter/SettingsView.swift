@@ -32,8 +32,8 @@ struct SettingsView: View {
               value: $settingsStore.settings.perKmRate
             )
             LabeledNumberField(
-              title: "Per Minute",
-              subtitle: "ಪ್ರತಿ ನಿಮಿಷ",
+              title: "Wait Per Minute",
+              subtitle: "ನಿಲ್ಲಿಕೆ ಪ್ರತಿ ನಿಮಿಷ",
               value: $settingsStore.settings.perMinuteRate
             )
             LabeledNumberField(
