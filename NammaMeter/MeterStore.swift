@@ -1,20 +1,21 @@
-import Combine
 import CoreLocation
 import Foundation
+import Observation
 
 @MainActor
-final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate {
-  @Published var isOnTrip = false
-  @Published var distanceMeters: Double = 0
-  @Published var elapsed: TimeInterval = 0
-  @Published var fare: Double = 0
-  @Published var points: [TripPoint] = []
-  @Published var currentSpeedKph: Double = 0
-  @Published var isWaiting = false
-  @Published var waitingDuration: TimeInterval = 0
-  @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
-  @Published var locationError: String?
-  @Published var conditions: TripConditions = .clear {
+@Observable
+final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
+  var isOnTrip = false
+  var distanceMeters: Double = 0
+  var elapsed: TimeInterval = 0
+  var fare: Double = 0
+  var points: [TripPoint] = []
+  var currentSpeedKph: Double = 0
+  var isWaiting = false
+  var waitingDuration: TimeInterval = 0
+  var authorizationStatus: CLAuthorizationStatus = .notDetermined
+  var locationError: String?
+  var conditions: TripConditions = .clear {
     didSet {
       guard let currentSettings else { return }
       multiplier = conditions.multiplier(using: currentSettings)
@@ -22,16 +23,17 @@ final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationMa
     }
   }
 
-  private let locationManager: CLLocationManager
-  private var tickTask: Task<Void, Never>?
-  private let clock = ContinuousClock()
-  private var startDate: Date?
-  private var lastLocation: CLLocation?
-  private var currentSettings: MeterSettings?
-  private var rateSnapshot: RateSnapshot?
-  private var multiplier: Double = 1
-  private var waitingStartedAt: Date?
-  private var waitingAccumulated: TimeInterval = 0
+  @ObservationIgnored private let locationManager: CLLocationManager
+  @ObservationIgnored private var tickTask: Task<Void, Never>?
+  @ObservationIgnored private var locationUpdatesTask: Task<Void, Never>?
+  @ObservationIgnored private let clock = ContinuousClock()
+  @ObservationIgnored private var startDate: Date?
+  @ObservationIgnored private var lastLocation: CLLocation?
+  @ObservationIgnored private var currentSettings: MeterSettings?
+  @ObservationIgnored private var rateSnapshot: RateSnapshot?
+  @ObservationIgnored private var multiplier: Double = 1
+  @ObservationIgnored private var waitingStartedAt: Date?
+  @ObservationIgnored private var waitingAccumulated: TimeInterval = 0
 
   override init() {
     locationManager = CLLocationManager()
@@ -70,7 +72,7 @@ final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationMa
 
     requestAuthorization()
     locationManager.requestAlwaysAuthorization()
-    locationManager.startUpdatingLocation()
+    startLocationUpdates()
     updateBackgroundLocationState()
     startTicking()
   }
@@ -79,7 +81,7 @@ final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationMa
     guard isOnTrip else { return }
     isOnTrip = false
     stopWaiting()
-    locationManager.stopUpdatingLocation()
+    stopLocationUpdates()
     updateBackgroundLocationState()
     stopTicking()
 
@@ -105,7 +107,7 @@ final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationMa
 
   private func startTicking() {
     tickTask?.cancel()
-    tickTask = Task { [weak self] in
+    tickTask = Task { @MainActor [weak self] in
       guard let self else { return }
       while !Task.isCancelled, self.isOnTrip {
         self.tick()
@@ -117,6 +119,27 @@ final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationMa
   private func stopTicking() {
     tickTask?.cancel()
     tickTask = nil
+  }
+
+  private func startLocationUpdates() {
+    locationUpdatesTask?.cancel()
+    locationUpdatesTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      do {
+        for try await update in CLLocationUpdate.liveUpdates() {
+          if Task.isCancelled { break }
+          guard let location = update.location else { continue }
+          self.handleLocation(location)
+        }
+      } catch {
+        locationError = error.localizedDescription
+      }
+    }
+  }
+
+  private func stopLocationUpdates() {
+    locationUpdatesTask?.cancel()
+    locationUpdatesTask = nil
   }
 
   private func tick() {
@@ -152,27 +175,24 @@ final class MeterStore: NSObject, ObservableObject, @preconcurrency CLLocationMa
     locationError = error.localizedDescription
   }
 
-  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+  private func handleLocation(_ location: CLLocation) {
     guard isOnTrip else { return }
-    let filtered = locations.filter { $0.horizontalAccuracy >= 0 && $0.horizontalAccuracy <= 40 }
-    guard !filtered.isEmpty else { return }
+    guard location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= 40 else { return }
 
-    for location in filtered {
-      currentSpeedKph = max(location.speed, 0) * 3.6
-      let point = TripPoint(location: location)
-      points.append(point)
+    currentSpeedKph = max(location.speed, 0) * 3.6
+    let point = TripPoint(location: location)
+    points.append(point)
 
-      if let lastLocation {
-        let delta = location.distance(from: lastLocation)
-        if isWaiting && (location.speed >= 1.0 || delta > 8) {
-          stopWaiting()
-        }
-        if delta > 2 {
-          distanceMeters += delta
-        }
+    if let lastLocation {
+      let delta = location.distance(from: lastLocation)
+      if isWaiting && (location.speed >= 1.0 || delta > 8) {
+        stopWaiting()
       }
-      lastLocation = location
+      if delta > 2 {
+        distanceMeters += delta
+      }
     }
+    lastLocation = location
     recalcFare()
   }
 

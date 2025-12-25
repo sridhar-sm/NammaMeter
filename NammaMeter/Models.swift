@@ -1,7 +1,7 @@
 import CoreLocation
 import Foundation
 
-struct TripPoint: Codable, Hashable, Identifiable {
+struct TripPoint: Codable, Hashable, Identifiable, Sendable {
   let id: UUID
   let latitude: Double
   let longitude: Double
@@ -33,7 +33,7 @@ struct TripPoint: Codable, Hashable, Identifiable {
   }
 }
 
-struct TripConditions: Codable, Equatable {
+struct TripConditions: Codable, Equatable, Sendable {
   var isRaining: Bool
   var isNight: Bool
   var isHeavyTraffic: Bool
@@ -48,7 +48,7 @@ struct TripConditions: Codable, Equatable {
   }
 }
 
-struct MeterSettings: Codable, Equatable {
+struct MeterSettings: Codable, Equatable, Sendable {
   var baseFare: Double
   var perKmRate: Double
   var perMinuteRate: Double
@@ -68,7 +68,7 @@ struct MeterSettings: Codable, Equatable {
   )
 }
 
-struct RateSnapshot: Codable, Equatable {
+struct RateSnapshot: Codable, Equatable, Sendable {
   let baseFare: Double
   let perKmRate: Double
   let perMinuteRate: Double
@@ -88,7 +88,7 @@ struct RateSnapshot: Codable, Equatable {
   }
 }
 
-struct Trip: Codable, Identifiable {
+struct Trip: Codable, Identifiable, Sendable {
   let id: UUID
   let startDate: Date
   let endDate: Date

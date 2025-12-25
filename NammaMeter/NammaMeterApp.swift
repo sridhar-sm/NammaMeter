@@ -2,14 +2,14 @@ import SwiftUI
 
 @main
 struct NammaMeterApp: App {
-  @StateObject private var settingsStore = SettingsStore()
-  @StateObject private var tripStore = TripStore()
+  @State private var settingsStore = SettingsStore()
+  @State private var tripStore = TripStore()
 
   var body: some Scene {
     WindowGroup {
       ContentView()
-        .environmentObject(settingsStore)
-        .environmentObject(tripStore)
+        .environment(settingsStore)
+        .environment(tripStore)
     }
   }
 }

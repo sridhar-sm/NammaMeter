@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HistoryView: View {
-  @EnvironmentObject var tripStore: TripStore
+  @Environment(TripStore.self) private var tripStore
   @Environment(\.editMode) private var editMode
   @State private var searchText = ""
   @State private var selection = Set<UUID>()
@@ -97,7 +97,7 @@ struct HistoryView: View {
   }
 
   private func tripSearchText(_ trip: Trip) -> String {
-    let dateText = Self.searchFormatter.string(from: trip.startDate)
+    let dateText = trip.startDate.formatted(date: .abbreviated, time: .shortened)
     let durationText = formattedElapsed(trip.duration)
     let distanceText = (trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
     return [
@@ -121,13 +121,6 @@ struct HistoryView: View {
     tripStore.delete(ids: selection)
     selection.removeAll()
   }
-
-  private static let searchFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .medium
-    formatter.timeStyle = .short
-    return formatter
-  }()
 }
 
 struct TripRow: View {
@@ -182,5 +175,5 @@ struct TripRow: View {
 
 #Preview {
   HistoryView()
-    .environmentObject(TripStore())
+    .environment(TripStore())
 }

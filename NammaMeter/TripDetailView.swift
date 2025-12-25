@@ -2,7 +2,7 @@ import MapKit
 import SwiftUI
 
 struct TripDetailView: View {
-  @EnvironmentObject var tripStore: TripStore
+  @Environment(TripStore.self) private var tripStore
   let tripId: UUID
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var replayIndex: Int = 0
@@ -339,5 +339,5 @@ extension Collection {
   store.add(trip)
 
   return TripDetailView(tripId: trip.id)
-    .environmentObject(store)
+    .environment(store)
 }

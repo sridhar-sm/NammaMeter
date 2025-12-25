@@ -4,9 +4,9 @@ import SwiftUI
 import UIKit
 
 struct MeterView: View {
-  @EnvironmentObject var settingsStore: SettingsStore
-  @EnvironmentObject var tripStore: TripStore
-  @StateObject private var meterStore = MeterStore()
+  @Environment(SettingsStore.self) private var settingsStore
+  @Environment(TripStore.self) private var tripStore
+  @State private var meterStore = MeterStore()
   @Binding var showSettings: Bool
   @Environment(\.openURL) private var openURL
   @State private var showLocationAlert = false
@@ -471,6 +471,6 @@ struct AutoRickshawIcon: View {
 
 #Preview {
   MeterView(showSettings: .constant(false))
-    .environmentObject(SettingsStore())
-    .environmentObject(TripStore())
+    .environment(SettingsStore())
+    .environment(TripStore())
 }

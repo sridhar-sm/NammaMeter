@@ -1,10 +1,12 @@
+import Observation
 import SwiftUI
 
 struct SettingsView: View {
-  @EnvironmentObject var settingsStore: SettingsStore
+  @Environment(SettingsStore.self) private var settingsStore
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
+    @Bindable var settingsStore = settingsStore
     NavigationStack {
       ZStack {
         NammaBackground()
@@ -129,5 +131,5 @@ struct LabeledNumberField: View {
 
 #Preview {
   SettingsView()
-    .environmentObject(SettingsStore())
+    .environment(SettingsStore())
 }

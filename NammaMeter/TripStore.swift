@@ -1,24 +1,26 @@
-import Combine
 import CoreLocation
 import Foundation
+import Observation
 
 @MainActor
-final class TripStore: ObservableObject {
-  @Published private(set) var trips: [Trip] = [] {
+@Observable
+final class TripStore {
+  private(set) var trips: [Trip] = [] {
     didSet {
       guard isLoaded else { return }
-      save()
+      saveTask?.cancel()
+      saveTask = Task { await save() }
     }
   }
 
-  private let fileURL: URL
-  private var isLoaded = false
-  private let geocoder = CLGeocoder()
+  @ObservationIgnored private let persistence: TripPersistence
+  @ObservationIgnored private var isLoaded = false
+  @ObservationIgnored private var saveTask: Task<Void, Never>?
+  @ObservationIgnored private let geocoder = CLGeocoder()
 
   init(fileURL: URL = TripStore.defaultURL) {
-    self.fileURL = fileURL
-    load()
-    isLoaded = true
+    self.persistence = TripPersistence(url: fileURL)
+    Task { await load() }
   }
 
   func add(_ trip: Trip) {
@@ -68,23 +70,42 @@ final class TripStore: ObservableObject {
     }
   }
 
-  private func load() {
-    guard let data = try? Data(contentsOf: fileURL) else { return }
-    let decoder = JSONDecoder()
-    decoder.dateDecodingStrategy = .iso8601
-    guard let decoded = try? decoder.decode([Trip].self, from: data) else { return }
-    trips = decoded
+  private func load() async {
+    if let decoded = await persistence.load() {
+      trips = decoded
+    }
+    isLoaded = true
   }
 
-  private func save() {
-    let encoder = JSONEncoder()
-    encoder.dateEncodingStrategy = .iso8601
-    guard let data = try? encoder.encode(trips) else { return }
-    try? data.write(to: fileURL, options: [.atomic])
+  private func save() async {
+    guard !Task.isCancelled, isLoaded else { return }
+    await persistence.save(trips)
   }
 
   nonisolated static var defaultURL: URL {
     FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
       .appendingPathComponent("trips.json")
+  }
+}
+
+private actor TripPersistence {
+  private let url: URL
+
+  init(url: URL) {
+    self.url = url
+  }
+
+  func load() -> [Trip]? {
+    guard let data = try? Data(contentsOf: url) else { return nil }
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    return try? decoder.decode([Trip].self, from: data)
+  }
+
+  func save(_ trips: [Trip]) {
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    guard let data = try? encoder.encode(trips) else { return }
+    try? data.write(to: url, options: [.atomic])
   }
 }

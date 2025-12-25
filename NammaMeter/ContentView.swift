@@ -40,6 +40,6 @@ struct TabLabel: View {
 
 #Preview {
   ContentView()
-    .environmentObject(SettingsStore())
-    .environmentObject(TripStore())
+    .environment(SettingsStore())
+    .environment(TripStore())
 }

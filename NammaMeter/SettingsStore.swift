@@ -1,42 +1,63 @@
-import Combine
 import Foundation
+import Observation
 
 @MainActor
-final class SettingsStore: ObservableObject {
-  @Published var settings: MeterSettings {
+@Observable
+final class SettingsStore {
+  var settings: MeterSettings {
     didSet {
       guard isLoaded else { return }
-      save()
+      saveTask?.cancel()
+      saveTask = Task { await save() }
     }
   }
 
-  private let fileURL: URL
-  private var isLoaded = false
+  @ObservationIgnored private let persistence: SettingsPersistence
+  @ObservationIgnored private var isLoaded = false
+  @ObservationIgnored private var saveTask: Task<Void, Never>?
 
   init(fileURL: URL = SettingsStore.defaultURL) {
-    self.fileURL = fileURL
+    self.persistence = SettingsPersistence(url: fileURL)
     self.settings = MeterSettings.bengaluruDefault
-    load()
-    isLoaded = true
+    Task { await load() }
   }
 
   func resetToDefaults() {
     settings = MeterSettings.bengaluruDefault
   }
 
-  private func load() {
-    guard let data = try? Data(contentsOf: fileURL) else { return }
-    guard let decoded = try? JSONDecoder().decode(MeterSettings.self, from: data) else { return }
-    settings = decoded
+  private func load() async {
+    if let decoded = await persistence.load() {
+      settings = decoded
+    }
+    isLoaded = true
   }
 
-  private func save() {
-    guard let data = try? JSONEncoder().encode(settings) else { return }
-    try? data.write(to: fileURL, options: [.atomic])
+  private func save() async {
+    guard !Task.isCancelled, isLoaded else { return }
+    await persistence.save(settings)
   }
 
   nonisolated static var defaultURL: URL {
     FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
       .appendingPathComponent("settings.json")
+  }
+}
+
+private actor SettingsPersistence {
+  private let url: URL
+
+  init(url: URL) {
+    self.url = url
+  }
+
+  func load() -> MeterSettings? {
+    guard let data = try? Data(contentsOf: url) else { return nil }
+    return try? JSONDecoder().decode(MeterSettings.self, from: data)
+  }
+
+  func save(_ settings: MeterSettings) {
+    guard let data = try? JSONEncoder().encode(settings) else { return }
+    try? data.write(to: url, options: [.atomic])
   }
 }
