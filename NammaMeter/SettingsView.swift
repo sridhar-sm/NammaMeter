@@ -3,7 +3,6 @@ import SwiftUI
 
 struct SettingsView: View {
   @Environment(SettingsStore.self) private var settingsStore
-  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     @Bindable var settingsStore = settingsStore
@@ -80,11 +79,6 @@ struct SettingsView: View {
               .font(.nammaDisplay(16))
             Text("ಸೆಟ್ಟಿಂಗ್ಸ್")
               .font(.nammaBody(11))
-          }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("Done") {
-            dismiss()
           }
         }
       }

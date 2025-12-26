@@ -7,7 +7,6 @@ struct MeterView: View {
   @Environment(SettingsStore.self) private var settingsStore
   @Environment(TripStore.self) private var tripStore
   @State private var meterStore = MeterStore()
-  @Binding var showSettings: Bool
   @Environment(\.openURL) private var openURL
   @State private var showLocationAlert = false
   @State private var showMeterPanel = false
@@ -82,7 +81,6 @@ struct MeterView: View {
 
   private var bottomControls: some View {
     HStack(alignment: .bottom, spacing: 8) {
-      settingsButton
       tripToggleButton
       waitToggleButton
       meterControlCluster
@@ -99,22 +97,6 @@ struct MeterView: View {
     .padding(6)
     .background(Theme.card.opacity(0.85))
     .clipShape(Capsule())
-  }
-
-  private var settingsButton: some View {
-    Button {
-      showSettings = true
-    } label: {
-      Image(systemName: "slider.horizontal.3")
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(Theme.ink)
-        .padding(8)
-        .background(Theme.card.opacity(0.9))
-        .clipShape(Circle())
-        .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
-    }
-    .buttonStyle(.plain)
-    .accessibilityLabel("Settings")
   }
 
   private var tripToggleButton: some View {
@@ -469,7 +451,7 @@ struct AutoRickshawIcon: View {
 }
 
 #Preview {
-  MeterView(showSettings: .constant(false))
+  MeterView()
     .environment(SettingsStore())
     .environment(TripStore())
 }
