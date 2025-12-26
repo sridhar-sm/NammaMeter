@@ -16,7 +16,7 @@ final class TripStore {
   @ObservationIgnored private let persistence: TripPersistence
   @ObservationIgnored private var isLoaded = false
   @ObservationIgnored private var saveTask: Task<Void, Never>?
-  @ObservationIgnored private let geocoder = CLGeocoder()
+  @ObservationIgnored private let geocoder = GeocodingService()
 
   init(fileURL: URL = TripStore.defaultURL) {
     self.persistence = TripPersistence(url: fileURL)
@@ -56,18 +56,11 @@ final class TripStore {
   func resolveStartLocation(for trip: Trip) async {
     guard trip.startLocationName == nil else { return }
     guard let start = trip.points.first else { return }
+    if Task.isCancelled { return }
     let location = CLLocation(latitude: start.latitude, longitude: start.longitude)
-    do {
-      let placemarks = try await geocoder.reverseGeocodeLocation(location)
-      guard let placemark = placemarks.first else { return }
-      let city = placemark.locality
-        ?? placemark.subAdministrativeArea
-        ?? placemark.administrativeArea
-      guard let city, !city.isEmpty else { return }
-      update(trip.id) { $0.startLocationName = city }
-    } catch {
-      return
-    }
+    guard let city = await geocoder.cityName(for: location) else { return }
+    if Task.isCancelled { return }
+    update(trip.id) { $0.startLocationName = city }
   }
 
   private func load() async {
@@ -107,5 +100,53 @@ private actor TripPersistence {
     encoder.dateEncodingStrategy = .iso8601
     guard let data = try? encoder.encode(trips) else { return }
     try? data.write(to: url, options: [.atomic])
+  }
+}
+
+private actor GeocodingService {
+  private let geocoder = CLGeocoder()
+  private var cache: [CacheKey: String] = [:]
+  private var cacheOrder: [CacheKey] = []
+  private let maxCacheEntries = 48
+
+  func cityName(for location: CLLocation) async -> String? {
+    if Task.isCancelled { return nil }
+    let key = CacheKey(location: location)
+    if let cached = cache[key] {
+      return cached
+    }
+    do {
+      let placemarks = try await geocoder.reverseGeocodeLocation(location)
+      guard let placemark = placemarks.first else { return nil }
+      let city = placemark.locality
+        ?? placemark.subAdministrativeArea
+        ?? placemark.administrativeArea
+      guard let city, !city.isEmpty else { return nil }
+      insertCache(city, for: key)
+      return city
+    } catch {
+      return nil
+    }
+  }
+
+  private func insertCache(_ city: String, for key: CacheKey) {
+    cache[key] = city
+    cacheOrder.removeAll { $0 == key }
+    cacheOrder.append(key)
+    if cacheOrder.count > maxCacheEntries, let oldest = cacheOrder.first {
+      cacheOrder.removeFirst()
+      cache.removeValue(forKey: oldest)
+    }
+  }
+
+  private struct CacheKey: Hashable {
+    let lat: Int
+    let lon: Int
+
+    init(location: CLLocation) {
+      let scale = 100.0
+      lat = Int((location.coordinate.latitude * scale).rounded())
+      lon = Int((location.coordinate.longitude * scale).rounded())
+    }
   }
 }
