@@ -21,7 +21,6 @@ struct MeterView: View {
         mapArea
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .ignoresSafeArea(edges: .top)
-          .padding(.horizontal, 16)
           .padding(.bottom, 16)
       }
       .onAppear {
