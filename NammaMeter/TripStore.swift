@@ -104,7 +104,6 @@ private actor TripPersistence {
 }
 
 private actor GeocodingService {
-  private let geocoder = CLGeocoder()
   private var cache: [CacheKey: String] = [:]
   private var cacheOrder: [CacheKey] = []
   private let maxCacheEntries = 48
@@ -115,6 +114,7 @@ private actor GeocodingService {
     if let cached = cache[key] {
       return cached
     }
+    let geocoder = CLGeocoder()
     do {
       let placemarks = try await geocoder.reverseGeocodeLocation(location)
       guard let placemark = placemarks.first else { return nil }

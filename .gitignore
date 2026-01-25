@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+# Conductor workspace scratch space
+.context/
+
 # User-specific Xcode data
 xcuserdata/
 *.xcuserstate
+
+# Per-user Xcode state inside project workspace
+NammaMeter.xcodeproj/project.xcworkspace/xcuserdata/
