@@ -11,6 +11,8 @@ struct HistoryView: View {
       ZStack {
         NammaBackground()
         List(selection: $selection) {
+          searchRow
+
           if tripStore.trips.isEmpty {
             VStack(alignment: .center, spacing: 12) {
               Text("No trips yet")
@@ -75,7 +77,6 @@ struct HistoryView: View {
           EditButton()
         }
       }
-      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .onChange(of: editMode?.wrappedValue) { _, newValue in
         if newValue != .active {
           selection.removeAll()
@@ -120,6 +121,35 @@ struct HistoryView: View {
   private func deleteSelected() {
     tripStore.delete(ids: selection)
     selection.removeAll()
+  }
+
+  private var searchRow: some View {
+    HStack(spacing: 10) {
+      Image(systemName: "magnifyingglass")
+        .foregroundStyle(Theme.ink.opacity(0.7))
+
+      TextField("Search trips", text: $searchText)
+        .font(.nammaBody(13))
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+
+      if !searchText.isEmpty {
+        Button {
+          searchText = ""
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(Theme.ink.opacity(0.5))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Clear search")
+      }
+    }
+    .padding(10)
+    .background(Theme.card)
+    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .listRowInsets(.init(top: 10, leading: 16, bottom: 6, trailing: 16))
+    .listRowSeparator(Visibility.hidden)
+    .listRowBackground(Color.clear)
   }
 }
 

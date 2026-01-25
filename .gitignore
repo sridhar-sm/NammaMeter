@@ -1,0 +1,5 @@
+# Conductor workspace scratch space
+.context/
+
+# Per-user Xcode state
+NammaMeter.xcodeproj/project.xcworkspace/xcuserdata/
