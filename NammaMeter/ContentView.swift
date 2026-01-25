@@ -1,11 +1,9 @@
 import SwiftUI
 
 struct ContentView: View {
-  @State private var showSettings = false
-
   var body: some View {
     TabView {
-      MeterView(showSettings: $showSettings)
+      MeterView()
         .tabItem {
           TabLabel(title: "Meter", subtitle: "ಮೀಟರ್", systemImage: "speedometer")
         }
@@ -14,11 +12,13 @@ struct ContentView: View {
         .tabItem {
           TabLabel(title: "Trips", subtitle: "ಪ್ರಯಾಣಗಳು", systemImage: "clock.arrow.circlepath")
         }
+
+      SettingsView()
+        .tabItem {
+          TabLabel(title: "Settings", subtitle: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು", systemImage: "slider.horizontal.3")
+        }
     }
     .tint(Theme.ink)
-    .sheet(isPresented: $showSettings) {
-      SettingsView()
-    }
   }
 }
 
