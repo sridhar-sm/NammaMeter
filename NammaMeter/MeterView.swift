@@ -61,22 +61,34 @@ struct MeterView: View {
       // Available height after accounting for all fixed elements
       let availableHeight = geo.size.height - bottomPadding - controlsHeight - (spacing * 2)
 
-      // Calculate actual meter height needed based on its aspect ratio
-      let meterNaturalHeight = SuperMeterDimensions.naturalHeight(for: geo.size.width)
-
-      // Meter gets what it needs (capped to leave room for map), extra goes to map
+      // Use the largest meter height (Super Mechanical) to determine fixed map height
+      // This ensures map size and position stay constant regardless of meter style
+      let maxMeterNaturalHeight = SuperMeterDimensions.naturalHeight(for: geo.size.width)
       let maxMeterHeight = availableHeight - minMapHeight
+      let referenceMeterHeight = min(maxMeterNaturalHeight, maxMeterHeight)
+      let fixedMapHeight = availableHeight - referenceMeterHeight
+
+      // Calculate actual meter height for the selected style
+      let meterNaturalHeight: CGFloat = {
+        switch meterFaceStyle {
+        case .superMeter:
+          return SuperMeterDimensions.naturalHeight(for: geo.size.width)
+        case .superElectronic:
+          return SuperElectronicDimensions.naturalHeight(for: geo.size.width)
+        case .digital:
+          return SuperMeterDimensions.naturalHeight(for: geo.size.width)
+        }
+      }()
       let meterHeight = min(meterNaturalHeight, maxMeterHeight)
-      let mapHeight = availableHeight - meterHeight
 
       VStack(spacing: spacing) {
         meterPanelWithNotch(height: meterHeight, topInset: topInset)
-          .frame(height: meterHeight)
+          .frame(height: referenceMeterHeight)
           .frame(maxWidth: .infinity)
 
         ZStack {
           LiveRouteMap(points: meterStore.points, followLatest: meterStore.isOnTrip)
-            .frame(height: mapHeight)
+            .frame(height: fixedMapHeight)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
               RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -123,6 +135,27 @@ struct MeterView: View {
         SuperDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
           .padding(.top, topInset + 8)
           .padding(.horizontal, 12)
+      }
+    case .superElectronic:
+      if meterRenderMode == .full {
+        SuperElectronicFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          waitingDuration: meterStore.waitingDuration,
+          distanceMeters: meterStore.distanceMeters,
+          isNight: meterStore.conditions.isNight,
+          topInset: topInset
+        )
+      } else {
+        SuperElectronicFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          waitingDuration: meterStore.waitingDuration,
+          distanceMeters: meterStore.distanceMeters,
+          isNight: meterStore.conditions.isNight,
+          topInset: topInset + 8
+        )
+        .padding(.horizontal, 12)
       }
     case .digital:
       if meterRenderMode == .full {
@@ -211,13 +244,16 @@ struct MeterView: View {
 
   private var tripToggleButton: some View {
     Button {
-      if meterStore.isOnTrip {
-        meterStore.stopTrip(tripStore: tripStore)
-      } else {
+      switch meterStore.tripState {
+      case .forHire:
         meterStore.startTrip(settings: settingsStore.settings)
+      case .inProgress:
+        meterStore.stopTrip(tripStore: tripStore)
+      case .complete:
+        meterStore.resetToForHire()
       }
     } label: {
-      MiniFlipSignView(isOnTrip: meterStore.isOnTrip)
+      MiniTripStateSign(tripState: meterStore.tripState)
     }
     .buttonStyle(.plain)
   }
@@ -297,7 +333,8 @@ struct MeterView: View {
 }
 
 enum MeterFaceStyle: String, CaseIterable, Identifiable {
-  case superMeter = "Super"
+  case superMeter = "Super Mechanical"
+  case superElectronic = "Super Electronic"
   case digital = "Neo Digital"
 
   var id: String { rawValue }
@@ -306,6 +343,8 @@ enum MeterFaceStyle: String, CaseIterable, Identifiable {
     switch self {
     case .superMeter:
       return "gauge.with.dots.needle.67percent"
+    case .superElectronic:
+      return "digitalcrown.horizontal.arrow.counterclockwise"
     case .digital:
       return "display"
     }
@@ -791,12 +830,21 @@ struct DigitalMeterScreen: View {
               .stroke(bezel, lineWidth: 2)
           )
 
-        Text(tripState == .forHire ? "HIRE" : formattedFare())
+        Text(displayText())
           .font(.system(size: textSize, weight: .bold, design: .monospaced))
           .foregroundStyle(glowColor)
           .shadow(color: glowColor, radius: glow ? 12 : 6, x: 0, y: 0)
           .tracking(textSize * 0.06)
       }
+    }
+  }
+
+  private func displayText() -> String {
+    switch tripState {
+    case .forHire:
+      return "HIRE"
+    case .inProgress, .complete:
+      return formattedFare()
     }
   }
 
@@ -844,17 +892,7 @@ struct MeterDisplayWindow: View {
               .stroke(displayEdge, lineWidth: 2)
           )
 
-        if tripState != .forHire {
-          let digitData = formattedDigits()
-          MeterDigitsRow(
-            digits: digitData.digits,
-            paiseStartIndex: digitData.paiseStartIndex,
-            digitStyle: digitStyle
-          )
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.trailing, 30)
-            .padding(.leading, 0)
-        } else {
+        if tripState == .forHire {
           RoundedRectangle(cornerRadius: 6, style: .continuous)
             .fill(Color(red: 0.78, green: 0.18, blue: 0.18))
             .overlay(
@@ -865,6 +903,17 @@ struct MeterDisplayWindow: View {
             )
             .padding(.horizontal, 10)
             .opacity(pulse ? 0.7 : 1.0)
+        } else {
+          // Show fare for both inProgress and complete states
+          let digitData = formattedDigits()
+          MeterDigitsRow(
+            digits: digitData.digits,
+            paiseStartIndex: digitData.paiseStartIndex,
+            digitStyle: digitStyle
+          )
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, 30)
+            .padding(.leading, 0)
         }
       }
     }
@@ -1240,6 +1289,42 @@ struct MiniFlipSignView: View {
       .rotation3DEffect(.degrees(isOnTrip ? 0 : -180), axis: (x: 0, y: 1, z: 0))
     }
     .animation(.spring(response: 0.5, dampingFraction: 0.85), value: isOnTrip)
+  }
+}
+
+struct MiniTripStateSign: View {
+  let tripState: TripMeterState
+
+  var body: some View {
+    ZStack {
+      // For Hire
+      MiniSignFace(
+        title: "For Hire",
+        subtitle: "ಬಾಡಿಗೆಗೆ",
+        color: Theme.coral
+      )
+      .opacity(tripState == .forHire ? 1 : 0)
+      .rotation3DEffect(.degrees(tripState == .forHire ? 0 : -180), axis: (x: 0, y: 1, z: 0))
+
+      // On Trip (Hired)
+      MiniSignFace(
+        title: "On Trip",
+        subtitle: "ಪ್ರಯಾಣ",
+        color: Theme.mint
+      )
+      .opacity(tripState == .inProgress ? 1 : 0)
+      .rotation3DEffect(.degrees(tripState == .inProgress ? 0 : 180), axis: (x: 0, y: 1, z: 0))
+
+      // Stop (Complete)
+      MiniSignFace(
+        title: "Stop",
+        subtitle: "ನಿಲ್ಲಿಸಿ",
+        color: Theme.mango
+      )
+      .opacity(tripState == .complete ? 1 : 0)
+      .rotation3DEffect(.degrees(tripState == .complete ? 0 : 180), axis: (x: 0, y: 1, z: 0))
+    }
+    .animation(.spring(response: 0.5, dampingFraction: 0.85), value: tripState)
   }
 }
 
