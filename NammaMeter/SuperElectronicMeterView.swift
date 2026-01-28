@@ -247,66 +247,81 @@ struct SuperElectronicFareRow: View {
 struct FareDigitsDisplay: View {
   let fare: Double
   let digitHeight: CGFloat
+  var colorScheme: LEDColorScheme = .red
 
   var body: some View {
     let totalPaise = max(0, Int((fare * 100).rounded()))
     let rupees = totalPaise / 100
     let paise = totalPaise % 100
 
-    // 3 digits for rupees (leading zeros blank), 2 for paise
-    let r2 = (rupees / 100) % 10  // hundreds
-    let r1 = (rupees / 10) % 10   // tens
-    let r0 = rupees % 10          // ones
-    let p1 = paise / 10           // paise tens
-    let p0 = paise % 10           // paise ones
+    // Build rupee values with leading zero blanking
+    let r2 = (rupees / 100) % 10
+    let r1 = (rupees / 10) % 10
+    let r0 = rupees % 10
+    let rupeeValues: [LED7SegmentValue] = [
+      r2 > 0 ? .digit(r2) : .blank,
+      (r2 > 0 || r1 > 0) ? .digit(r1) : .blank,
+      .digit(r0)
+    ]
+
+    // Paise values (always show both)
+    let p1 = paise / 10
+    let p0 = paise % 10
+    let paiseValues: [LED7SegmentValue] = [.digit(p1), .digit(p0)]
 
     HStack(spacing: digitHeight * 0.12) {
-      // Rupees digits (leading zeros blank)
-      SevenSegmentDigit(digit: r2 > 0 ? r2 : nil, height: digitHeight)
-      SevenSegmentDigit(digit: (r2 > 0 || r1 > 0) ? r1 : nil, height: digitHeight)
-      SevenSegmentDigit(digit: r0, height: digitHeight)
+      LEDDigitGroup(
+        digitCount: 3,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        decimalPosition: 2,
+        values: rupeeValues
+      )
 
-      // Decimal point
-      Circle()
-        .fill(LEDColors.activeRed)
-        .frame(width: digitHeight * 0.12, height: digitHeight * 0.12)
-        .shadow(color: LEDColors.activeRed.opacity(0.8), radius: 4)
-        .offset(y: digitHeight * 0.4)
-
-      // Paise digits (always show both)
-      SevenSegmentDigit(digit: p1, height: digitHeight)
-      SevenSegmentDigit(digit: p0, height: digitHeight)
+      LEDDigitGroup(
+        digitCount: 2,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        values: paiseValues
+      )
     }
   }
 }
 
 struct ForHireFareDisplay: View {
   let digitHeight: CGFloat
+  var colorScheme: LEDColorScheme = .red
 
   var body: some View {
-    // Show "For" in middle 3 positions (positions 1, 2, 3 of 5)
-    // Position 0: blank, Position 1: F, Position 2: o, Position 3: r, Position 4: blank
+    // Show "For" across positions with dim decimal
+    let values: [LED7SegmentValue] = [
+      .blank,
+      .character("F"),
+      .character("o"),
+      .character("r"),
+      .blank
+    ]
+
     HStack(spacing: digitHeight * 0.12) {
-      // Position 0: blank (hundreds rupees)
-      SevenSegmentDigit(digit: nil, height: digitHeight)
+      // First 3 digits (blank, F, o) with dim decimal after
+      LEDDigitGroup(
+        digitCount: 3,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        values: Array(values[0...2])
+      )
 
-      // Position 1: F (tens rupees)
-      SevenSegmentDigit(digit: nil, height: digitHeight, character: "F")
-
-      // Position 2: o (ones rupees)
-      SevenSegmentDigit(digit: nil, height: digitHeight, character: "o")
-
-      // Decimal point - dim
-      Circle()
-        .fill(LEDColors.dimRed)
-        .frame(width: digitHeight * 0.12, height: digitHeight * 0.12)
+      // Dim decimal point
+      LEDDecimalPoint(isActive: false, colorScheme: colorScheme, size: digitHeight * 0.12)
         .offset(y: digitHeight * 0.4)
 
-      // Position 3: r (tens paise)
-      SevenSegmentDigit(digit: nil, height: digitHeight, character: "r")
-
-      // Position 4: blank (ones paise)
-      SevenSegmentDigit(digit: nil, height: digitHeight)
+      // Last 2 digits (r, blank)
+      LEDDigitGroup(
+        digitCount: 2,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        values: Array(values[3...4])
+      )
     }
   }
 }
@@ -361,53 +376,47 @@ struct WaitTimeDisplay: View {
   let digitHeight: CGFloat
   var showBlank: Bool = false
   var showForHire: Bool = false
+  var colorScheme: LEDColorScheme = .red
+
+  private var displayValues: (values: [LED7SegmentValue], colonActive: Bool) {
+    if showForHire {
+      return ([.blank, .blank, .character("H"), .character("I")], false)
+    } else if showBlank {
+      return ([.blank, .blank, .blank, .blank], false)
+    } else {
+      let totalSeconds = Int(duration)
+      let minutes = (totalSeconds / 60) % 100
+      let seconds = totalSeconds % 60
+      return ([
+        .digit(minutes / 10),
+        .digit(minutes % 10),
+        .digit(seconds / 10),
+        .digit(seconds % 10)
+      ], true)
+    }
+  }
 
   var body: some View {
-    let totalSeconds = Int(duration)
-    let minutes = (totalSeconds / 60) % 100
-    let seconds = totalSeconds % 60
-
-    let m1 = showBlank ? nil : minutes / 10
-    let m0 = showBlank ? nil : minutes % 10
-    let s1 = showBlank ? nil : seconds / 10
-    let s0 = showBlank ? nil : seconds % 10
+    let (values, colonActive) = displayValues
 
     HStack(spacing: digitHeight * 0.08) {
-      if showForHire {
-        // Show blank in first two positions, "HI" in last two
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true)
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true)
+      LEDDigitGroup(
+        digitCount: 2,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        isSmall: true,
+        values: Array(values[0...1])
+      )
 
-        // Colon - dim
-        VStack(spacing: digitHeight * 0.15) {
-          Circle()
-            .fill(LEDColors.dimRed)
-            .frame(width: digitHeight * 0.1, height: digitHeight * 0.1)
-          Circle()
-            .fill(LEDColors.dimRed)
-            .frame(width: digitHeight * 0.1, height: digitHeight * 0.1)
-        }
+      LEDColon(isActive: colonActive, colorScheme: colorScheme, height: digitHeight)
 
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true, character: "H")
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true, character: "I")
-      } else {
-        SevenSegmentDigit(digit: m1, height: digitHeight, isSmall: true)
-        SevenSegmentDigit(digit: m0, height: digitHeight, isSmall: true)
-
-        // Colon - dim when blank
-        VStack(spacing: digitHeight * 0.15) {
-          Circle()
-            .fill(showBlank ? LEDColors.dimRed : LEDColors.activeRed)
-            .frame(width: digitHeight * 0.1, height: digitHeight * 0.1)
-          Circle()
-            .fill(showBlank ? LEDColors.dimRed : LEDColors.activeRed)
-            .frame(width: digitHeight * 0.1, height: digitHeight * 0.1)
-        }
-        .shadow(color: showBlank ? .clear : LEDColors.activeRed.opacity(0.6), radius: showBlank ? 0 : 2)
-
-        SevenSegmentDigit(digit: s1, height: digitHeight, isSmall: true)
-        SevenSegmentDigit(digit: s0, height: digitHeight, isSmall: true)
-      }
+      LEDDigitGroup(
+        digitCount: 2,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        isSmall: true,
+        values: Array(values[2...3])
+      )
     }
   }
 }
@@ -417,49 +426,43 @@ struct DistanceDisplay: View {
   let digitHeight: CGFloat
   var showBlank: Bool = false
   var showForHire: Bool = false
+  var colorScheme: LEDColorScheme = .red
+
+  private var displayValues: (integerValues: [LED7SegmentValue], decimalValue: LED7SegmentValue, decimalActive: Bool) {
+    if showForHire {
+      return ([.character("r"), .character("E"), .blank], .blank, false)
+    } else if showBlank {
+      return ([.blank, .blank, .blank], .blank, false)
+    } else {
+      let totalTenths = Int((distanceKm * 10).rounded()) % 10000
+      let d2raw = (totalTenths / 1000) % 10
+      let d1raw = (totalTenths / 100) % 10
+      let d0raw = (totalTenths / 10) % 10
+      let decimalRaw = totalTenths % 10
+      return ([
+        d2raw > 0 ? .digit(d2raw) : .blank,
+        (d2raw > 0 || d1raw > 0) ? .digit(d1raw) : .blank,
+        .digit(d0raw)
+      ], .digit(decimalRaw), true)
+    }
+  }
 
   var body: some View {
-    // Show distance as 000.0 format (3 integer + 1 decimal)
-    let totalTenths = Int((distanceKm * 10).rounded()) % 10000
-    let d2raw = (totalTenths / 1000) % 10  // hundreds of km
-    let d1raw = (totalTenths / 100) % 10   // tens of km
-    let d0raw = (totalTenths / 10) % 10    // ones of km
-    let decimalRaw = totalTenths % 10       // tenths of km
-
-    // Leading zeros blank for d2 and d1
-    let d2: Int? = showBlank ? nil : (d2raw > 0 ? d2raw : nil)
-    let d1: Int? = showBlank ? nil : ((d2raw > 0 || d1raw > 0) ? d1raw : nil)
-    let d0: Int? = showBlank ? nil : d0raw
-    let decimal: Int? = showBlank ? nil : decimalRaw
+    let (integerValues, decimalValue, decimalActive) = displayValues
 
     HStack(spacing: digitHeight * 0.08) {
-      if showForHire {
-        // Show "rE" in first two positions, rest blank
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true, character: "r")
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true, character: "E")
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true)
+      LEDDigitGroup(
+        digitCount: 3,
+        height: digitHeight,
+        colorScheme: colorScheme,
+        isSmall: true,
+        values: integerValues
+      )
 
-        // Decimal point - dim
-        Circle()
-          .fill(LEDColors.dimRed)
-          .frame(width: digitHeight * 0.08, height: digitHeight * 0.08)
-          .offset(y: digitHeight * 0.35)
+      LEDDecimalPoint(isActive: decimalActive, colorScheme: colorScheme, size: digitHeight * 0.08)
+        .offset(y: digitHeight * 0.35)
 
-        SevenSegmentDigit(digit: nil, height: digitHeight, isSmall: true)
-      } else {
-        SevenSegmentDigit(digit: d2, height: digitHeight, isSmall: true)
-        SevenSegmentDigit(digit: d1, height: digitHeight, isSmall: true)
-        SevenSegmentDigit(digit: d0, height: digitHeight, isSmall: true)
-
-        // Decimal point - dim when blank
-        Circle()
-          .fill(showBlank ? LEDColors.dimRed : LEDColors.activeRed)
-          .frame(width: digitHeight * 0.08, height: digitHeight * 0.08)
-          .shadow(color: showBlank ? .clear : LEDColors.activeRed.opacity(0.6), radius: showBlank ? 0 : 2)
-          .offset(y: digitHeight * 0.35)
-
-        SevenSegmentDigit(digit: decimal, height: digitHeight, isSmall: true)
-      }
+      LED7SegmentDigit(value: decimalValue, height: digitHeight, colorScheme: colorScheme, isSmall: true)
     }
   }
 }
@@ -532,38 +535,6 @@ struct SuperElectronicStatusBar: View {
   }
 }
 
-struct LEDStatusIndicator: View {
-  let label: String
-  let isActive: Bool
-  let height: CGFloat
-
-  private let activeColor = Color(red: 1.0, green: 0.2, blue: 0.15)
-  private let dimColor = Color(red: 0.15, green: 0.08, blue: 0.08)
-  private let labelColor = Color(red: 0.6, green: 0.6, blue: 0.58)
-
-  var body: some View {
-    VStack(spacing: height * 0.08) {
-      // LED dot
-      Circle()
-        .fill(isActive ? activeColor : dimColor)
-        .frame(width: height * 0.22, height: height * 0.22)
-        .overlay(
-          Circle()
-            .stroke(Color.black.opacity(0.5), lineWidth: 1)
-        )
-        .shadow(color: isActive ? activeColor.opacity(0.8) : .clear, radius: isActive ? 6 : 0)
-
-      // Label
-      Text(label)
-        .font(.system(size: height * 0.14, weight: .medium, design: .rounded))
-        .foregroundStyle(labelColor)
-        .multilineTextAlignment(.center)
-        .lineLimit(2)
-        .minimumScaleFactor(0.8)
-    }
-    .frame(width: height * 0.6)
-  }
-}
 
 // MARK: - Manufacturer Plate
 
@@ -613,149 +584,6 @@ struct SuperElectronicManufacturerPlate: View {
   }
 }
 
-// MARK: - Seven Segment Digit
-
-enum LEDColors {
-  static let activeRed = Color(red: 1.0, green: 0.2, blue: 0.12)
-  static let dimRed = Color(red: 0.12, green: 0.06, blue: 0.06)
-}
-
-struct SevenSegmentDigit: View {
-  let digit: Int?
-  let height: CGFloat
-  var isSmall: Bool = false
-  var character: Character? = nil
-
-  // Segment order: [a, b, c, d, e, f, g]
-  // a=top, b=top-right, c=bottom-right, d=bottom, e=bottom-left, f=top-left, g=middle
-  private let segmentMap: [Int: [Bool]] = [
-    0: [true, true, true, true, true, true, false],
-    1: [false, true, true, false, false, false, false],
-    2: [true, true, false, true, true, false, true],
-    3: [true, true, true, true, false, false, true],
-    4: [false, true, true, false, false, true, true],
-    5: [true, false, true, true, false, true, true],
-    6: [true, false, true, true, true, true, true],
-    7: [true, true, true, false, false, false, false],
-    8: [true, true, true, true, true, true, true],
-    9: [true, true, true, true, false, true, true]
-  ]
-
-  // Letter segment mappings for FOR HIRE display
-  private let letterMap: [Character: [Bool]] = [
-    "F": [true, false, false, false, true, true, true],   // a, f, g, e
-    "o": [false, false, true, true, true, false, true],   // g, e, c, d
-    "r": [false, false, false, false, true, false, true], // g, e
-    "H": [false, true, true, false, true, true, true],    // f, b, g, e, c
-    "I": [false, true, true, false, false, false, false], // b, c
-    "E": [true, false, false, true, true, true, true]     // a, f, g, e, d
-  ]
-
-  var body: some View {
-    let width = height * 0.6
-    let segmentThickness = height * (isSmall ? 0.1 : 0.12)
-    let segmentLength = height * 0.38
-
-    let segments: [Bool] = {
-      if let char = character {
-        return letterMap[char] ?? Array(repeating: false, count: 7)
-      } else if let d = digit {
-        return segmentMap[d] ?? Array(repeating: false, count: 7)
-      } else {
-        return Array(repeating: false, count: 7)
-      }
-    }()
-
-    ZStack {
-      // Background for digit area
-      RoundedRectangle(cornerRadius: 2)
-        .fill(Color.black.opacity(0.3))
-        .frame(width: width, height: height)
-
-      // Segment a (top horizontal)
-      SegmentShape(isHorizontal: true)
-        .fill(segments[0] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentLength, height: segmentThickness)
-        .shadow(color: segments[0] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[0] ? 4 : 0)
-        .offset(y: -height * 0.38)
-
-      // Segment b (top right vertical)
-      SegmentShape(isHorizontal: false)
-        .fill(segments[1] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentThickness, height: segmentLength * 0.85)
-        .shadow(color: segments[1] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[1] ? 4 : 0)
-        .offset(x: width * 0.28, y: -height * 0.18)
-
-      // Segment c (bottom right vertical)
-      SegmentShape(isHorizontal: false)
-        .fill(segments[2] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentThickness, height: segmentLength * 0.85)
-        .shadow(color: segments[2] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[2] ? 4 : 0)
-        .offset(x: width * 0.28, y: height * 0.18)
-
-      // Segment d (bottom horizontal)
-      SegmentShape(isHorizontal: true)
-        .fill(segments[3] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentLength, height: segmentThickness)
-        .shadow(color: segments[3] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[3] ? 4 : 0)
-        .offset(y: height * 0.38)
-
-      // Segment e (bottom left vertical)
-      SegmentShape(isHorizontal: false)
-        .fill(segments[4] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentThickness, height: segmentLength * 0.85)
-        .shadow(color: segments[4] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[4] ? 4 : 0)
-        .offset(x: -width * 0.28, y: height * 0.18)
-
-      // Segment f (top left vertical)
-      SegmentShape(isHorizontal: false)
-        .fill(segments[5] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentThickness, height: segmentLength * 0.85)
-        .shadow(color: segments[5] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[5] ? 4 : 0)
-        .offset(x: -width * 0.28, y: -height * 0.18)
-
-      // Segment g (middle horizontal)
-      SegmentShape(isHorizontal: true)
-        .fill(segments[6] ? LEDColors.activeRed : LEDColors.dimRed)
-        .frame(width: segmentLength, height: segmentThickness)
-        .shadow(color: segments[6] ? LEDColors.activeRed.opacity(0.7) : .clear, radius: segments[6] ? 4 : 0)
-    }
-    .frame(width: width, height: height)
-  }
-}
-
-struct SegmentShape: Shape {
-  let isHorizontal: Bool
-
-  func path(in rect: CGRect) -> Path {
-    var path = Path()
-
-    if isHorizontal {
-      // Horizontal segment with pointed ends
-      let pointOffset = rect.height * 0.5
-      path.move(to: CGPoint(x: pointOffset, y: rect.midY))
-      path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-      path.addLine(to: CGPoint(x: rect.maxX - pointOffset, y: rect.minY))
-      path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
-      path.addLine(to: CGPoint(x: rect.maxX - pointOffset, y: rect.maxY))
-      path.addLine(to: CGPoint(x: pointOffset, y: rect.maxY))
-      path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
-    } else {
-      // Vertical segment with pointed ends
-      let pointOffset = rect.width * 0.5
-      path.move(to: CGPoint(x: rect.midX, y: pointOffset))
-      path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-      path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - pointOffset))
-      path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
-      path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - pointOffset))
-      path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-      path.addLine(to: CGPoint(x: rect.midX, y: pointOffset))
-    }
-
-    path.closeSubpath()
-    return path
-  }
-}
 
 // MARK: - Preview
 
