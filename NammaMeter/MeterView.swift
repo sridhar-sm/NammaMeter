@@ -52,24 +52,27 @@ struct MeterView: View {
 
   private var mapArea: some View {
     GeometryReader { geo in
-      let minMapHeight: CGFloat = 160
-      let actionBarHeight = max(safeAreaBottom + 56, 72)
-      let desiredMeterHeight = max(geo.size.height * 0.55, 320)
-      let maxMeterHeight = max(geo.size.height - minMapHeight - actionBarHeight - 24, 0)
-      let meterHeight = min(desiredMeterHeight, maxMeterHeight)
-      let mapHeight = max(geo.size.height - meterHeight - actionBarHeight - 24, minMapHeight)
+      let topInset = safeAreaTop
+      let bottomPadding: CGFloat = 8
+      let spacing: CGFloat = 4
+      let minMapHeight: CGFloat = 100
+      let controlsHeight: CGFloat = 56
 
-      VStack(spacing: 12) {
-        ZStack(alignment: .topTrailing) {
-          meterPanelView
-          MeterSwitcherBar(style: $meterFaceStyle, mode: $meterRenderMode, digitStyle: $digitWheelStyle)
-            .padding(.top, 6)
-            .padding(.trailing, 8)
-        }
-        .frame(height: meterHeight)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 12)
-        .padding(.top, safeAreaTop + 8)
+      // Available height after accounting for all fixed elements
+      let availableHeight = geo.size.height - bottomPadding - controlsHeight - (spacing * 2)
+
+      // Calculate actual meter height needed based on its aspect ratio
+      let meterNaturalHeight = SuperMeterDimensions.naturalHeight(for: geo.size.width)
+
+      // Meter gets what it needs (capped to leave room for map), extra goes to map
+      let maxMeterHeight = availableHeight - minMapHeight
+      let meterHeight = min(meterNaturalHeight, maxMeterHeight)
+      let mapHeight = availableHeight - meterHeight
+
+      VStack(spacing: spacing) {
+        meterPanelWithNotch(height: meterHeight, topInset: topInset)
+          .frame(height: meterHeight)
+          .frame(maxWidth: .infinity)
 
         ZStack {
           LiveRouteMap(points: meterStore.points, followLatest: meterStore.isOnTrip)
@@ -86,53 +89,105 @@ struct MeterView: View {
             .padding(.top, 10)
             .padding(.leading, 10)
         }
+        .overlay(alignment: .topTrailing) {
+          meterSettingsButton
+            .padding(.top, 10)
+            .padding(.trailing, 10)
+        }
         .padding(.horizontal, 12)
-        .padding(.bottom, 4)
 
         HStack {
           Spacer()
           bottomControls
         }
-        .frame(height: actionBarHeight)
+        .frame(height: controlsHeight)
         .padding(.horizontal, 12)
       }
+      .padding(.bottom, bottomPadding)
       .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
     }
   }
 
   @ViewBuilder
-  private var meterPanelView: some View {
+  private func meterPanelWithNotch(height: CGFloat, topInset: CGFloat) -> some View {
     switch meterFaceStyle {
     case .superMeter:
       if meterRenderMode == .full {
-        SuperFullMeterPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
+        SuperFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          digitStyle: digitWheelStyle,
+          topInset: topInset
+        )
       } else {
         SuperDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
+          .padding(.top, topInset + 8)
+          .padding(.horizontal, 12)
       }
     case .digital:
       if meterRenderMode == .full {
         DigitalFullMeterPanel(tripState: meterStore.tripState, fare: meterStore.fare)
+          .padding(.top, topInset + 8)
+          .padding(.horizontal, 12)
       } else {
         DigitalDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare)
+          .padding(.top, topInset + 8)
+          .padding(.horizontal, 12)
       }
     }
   }
 
-  private var safeAreaTop: CGFloat {
-    UIApplication.shared.connectedScenes
-      .compactMap { $0 as? UIWindowScene }
-      .flatMap { $0.windows }
-      .first { $0.isKeyWindow }?
-      .safeAreaInsets.top ?? 0
+  private var meterSettingsButton: some View {
+    Menu {
+      Section("Meter Style") {
+        ForEach(MeterFaceStyle.allCases) { style in
+          Button {
+            meterFaceStyle = style
+          } label: {
+            Label(style.label, systemImage: style.systemImage)
+          }
+        }
+      }
+      Section("Display Mode") {
+        ForEach(MeterRenderMode.allCases) { mode in
+          Button {
+            meterRenderMode = mode
+          } label: {
+            if meterRenderMode == mode {
+              Label(mode.label, systemImage: "checkmark")
+            } else {
+              Text(mode.label)
+            }
+          }
+        }
+      }
+      Section("Digit Style") {
+        ForEach(DigitWheelStyle.allCases) { style in
+          Button {
+            digitWheelStyle = style
+          } label: {
+            if digitWheelStyle == style {
+              Label(style.label, systemImage: "checkmark")
+            } else {
+              Text(style.label)
+            }
+          }
+        }
+      }
+    } label: {
+      Image(systemName: "gearshape.fill")
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundStyle(Theme.ink)
+        .frame(width: 32, height: 32)
+        .background(Theme.card.opacity(0.92))
+        .clipShape(Circle())
+        .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
+    }
+    .accessibilityLabel("Meter settings")
   }
 
-  private var safeAreaBottom: CGFloat {
-    UIApplication.shared.connectedScenes
-      .compactMap { $0 as? UIWindowScene }
-      .flatMap { $0.windows }
-      .first { $0.isKeyWindow }?
-      .safeAreaInsets.bottom ?? 0
-  }
+  private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
+  private var safeAreaBottom: CGFloat { windowSafeAreaInsets.bottom }
 
   private var bottomControls: some View {
     HStack(alignment: .bottom, spacing: 8) {
@@ -273,64 +328,70 @@ enum DigitWheelStyle: String, CaseIterable, Identifiable {
   var label: String { rawValue }
 }
 
-struct MeterSwitcherBar: View {
-  @Binding var style: MeterFaceStyle
-  @Binding var mode: MeterRenderMode
-  @Binding var digitStyle: DigitWheelStyle
+// MARK: - Meter Dimensions
 
-  var body: some View {
-    HStack(spacing: 6) {
-      Menu {
-        ForEach(MeterFaceStyle.allCases) { option in
-          Button {
-            style = option
-          } label: {
-            Label(option.label, systemImage: option.systemImage)
-          }
-        }
-      } label: {
-        HStack(spacing: 4) {
-          Image(systemName: style.systemImage)
-            .font(.system(size: 10, weight: .semibold))
-          Text(style.label)
-            .font(.nammaBody(10))
-          Image(systemName: "chevron.down")
-            .font(.system(size: 9, weight: .bold))
-        }
-        .foregroundStyle(Theme.ink)
-      }
+/// Shared dimension ratios for the Super meter to ensure consistency between layout calculations
+enum SuperMeterDimensions {
+  static let widthRatio: CGFloat = 0.88
+  static let bodyAspect: CGFloat = 1.1
+  static let canopyRatio: CGFloat = 0.18
+  static let baseRatio: CGFloat = 0.14
+  static let canopyOverlap: CGFloat = 0.85
 
-      Picker("Mode", selection: $mode) {
-        ForEach(MeterRenderMode.allCases) { option in
-          Text(option.label).tag(option)
-        }
-      }
-      .pickerStyle(.segmented)
-      .frame(width: 120)
+  /// Calculate the natural height of the meter given a container width
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    let bodyWidth = containerWidth * widthRatio
+    let bodyHeight = bodyWidth * bodyAspect
+    let canopyHeight = bodyHeight * canopyRatio
+    let baseHeight = bodyHeight * baseRatio
+    return bodyHeight + canopyHeight * canopyOverlap + baseHeight
+  }
+}
 
-      Menu {
-        ForEach(DigitWheelStyle.allCases) { option in
-          Button {
-            digitStyle = option
-          } label: {
-            Text(option.label)
-          }
+// MARK: - Shared Helpers
+
+@MainActor
+private var windowSafeAreaInsets: UIEdgeInsets {
+  UIApplication.shared.connectedScenes
+    .compactMap { $0 as? UIWindowScene }
+    .flatMap { $0.windows }
+    .first { $0.isKeyWindow }?
+    .safeAreaInsets ?? .zero
+}
+
+// MARK: - Hire Pulse Animation
+
+private struct HirePulseModifier: ViewModifier {
+  let tripState: TripMeterState
+  let duration: Double
+  @Binding var pulse: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .onAppear {
+        if tripState == .forHire {
+          startPulse()
         }
-      } label: {
-        HStack(spacing: 4) {
-          Text(digitStyle.label)
-            .font(.nammaBody(10))
-          Image(systemName: "chevron.down")
-            .font(.system(size: 9, weight: .bold))
-        }
-        .foregroundStyle(Theme.ink)
       }
+      .onChange(of: tripState) { _, newValue in
+        if newValue == .forHire {
+          startPulse()
+        } else {
+          pulse = false
+        }
+      }
+  }
+
+  private func startPulse() {
+    withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+      pulse = true
     }
-    .padding(.horizontal, 10)
-    .padding(.vertical, 6)
-    .background(Theme.card.opacity(0.92))
-    .clipShape(Capsule())
-    .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
+  }
+}
+
+extension View {
+  func hirePulse(tripState: TripMeterState, duration: Double = 1.2, pulse: Binding<Bool>) -> some View {
+    modifier(HirePulseModifier(tripState: tripState, duration: duration, pulse: pulse))
   }
 }
 
@@ -338,6 +399,7 @@ struct SuperFullMeterPanel: View {
   let tripState: TripMeterState
   let fare: Double
   let digitStyle: DigitWheelStyle
+  let topInset: CGFloat
   @State private var hirePulse = false
 
   private let caseTop = Color(red: 0.17, green: 0.18, blue: 0.19)
@@ -349,21 +411,26 @@ struct SuperFullMeterPanel: View {
 
   var body: some View {
     GeometryReader { geo in
-      let desiredBodyWidth = geo.size.width * 0.78
-      let bodyHeightForWidth = desiredBodyWidth * 1.28
-      let canopyHeightForWidth = bodyHeightForWidth * 0.18
-      let baseHeightForWidth = bodyHeightForWidth * 0.14
-      let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * 0.85 + baseHeightForWidth
+      // Calculate meter dimensions using shared constants
+      let desiredBodyWidth = geo.size.width * SuperMeterDimensions.widthRatio
+      let bodyHeightForWidth = desiredBodyWidth * SuperMeterDimensions.bodyAspect
+      let canopyHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.canopyRatio
+      let baseHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.baseRatio
+      let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap + baseHeightForWidth
+
+      // Scale to fit available height
       let scale = min(1, geo.size.height / totalHeightForWidth)
       let bodyWidth = desiredBodyWidth * scale
       let bodyHeight = bodyHeightForWidth * scale
       let canopyHeight = canopyHeightForWidth * scale
       let baseHeight = baseHeightForWidth * scale
 
-      ZStack {
-        Color.clear
+      // Offset to move meter up so canopy bottom aligns with bottom of notch
+      let meterTopOffset = topInset - canopyHeight
 
+      ZStack(alignment: .top) {
         VStack(spacing: -bodyHeight * 0.08) {
+          // Canopy with original proportions
           SuperMeterCanopyShape()
             .fill(
               LinearGradient(
@@ -379,8 +446,9 @@ struct SuperFullMeterPanel: View {
             )
             .shadow(color: Color.black.opacity(0.25), radius: 10, x: 0, y: 6)
 
-          // Dial layering: outer casing -> inner white panel -> dial face content -> manufacturer plate.
+          // Main meter body
           ZStack {
+            // Outer casing
             RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
               .fill(
                 LinearGradient(
@@ -395,20 +463,21 @@ struct SuperFullMeterPanel: View {
               )
               .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
 
+            // Inner white panel - wider than tall (landscape rectangle)
             RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
               .fill(metalPanel)
-              .padding(.horizontal, bodyWidth * 0.08)
-              .padding(.top, bodyHeight * 0.12)
-              .padding(.bottom, bodyHeight * 0.3)
+              .padding(.horizontal, bodyWidth * 0.07)
+              .padding(.top, bodyHeight * 0.07)
+              .padding(.bottom, bodyHeight * 0.4)
               .overlay(
                 RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
                   .stroke(metalEdge, lineWidth: 1)
-                  .padding(.horizontal, bodyWidth * 0.08)
-                  .padding(.top, bodyHeight * 0.12)
-                  .padding(.bottom, bodyHeight * 0.3)
+                  .padding(.horizontal, bodyWidth * 0.07)
+                  .padding(.top, bodyHeight * 0.07)
+                  .padding(.bottom, bodyHeight * 0.4)
               )
 
-            // Dial face content stack (title, subtitle, display window, fare row).
+            // Dial face content
             SuperMeterFace(
               bodyWidth: bodyWidth,
               bodyHeight: bodyHeight,
@@ -419,45 +488,44 @@ struct SuperFullMeterPanel: View {
               pulse: hirePulse,
               digitStyle: digitStyle
             )
-            .padding(.horizontal, bodyWidth * 0.08)
-            .padding(.top, bodyHeight * 0.12)
-            .padding(.bottom, bodyHeight * 0.3)
+            .padding(.horizontal, bodyWidth * 0.07)
+            .padding(.top, bodyHeight * 0.07)
+            .padding(.bottom, bodyHeight * 0.4)
             .clipShape(RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous))
 
-//            Text("SUPER")
-//              .font(.system(size: bodyWidth * 0.08, weight: .bold, design: .rounded))
-//              .foregroundStyle(Color.white.opacity(0.12))
-//              .rotationEffect(.degrees(-90))
-//              .offset(x: -bodyWidth * 0.45, y: bodyHeight * 0.08)
-
+            // Manufacturer plate
             SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
-              .offset(y: bodyHeight * 0.32)
+              .offset(y: bodyHeight * 0.25)
           }
           .frame(width: bodyWidth, height: bodyHeight)
 
+          // Base mount
           SuperMeterBaseView(width: bodyWidth * 0.62, height: baseHeight)
             .offset(y: baseHeight * -0.05)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .offset(y: meterTopOffset)
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
     }
-    .onAppear {
-      if tripState == .forHire {
-        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
-          hirePulse = true
-        }
-      }
-    }
-    .onChange(of: tripState) { _, newValue in
-      if newValue == .forHire {
-        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
-          hirePulse = true
-        }
-      } else {
-        hirePulse = false
-      }
-    }
+    .hirePulse(tripState: tripState, pulse: $hirePulse)
+  }
+}
+
+/// Classic peaked canopy shape for the meter top
+struct SuperMeterCanopyShape: Shape {
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+    let peak = CGPoint(x: rect.midX, y: rect.minY)
+    let leftTop = CGPoint(x: rect.minX + rect.width * 0.12, y: rect.minY + rect.height * 0.35)
+    let rightTop = CGPoint(x: rect.maxX - rect.width * 0.12, y: rect.minY + rect.height * 0.35)
+
+    path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+    path.addLine(to: leftTop)
+    path.addQuadCurve(to: peak, control: CGPoint(x: rect.midX - rect.width * 0.18, y: rect.minY))
+    path.addQuadCurve(to: rightTop, control: CGPoint(x: rect.midX + rect.width * 0.18, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+    path.closeSubpath()
+    return path
   }
 }
 
@@ -491,22 +559,7 @@ struct SuperDisplayPanel: View {
       }
       .frame(width: geo.size.width, height: geo.size.height)
     }
-    .onAppear {
-      if tripState == .forHire {
-        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
-          hirePulse = true
-        }
-      }
-    }
-    .onChange(of: tripState) { _, newValue in
-      if newValue == .forHire {
-        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
-          hirePulse = true
-        }
-      } else {
-        hirePulse = false
-      }
-    }
+    .hirePulse(tripState: tripState, pulse: $hirePulse)
   }
 }
 
@@ -522,14 +575,13 @@ struct SuperMeterFace: View {
 
   var body: some View {
     // Face layering: title -> subtitle -> display window -> RUPEES/FARE/PAISE row.
-    VStack(spacing: bodyHeight * 0.03) {
+    VStack(spacing: bodyHeight * 0.008) {
       Text("Super")
-        .font(.system(size: bodyWidth * 0.08, weight: .bold, design: .rounded))
+        .font(.system(size: bodyWidth * 0.07, weight: .bold, design: .rounded))
         .foregroundStyle(printInk)
-        .padding(.top, bodyHeight * 0.002)
 
       Text("AUTO RICKSHAW METER")
-        .font(.system(size: bodyWidth * 0.045, weight: .semibold, design: .rounded))
+        .font(.system(size: bodyWidth * 0.038, weight: .semibold, design: .rounded))
         .foregroundStyle(printInk.opacity(0.75))
 
       MeterDisplayWindow(
@@ -554,11 +606,8 @@ struct SuperMeterFace: View {
           .tracking(1.2)
       }
       .foregroundStyle(printInk.opacity(0.7))
-      .padding(.top, bodyHeight * 0.01)
-      .padding(.bottom, bodyHeight * 0.02)
     }
-    .padding(.horizontal, bodyWidth * 0.06)
-    .padding(.top, bodyHeight * 0.05)
+    .padding(.horizontal, bodyWidth * 0.03)
   }
 }
 
@@ -582,7 +631,7 @@ struct SuperMeterPlate: View {
         RoundedRectangle(cornerRadius: bodyWidth * 0.03, style: .continuous)
           .stroke(Color.black.opacity(0.4), lineWidth: 0.8)
       )
-      .frame(width: bodyWidth * 0.7, height: bodyHeight * 0.13)
+      .frame(width: bodyWidth * 0.7, height: bodyHeight * 0.2)
       .overlay(
         VStack(spacing: bodyHeight * 0.012) {
           Text("Manufactured by")
@@ -596,22 +645,6 @@ struct SuperMeterPlate: View {
             .foregroundStyle(printInk.opacity(0.6))
         }
       )
-  }
-}
-
-struct SuperMeterCanopyShape: Shape {
-  func path(in rect: CGRect) -> Path {
-    var path = Path()
-    let peak = CGPoint(x: rect.midX, y: rect.minY)
-    let leftTop = CGPoint(x: rect.minX + rect.width * 0.18, y: rect.minY + rect.height * 0.28)
-    let rightTop = CGPoint(x: rect.maxX - rect.width * 0.18, y: rect.minY + rect.height * 0.28)
-    path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-    path.addLine(to: leftTop)
-    path.addQuadCurve(to: peak, control: CGPoint(x: rect.midX - rect.width * 0.14, y: rect.minY))
-    path.addQuadCurve(to: rightTop, control: CGPoint(x: rect.midX + rect.width * 0.14, y: rect.minY))
-    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-    path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-    return path
   }
 }
 
@@ -861,7 +894,7 @@ struct MeterDigitsRow: View {
       let maxDigitWidth = geo.size.width / CGFloat(count)
       let digitWidth = maxDigitWidth * 0.72
       let totalGap = (0..<(count - 1)).reduce(CGFloat(0)) { partial, index in
-        partial + gapSpacing(after: index, paiseStartIndex: paiseStartIndex, large: largeSpacing, small: smallSpacing)
+        partial + gapSpacing(after: index, large: largeSpacing, small: smallSpacing)
       }
       let rowWidth = (digitWidth * CGFloat(count)) + totalGap
 
@@ -870,7 +903,7 @@ struct MeterDigitsRow: View {
           MeterDigitCell(digit: value, isAccent: index >= paiseStartIndex, digitStyle: digitStyle)
             .frame(width: digitWidth, height: geo.size.height * 0.92)
             .padding(.trailing, index < count - 1
-              ? gapSpacing(after: index, paiseStartIndex: paiseStartIndex, large: largeSpacing, small: smallSpacing)
+              ? gapSpacing(after: index, large: largeSpacing, small: smallSpacing)
               : 0
             )
         }
@@ -879,10 +912,10 @@ struct MeterDigitsRow: View {
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
   }
-}
 
-private func gapSpacing(after index: Int, paiseStartIndex: Int, large: CGFloat, small: CGFloat) -> CGFloat {
-  index >= paiseStartIndex ? small : large
+  private func gapSpacing(after index: Int, large: CGFloat, small: CGFloat) -> CGFloat {
+    index >= paiseStartIndex ? small : large
+  }
 }
 
 struct MeterDigitCell: View {
@@ -1051,10 +1084,13 @@ struct MeterDigitCell: View {
       if newDigit == oldDigit { return }
 
       let forward = (newDigit - oldDigit + 10) % 10
+      // For disk: clockwise rotation when increasing (direction: 1)
+      // For drum: scroll up when increasing (direction: -1)
+      let diskDirection: CGFloat = digitStyle == .disk ? 1 : -1
       if forward == 1 {
-        animateRoll(to: newDigit, direction: -1)
+        animateRoll(to: newDigit, direction: diskDirection)
       } else if forward == 9 {
-        animateRoll(to: newDigit, direction: 1)
+        animateRoll(to: newDigit, direction: -diskDirection)
       } else {
         currentDigit = newDigit
         wheelRotation = 0
@@ -1069,25 +1105,26 @@ struct MeterDigitCell: View {
   }
 
   private func animateRoll(to newDigit: Int, direction: CGFloat) {
+    let animationDuration: Double = digitStyle == .disk ? 0.24 : 0.22
+    let completionDelay = animationDuration + 0.02
+
     if digitStyle == .disk {
       wheelRotation = 0
-      withAnimation(.easeInOut(duration: 0.24)) {
+      withAnimation(.easeInOut(duration: animationDuration)) {
         wheelRotation = direction * 36
-      }
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.26) {
-        currentDigit = newDigit
-        wheelRotation = 0
       }
     } else {
       rollDirection = direction
       rollProgress = 0
-      withAnimation(.easeInOut(duration: 0.22)) {
+      withAnimation(.easeInOut(duration: animationDuration)) {
         rollProgress = 1
       }
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
-        currentDigit = newDigit
-        rollProgress = 0
-      }
+    }
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + completionDelay) {
+      currentDigit = newDigit
+      wheelRotation = 0
+      rollProgress = 0
     }
   }
 
