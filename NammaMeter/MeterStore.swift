@@ -114,6 +114,11 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     tripState = .complete
   }
 
+  func resetToForHire() {
+    guard tripState == .complete else { return }
+    tripState = .forHire
+  }
+
   private func startTicking() {
     tickTask?.cancel()
     tickTask = Task { @MainActor [weak self] in
