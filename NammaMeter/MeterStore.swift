@@ -2,6 +2,12 @@ import CoreLocation
 import Foundation
 import Observation
 
+enum TripMeterState {
+  case forHire
+  case inProgress
+  case complete
+}
+
 @MainActor
 @Observable
 final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
@@ -13,6 +19,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   var currentSpeedKph: Double = 0
   var isWaiting = false
   var waitingDuration: TimeInterval = 0
+  var tripState: TripMeterState = .forHire
   var authorizationStatus: CLAuthorizationStatus = .notDetermined
   var locationError: String?
   var conditions: TripConditions = .clear {
@@ -66,6 +73,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     waitingDuration = 0
     waitingAccumulated = 0
     waitingStartedAt = nil
+    tripState = .inProgress
     startDate = Date()
     lastLocation = nil
     locationError = nil
@@ -103,6 +111,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     tripStore.add(trip)
     Task { await tripStore.resolveStartLocation(for: trip) }
     currentSettings = nil
+    tripState = .complete
   }
 
   private func startTicking() {

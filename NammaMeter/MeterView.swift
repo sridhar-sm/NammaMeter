@@ -10,6 +10,9 @@ struct MeterView: View {
   @Environment(\.openURL) private var openURL
   @State private var showLocationAlert = false
   @State private var showMeterPanel = false
+  @State private var meterFaceStyle: MeterFaceStyle = .superMeter
+  @State private var meterRenderMode: MeterRenderMode = .full
+  @State private var digitWheelStyle: DigitWheelStyle = .disk
   private let fareTileSize = CGSize(width: 124, height: 50)
   private let fareTileSpacing: CGFloat = 6
 
@@ -49,35 +52,142 @@ struct MeterView: View {
 
   private var mapArea: some View {
     GeometryReader { geo in
-      ZStack {
-        LiveRouteMap(points: meterStore.points, followLatest: meterStore.isOnTrip)
-          .frame(width: geo.size.width, height: geo.size.height)
-          .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-          .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-              .stroke(Color.white.opacity(0.4), lineWidth: 1)
-          )
-          .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
+      let topInset = safeAreaTop
+      let bottomPadding: CGFloat = 8
+      let spacing: CGFloat = 4
+      let minMapHeight: CGFloat = 100
+      let controlsHeight: CGFloat = 56
+
+      // Available height after accounting for all fixed elements
+      let availableHeight = geo.size.height - bottomPadding - controlsHeight - (spacing * 2)
+
+      // Calculate actual meter height needed based on its aspect ratio
+      let meterNaturalHeight = SuperMeterDimensions.naturalHeight(for: geo.size.width)
+
+      // Meter gets what it needs (capped to leave room for map), extra goes to map
+      let maxMeterHeight = availableHeight - minMapHeight
+      let meterHeight = min(meterNaturalHeight, maxMeterHeight)
+      let mapHeight = availableHeight - meterHeight
+
+      VStack(spacing: spacing) {
+        meterPanelWithNotch(height: meterHeight, topInset: topInset)
+          .frame(height: meterHeight)
+          .frame(maxWidth: .infinity)
+
+        ZStack {
+          LiveRouteMap(points: meterStore.points, followLatest: meterStore.isOnTrip)
+            .frame(height: mapHeight)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay(
+              RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.4), lineWidth: 1)
+            )
+            .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
+        }
+        .overlay(alignment: .topLeading) {
+          conditionsOverlay
+            .padding(.top, 10)
+            .padding(.leading, 10)
+        }
+        .overlay(alignment: .topTrailing) {
+          meterSettingsButton
+            .padding(.top, 10)
+            .padding(.trailing, 10)
+        }
+        .padding(.horizontal, 12)
+
+        HStack {
+          Spacer()
+          bottomControls
+        }
+        .frame(height: controlsHeight)
+        .padding(.horizontal, 12)
       }
-      .overlay(alignment: .topLeading) {
-        conditionsOverlay
-          .padding(.top, safeAreaTop + 8)
-          .padding(.leading, 10)
+      .padding(.bottom, bottomPadding)
+      .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+    }
+  }
+
+  @ViewBuilder
+  private func meterPanelWithNotch(height: CGFloat, topInset: CGFloat) -> some View {
+    switch meterFaceStyle {
+    case .superMeter:
+      if meterRenderMode == .full {
+        SuperFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          digitStyle: digitWheelStyle,
+          topInset: topInset
+        )
+      } else {
+        SuperDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
+          .padding(.top, topInset + 8)
+          .padding(.horizontal, 12)
       }
-      .overlay(alignment: .bottomTrailing) {
-        bottomControls
-          .padding(10)
+    case .digital:
+      if meterRenderMode == .full {
+        DigitalFullMeterPanel(tripState: meterStore.tripState, fare: meterStore.fare)
+          .padding(.top, topInset + 8)
+          .padding(.horizontal, 12)
+      } else {
+        DigitalDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare)
+          .padding(.top, topInset + 8)
+          .padding(.horizontal, 12)
       }
     }
   }
 
-  private var safeAreaTop: CGFloat {
-    UIApplication.shared.connectedScenes
-      .compactMap { $0 as? UIWindowScene }
-      .flatMap { $0.windows }
-      .first { $0.isKeyWindow }?
-      .safeAreaInsets.top ?? 0
+  private var meterSettingsButton: some View {
+    Menu {
+      Section("Meter Style") {
+        ForEach(MeterFaceStyle.allCases) { style in
+          Button {
+            meterFaceStyle = style
+          } label: {
+            Label(style.label, systemImage: style.systemImage)
+          }
+        }
+      }
+      Section("Display Mode") {
+        ForEach(MeterRenderMode.allCases) { mode in
+          Button {
+            meterRenderMode = mode
+          } label: {
+            if meterRenderMode == mode {
+              Label(mode.label, systemImage: "checkmark")
+            } else {
+              Text(mode.label)
+            }
+          }
+        }
+      }
+      Section("Digit Style") {
+        ForEach(DigitWheelStyle.allCases) { style in
+          Button {
+            digitWheelStyle = style
+          } label: {
+            if digitWheelStyle == style {
+              Label(style.label, systemImage: "checkmark")
+            } else {
+              Text(style.label)
+            }
+          }
+        }
+      }
+    } label: {
+      Image(systemName: "gearshape.fill")
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundStyle(Theme.ink)
+        .frame(width: 32, height: 32)
+        .background(Theme.card.opacity(0.92))
+        .clipShape(Circle())
+        .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
+    }
+    .accessibilityLabel("Meter settings")
   }
+
+  private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
+  private var safeAreaBottom: CGFloat { windowSafeAreaInsets.bottom }
 
   private var bottomControls: some View {
     HStack(alignment: .bottom, spacing: 8) {
@@ -185,6 +295,869 @@ struct MeterView: View {
     )
   }
 }
+
+enum MeterFaceStyle: String, CaseIterable, Identifiable {
+  case superMeter = "Super"
+  case digital = "Neo Digital"
+
+  var id: String { rawValue }
+  var label: String { rawValue }
+  var systemImage: String {
+    switch self {
+    case .superMeter:
+      return "gauge.with.dots.needle.67percent"
+    case .digital:
+      return "display"
+    }
+  }
+}
+
+enum MeterRenderMode: String, CaseIterable, Identifiable {
+  case full = "Full"
+  case displayOnly = "Display"
+
+  var id: String { rawValue }
+  var label: String { rawValue }
+}
+
+enum DigitWheelStyle: String, CaseIterable, Identifiable {
+  case drum = "Drum"
+  case disk = "Disk"
+
+  var id: String { rawValue }
+  var label: String { rawValue }
+}
+
+// MARK: - Meter Dimensions
+
+/// Shared dimension ratios for the Super meter to ensure consistency between layout calculations
+enum SuperMeterDimensions {
+  static let widthRatio: CGFloat = 0.88
+  static let bodyAspect: CGFloat = 1.1
+  static let canopyRatio: CGFloat = 0.18
+  static let baseRatio: CGFloat = 0.14
+  static let canopyOverlap: CGFloat = 0.85
+
+  /// Calculate the natural height of the meter given a container width
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    let bodyWidth = containerWidth * widthRatio
+    let bodyHeight = bodyWidth * bodyAspect
+    let canopyHeight = bodyHeight * canopyRatio
+    let baseHeight = bodyHeight * baseRatio
+    return bodyHeight + canopyHeight * canopyOverlap + baseHeight
+  }
+}
+
+// MARK: - Shared Helpers
+
+@MainActor
+private var windowSafeAreaInsets: UIEdgeInsets {
+  UIApplication.shared.connectedScenes
+    .compactMap { $0 as? UIWindowScene }
+    .flatMap { $0.windows }
+    .first { $0.isKeyWindow }?
+    .safeAreaInsets ?? .zero
+}
+
+// MARK: - Hire Pulse Animation
+
+private struct HirePulseModifier: ViewModifier {
+  let tripState: TripMeterState
+  let duration: Double
+  @Binding var pulse: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .onAppear {
+        if tripState == .forHire {
+          startPulse()
+        }
+      }
+      .onChange(of: tripState) { _, newValue in
+        if newValue == .forHire {
+          startPulse()
+        } else {
+          pulse = false
+        }
+      }
+  }
+
+  private func startPulse() {
+    withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+      pulse = true
+    }
+  }
+}
+
+extension View {
+  func hirePulse(tripState: TripMeterState, duration: Double = 1.2, pulse: Binding<Bool>) -> some View {
+    modifier(HirePulseModifier(tripState: tripState, duration: duration, pulse: pulse))
+  }
+}
+
+struct SuperFullMeterPanel: View {
+  let tripState: TripMeterState
+  let fare: Double
+  let digitStyle: DigitWheelStyle
+  let topInset: CGFloat
+  @State private var hirePulse = false
+
+  private let caseTop = Color(red: 0.17, green: 0.18, blue: 0.19)
+  private let caseBottom = Color(red: 0.06, green: 0.06, blue: 0.07)
+  private let metalPanel = Color(red: 0.9, green: 0.9, blue: 0.88)
+  private let metalEdge = Color(red: 0.7, green: 0.7, blue: 0.68)
+  private let displayEdge = Color(red: 0.22, green: 0.22, blue: 0.24)
+  private let printInk = Color.black.opacity(0.82)
+
+  var body: some View {
+    GeometryReader { geo in
+      // Calculate meter dimensions using shared constants
+      let desiredBodyWidth = geo.size.width * SuperMeterDimensions.widthRatio
+      let bodyHeightForWidth = desiredBodyWidth * SuperMeterDimensions.bodyAspect
+      let canopyHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.canopyRatio
+      let baseHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.baseRatio
+      let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap + baseHeightForWidth
+
+      // Scale to fit available height
+      let scale = min(1, geo.size.height / totalHeightForWidth)
+      let bodyWidth = desiredBodyWidth * scale
+      let bodyHeight = bodyHeightForWidth * scale
+      let canopyHeight = canopyHeightForWidth * scale
+      let baseHeight = baseHeightForWidth * scale
+
+      // Offset to move meter up so canopy bottom aligns with bottom of notch
+      let meterTopOffset = topInset - canopyHeight
+
+      ZStack(alignment: .top) {
+        VStack(spacing: -bodyHeight * 0.08) {
+          // Canopy with original proportions
+          SuperMeterCanopyShape()
+            .fill(
+              LinearGradient(
+                colors: [caseTop, caseBottom],
+                startPoint: .top,
+                endPoint: .bottom
+              )
+            )
+            .frame(width: bodyWidth * 0.9, height: canopyHeight)
+            .overlay(
+              SuperMeterCanopyShape()
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.25), radius: 10, x: 0, y: 6)
+
+          // Main meter body
+          ZStack {
+            // Outer casing
+            RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
+              .fill(
+                LinearGradient(
+                  colors: [caseTop, caseBottom],
+                  startPoint: .topLeading,
+                  endPoint: .bottomTrailing
+                )
+              )
+              .overlay(
+                RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
+                  .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
+              )
+              .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
+
+            // Inner white panel - wider than tall (landscape rectangle)
+            RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
+              .fill(metalPanel)
+              .padding(.horizontal, bodyWidth * 0.07)
+              .padding(.top, bodyHeight * 0.07)
+              .padding(.bottom, bodyHeight * 0.4)
+              .overlay(
+                RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
+                  .stroke(metalEdge, lineWidth: 1)
+                  .padding(.horizontal, bodyWidth * 0.07)
+                  .padding(.top, bodyHeight * 0.07)
+                  .padding(.bottom, bodyHeight * 0.4)
+              )
+
+            // Dial face content
+            SuperMeterFace(
+              bodyWidth: bodyWidth,
+              bodyHeight: bodyHeight,
+              tripState: tripState,
+              fare: fare,
+              displayEdge: displayEdge,
+              printInk: printInk,
+              pulse: hirePulse,
+              digitStyle: digitStyle
+            )
+            .padding(.horizontal, bodyWidth * 0.07)
+            .padding(.top, bodyHeight * 0.07)
+            .padding(.bottom, bodyHeight * 0.4)
+            .clipShape(RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous))
+
+            // Manufacturer plate
+            SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
+              .offset(y: bodyHeight * 0.25)
+          }
+          .frame(width: bodyWidth, height: bodyHeight)
+
+          // Base mount
+          SuperMeterBaseView(width: bodyWidth * 0.62, height: baseHeight)
+            .offset(y: baseHeight * -0.05)
+        }
+        .offset(y: meterTopOffset)
+      }
+      .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+    }
+    .hirePulse(tripState: tripState, pulse: $hirePulse)
+  }
+}
+
+/// Classic peaked canopy shape for the meter top
+struct SuperMeterCanopyShape: Shape {
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+    let peak = CGPoint(x: rect.midX, y: rect.minY)
+    let leftTop = CGPoint(x: rect.minX + rect.width * 0.12, y: rect.minY + rect.height * 0.35)
+    let rightTop = CGPoint(x: rect.maxX - rect.width * 0.12, y: rect.minY + rect.height * 0.35)
+
+    path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+    path.addLine(to: leftTop)
+    path.addQuadCurve(to: peak, control: CGPoint(x: rect.midX - rect.width * 0.18, y: rect.minY))
+    path.addQuadCurve(to: rightTop, control: CGPoint(x: rect.midX + rect.width * 0.18, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+    path.closeSubpath()
+    return path
+  }
+}
+
+struct SuperDisplayPanel: View {
+  let tripState: TripMeterState
+  let fare: Double
+  let digitStyle: DigitWheelStyle
+  @State private var hirePulse = false
+
+  private let displayEdge = Color(red: 0.22, green: 0.22, blue: 0.24)
+
+  var body: some View {
+    GeometryReader { geo in
+      let padding = min(geo.size.width, geo.size.height) * 0.06
+      let availableWidth = max(geo.size.width - padding * 2, 0)
+      let availableHeight = max(geo.size.height - padding * 2, 0)
+      let aspect: CGFloat = 3.2
+      let width = min(availableWidth, availableHeight * aspect)
+      let height = width / aspect
+
+      ZStack {
+        Color.clear
+        MeterDisplayWindow(
+          tripState: tripState,
+          fare: fare,
+          displayEdge: displayEdge,
+          pulse: hirePulse,
+          digitStyle: digitStyle
+        )
+        .frame(width: width, height: height)
+      }
+      .frame(width: geo.size.width, height: geo.size.height)
+    }
+    .hirePulse(tripState: tripState, pulse: $hirePulse)
+  }
+}
+
+struct SuperMeterFace: View {
+  let bodyWidth: CGFloat
+  let bodyHeight: CGFloat
+  let tripState: TripMeterState
+  let fare: Double
+  let displayEdge: Color
+  let printInk: Color
+  let pulse: Bool
+  let digitStyle: DigitWheelStyle
+
+  var body: some View {
+    // Face layering: title -> subtitle -> display window -> RUPEES/FARE/PAISE row.
+    VStack(spacing: bodyHeight * 0.008) {
+      Text("Super")
+        .font(.system(size: bodyWidth * 0.07, weight: .bold, design: .rounded))
+        .foregroundStyle(printInk)
+
+      Text("AUTO RICKSHAW METER")
+        .font(.system(size: bodyWidth * 0.038, weight: .semibold, design: .rounded))
+        .foregroundStyle(printInk.opacity(0.75))
+
+      MeterDisplayWindow(
+        tripState: tripState,
+        fare: fare,
+        displayEdge: displayEdge,
+        pulse: pulse,
+        digitStyle: digitStyle
+      )
+      .frame(height: bodyHeight * 0.2)
+
+      HStack(spacing: bodyWidth * 0.03) {
+        Text("RUPEES")
+          .font(.system(size: bodyWidth * 0.038, weight: .semibold, design: .rounded))
+          .tracking(1.2)
+        Text("FARE")
+          .font(.system(size: bodyWidth * 0.08, weight: .heavy, design: .rounded))
+          .foregroundStyle(Color(red: 0.78, green: 0.18, blue: 0.18))
+          .tracking(1.0)
+        Text("PAISE")
+          .font(.system(size: bodyWidth * 0.038, weight: .semibold, design: .rounded))
+          .tracking(1.2)
+      }
+      .foregroundStyle(printInk.opacity(0.7))
+    }
+    .padding(.horizontal, bodyWidth * 0.03)
+  }
+}
+
+struct SuperMeterPlate: View {
+  let bodyWidth: CGFloat
+  let bodyHeight: CGFloat
+  let printInk: Color
+  let metalPanel: Color
+  let metalEdge: Color
+
+  var body: some View {
+    RoundedRectangle(cornerRadius: bodyWidth * 0.03, style: .continuous)
+      .fill(
+        LinearGradient(
+          colors: [Color.white, metalPanel, metalEdge],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+      )
+      .overlay(
+        RoundedRectangle(cornerRadius: bodyWidth * 0.03, style: .continuous)
+          .stroke(Color.black.opacity(0.4), lineWidth: 0.8)
+      )
+      .frame(width: bodyWidth * 0.7, height: bodyHeight * 0.2)
+      .overlay(
+        VStack(spacing: bodyHeight * 0.012) {
+          Text("Manufactured by")
+            .font(.system(size: bodyWidth * 0.03, weight: .semibold, design: .rounded))
+            .foregroundStyle(printInk.opacity(0.7))
+          Text("Super METER MFG. CO.")
+            .font(.system(size: bodyWidth * 0.04, weight: .bold, design: .rounded))
+            .foregroundStyle(printInk)
+          Text("MUNDHWA, PUNE · INDIA")
+            .font(.system(size: bodyWidth * 0.028, weight: .medium, design: .rounded))
+            .foregroundStyle(printInk.opacity(0.6))
+        }
+      )
+  }
+}
+
+struct SuperMeterBaseView: View {
+  let width: CGFloat
+  let height: CGFloat
+
+  var body: some View {
+    ZStack {
+      RoundedRectangle(cornerRadius: height * 0.35, style: .continuous)
+        .fill(
+          LinearGradient(
+            colors: [
+              Color(red: 0.12, green: 0.12, blue: 0.13),
+              Color(red: 0.05, green: 0.05, blue: 0.06)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        )
+        .overlay(
+          RoundedRectangle(cornerRadius: height * 0.35, style: .continuous)
+            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+
+      HStack(spacing: width * 0.12) {
+        Capsule()
+          .fill(Color.black.opacity(0.7))
+          .frame(width: width * 0.12, height: height * 0.55)
+        Capsule()
+          .fill(Color.black.opacity(0.7))
+          .frame(width: width * 0.12, height: height * 0.55)
+      }
+    }
+    .frame(width: width, height: height)
+  }
+}
+
+struct DigitalFullMeterPanel: View {
+  let tripState: TripMeterState
+  let fare: Double
+  @State private var glowPulse = false
+
+  private let bodyColor = Color(red: 0.09, green: 0.1, blue: 0.12)
+  private let bezel = Color(red: 0.18, green: 0.2, blue: 0.24)
+  private let accent = Color(red: 0.15, green: 0.8, blue: 0.9)
+
+  var body: some View {
+    GeometryReader { geo in
+      let desiredWidth = geo.size.width * 0.78
+      let bodyHeightForWidth = desiredWidth * 0.7
+      let scale = min(1, geo.size.height / bodyHeightForWidth)
+      let bodyWidth = desiredWidth * scale
+      let bodyHeight = bodyHeightForWidth * scale
+
+      ZStack {
+        RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
+          .fill(
+            LinearGradient(
+              colors: [bodyColor, Color.black],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .overlay(
+            RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
+              .stroke(Color.white.opacity(0.08), lineWidth: 1)
+          )
+          .shadow(color: Color.black.opacity(0.4), radius: 14, x: 0, y: 8)
+
+        VStack(spacing: bodyHeight * 0.08) {
+          Text("DIGITAL FARE METER")
+            .font(.system(size: bodyWidth * 0.05, weight: .semibold, design: .rounded))
+            .foregroundStyle(Color.white.opacity(0.7))
+
+          DigitalMeterScreen(tripState: tripState, fare: fare, glow: glowPulse, accent: accent, bezel: bezel)
+            .frame(height: bodyHeight * 0.32)
+
+          DigitalButtonRow(width: bodyWidth)
+        }
+        .padding(.horizontal, bodyWidth * 0.12)
+        .padding(.vertical, bodyHeight * 0.12)
+      }
+      .frame(width: bodyWidth, height: bodyHeight)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    .onAppear {
+      withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+        glowPulse = true
+      }
+    }
+  }
+}
+
+struct DigitalDisplayPanel: View {
+  let tripState: TripMeterState
+  let fare: Double
+  @State private var glowPulse = false
+
+  private let bezel = Color(red: 0.2, green: 0.22, blue: 0.26)
+  private let accent = Color(red: 0.15, green: 0.8, blue: 0.9)
+
+  var body: some View {
+    GeometryReader { geo in
+      let padding = min(geo.size.width, geo.size.height) * 0.06
+      let availableWidth = max(geo.size.width - padding * 2, 0)
+      let availableHeight = max(geo.size.height - padding * 2, 0)
+      let aspect: CGFloat = 3.4
+      let width = min(availableWidth, availableHeight * aspect)
+      let height = width / aspect
+
+      ZStack {
+        Color.clear
+        DigitalMeterScreen(tripState: tripState, fare: fare, glow: glowPulse, accent: accent, bezel: bezel)
+          .frame(width: width, height: height)
+      }
+      .frame(width: geo.size.width, height: geo.size.height)
+    }
+    .onAppear {
+      withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+        glowPulse = true
+      }
+    }
+  }
+}
+
+struct DigitalMeterScreen: View {
+  let tripState: TripMeterState
+  let fare: Double
+  let glow: Bool
+  let accent: Color
+  let bezel: Color
+
+  var body: some View {
+    GeometryReader { geo in
+      let textSize = min(geo.size.height * 0.55, 36)
+      let glowColor = accent.opacity(glow ? 0.85 : 0.45)
+
+      ZStack {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+          .fill(Color(red: 0.03, green: 0.06, blue: 0.08))
+          .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .stroke(bezel, lineWidth: 2)
+          )
+
+        Text(tripState == .forHire ? "HIRE" : formattedFare())
+          .font(.system(size: textSize, weight: .bold, design: .monospaced))
+          .foregroundStyle(glowColor)
+          .shadow(color: glowColor, radius: glow ? 12 : 6, x: 0, y: 0)
+          .tracking(textSize * 0.06)
+      }
+    }
+  }
+
+  private func formattedFare() -> String {
+    let value = max(0, Int(fare.rounded()))
+    return String(format: "%04d", value)
+  }
+}
+
+struct DigitalButtonRow: View {
+  let width: CGFloat
+
+  var body: some View {
+    HStack(spacing: width * 0.07) {
+      ForEach(0..<3) { index in
+        Circle()
+          .fill(Color(red: 0.18, green: 0.19, blue: 0.22))
+          .overlay(
+            Circle()
+              .stroke(Color.white.opacity(0.12), lineWidth: 1)
+          )
+          .frame(width: width * 0.08, height: width * 0.08)
+          .shadow(color: Color.black.opacity(0.35), radius: 4, x: 0, y: 2)
+          .opacity(index == 1 ? 1 : 0.85)
+      }
+    }
+  }
+}
+
+struct MeterDisplayWindow: View {
+  let tripState: TripMeterState
+  let fare: Double
+  let displayEdge: Color
+  let pulse: Bool
+  let digitStyle: DigitWheelStyle
+
+  var body: some View {
+    GeometryReader { geo in
+      let textSize = min(geo.size.height * 0.55, 28)
+      ZStack {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+          .fill(Color(red: 0.96, green: 0.95, blue: 0.93))
+          .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .stroke(displayEdge, lineWidth: 2)
+          )
+
+        if tripState != .forHire {
+          let digitData = formattedDigits()
+          MeterDigitsRow(
+            digits: digitData.digits,
+            paiseStartIndex: digitData.paiseStartIndex,
+            digitStyle: digitStyle
+          )
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, 30)
+            .padding(.leading, 0)
+        } else {
+          RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(Color(red: 0.78, green: 0.18, blue: 0.18))
+            .overlay(
+              Text("FOR HIRE")
+                .font(.system(size: textSize, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+                .tracking(textSize * 0.06)
+            )
+            .padding(.horizontal, 10)
+            .opacity(pulse ? 0.7 : 1.0)
+        }
+      }
+    }
+  }
+
+  private func formattedDigits() -> (digits: [String], paiseStartIndex: Int) {
+    let totalPaise = max(0, Int((fare * 100).rounded()))
+    let rupees = totalPaise / 100
+    let paise = totalPaise % 100
+    let rupeesString = String(format: "%02d", rupees % 100)
+    let paiseString = String(format: "%02d", paise)
+    let combined = rupeesString + paiseString
+    return (combined.map { String($0) }, rupeesString.count)
+  }
+}
+
+struct MeterDigitsRow: View {
+  let digits: [String]
+  let paiseStartIndex: Int
+  let digitStyle: DigitWheelStyle
+
+  var body: some View {
+    GeometryReader { geo in
+      let largeSpacing: CGFloat = 20
+      let smallSpacing: CGFloat = 2
+      let count = max(digits.count, 1)
+      let maxDigitWidth = geo.size.width / CGFloat(count)
+      let digitWidth = maxDigitWidth * 0.72
+      let totalGap = (0..<(count - 1)).reduce(CGFloat(0)) { partial, index in
+        partial + gapSpacing(after: index, large: largeSpacing, small: smallSpacing)
+      }
+      let rowWidth = (digitWidth * CGFloat(count)) + totalGap
+
+      HStack(spacing: 0) {
+        ForEach(Array(digits.enumerated()), id: \.offset) { index, value in
+          MeterDigitCell(digit: value, isAccent: index >= paiseStartIndex, digitStyle: digitStyle)
+            .frame(width: digitWidth, height: geo.size.height * 0.92)
+            .padding(.trailing, index < count - 1
+              ? gapSpacing(after: index, large: largeSpacing, small: smallSpacing)
+              : 0
+            )
+        }
+      }
+      .frame(width: rowWidth, alignment: .center)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+  }
+
+  private func gapSpacing(after index: Int, large: CGFloat, small: CGFloat) -> CGFloat {
+    index >= paiseStartIndex ? small : large
+  }
+}
+
+struct MeterDigitCell: View {
+  let digit: String
+  let isAccent: Bool
+  let digitStyle: DigitWheelStyle
+  @State private var currentDigit: Int?
+  @State private var wheelRotation: CGFloat = 0
+  @State private var rollProgress: CGFloat = 0
+  @State private var rollDirection: CGFloat = -1
+
+  var body: some View {
+    GeometryReader { geo in
+      let height = geo.size.height
+      let fontSize = min(height * 0.75, 28)
+      let baseDigit = currentDigit ?? Int(digit) ?? 0
+      let prevDigit = steppedDigit(from: baseDigit, by: -1)
+      let nextDigit = steppedDigit(from: baseDigit, by: 1)
+      let windowWidth = geo.size.width * 0.7
+      let windowHeight = height * 0.78
+      let windowShape = Capsule()
+      let wheelFill: AnyShapeStyle = digitStyle == .disk
+        ? AnyShapeStyle(
+          RadialGradient(
+            colors: [
+              Color.white,
+              Color(red: 0.94, green: 0.94, blue: 0.94),
+              Color(red: 0.86, green: 0.86, blue: 0.86),
+              Color(red: 0.97, green: 0.97, blue: 0.97)
+            ],
+            center: .center,
+            startRadius: 2,
+            endRadius: max(windowWidth, windowHeight) * 0.9
+          )
+        )
+        : AnyShapeStyle(
+          LinearGradient(
+            colors: [
+              Color.white,
+              Color(red: 0.95, green: 0.95, blue: 0.95),
+              Color(red: 0.88, green: 0.88, blue: 0.88),
+              Color(red: 0.98, green: 0.98, blue: 0.98)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        )
+      let wheelDiameter = max(windowWidth, windowHeight) * 1.45
+      let stepAngle: CGFloat = 36
+      let radius = windowHeight * 0.38
+      let step = height * 0.32
+      let rollOffset = rollDirection * step * rollProgress
+      let verticalBias = windowHeight * 0.35
+
+      // Window layering: oval cutout -> wheel disk -> digits -> highlight.
+      ZStack {
+        windowShape
+          .fill(Color.black.opacity(0.78))
+          .frame(width: windowWidth, height: windowHeight)
+          .overlay(
+            windowShape
+              .stroke(Color.black.opacity(0.85), lineWidth: 1)
+              .frame(width: windowWidth, height: windowHeight)
+          )
+          .shadow(color: Color.black.opacity(0.45), radius: 3, x: 0, y: 2)
+
+        ZStack {
+          Circle()
+            .fill(wheelFill)
+            .frame(width: wheelDiameter, height: wheelDiameter)
+            .overlay(
+              Circle()
+                .stroke(Color.black.opacity(0.25), lineWidth: 1)
+            )
+
+          ZStack {
+            if digitStyle == .disk {
+              diskDigit(
+                prevDigit,
+                angle: -stepAngle + wheelRotation,
+                radius: radius,
+                fontSize: fontSize * 0.85,
+                opacity: 0.35
+              )
+
+              diskDigit(
+                String(baseDigit),
+                angle: wheelRotation,
+                radius: radius,
+                fontSize: fontSize,
+                opacity: 1
+              )
+
+              diskDigit(
+                nextDigit,
+                angle: stepAngle + wheelRotation,
+                radius: radius,
+                fontSize: fontSize * 0.85,
+                opacity: 0.35
+              )
+            } else {
+              drumDigit(
+                prevDigit,
+                offset: -step,
+                fontSize: fontSize * 0.85,
+                opacity: 0.35
+              )
+              drumDigit(
+                String(baseDigit),
+                offset: 0,
+                fontSize: fontSize,
+                opacity: 1
+              )
+              drumDigit(
+                nextDigit,
+                offset: step,
+                fontSize: fontSize * 0.85,
+                opacity: 0.35
+              )
+            }
+          }
+          .offset(y: (digitStyle == .drum ? rollOffset : 0) + (digitStyle == .disk ? verticalBias : 0))
+          .shadow(color: Color.black.opacity(0.18), radius: 2, x: 0, y: 1)
+        }
+        .frame(width: wheelDiameter, height: wheelDiameter)
+        .mask(
+          windowShape
+            .frame(width: windowWidth, height: windowHeight)
+            .padding(2)
+        )
+        .overlay(
+          LinearGradient(
+            colors: [Color.white.opacity(0.28), Color.clear, Color.black.opacity(0.2)],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+          .mask(
+            windowShape
+              .frame(width: windowWidth, height: windowHeight)
+              .padding(2)
+          )
+        )
+      }
+      .overlay(
+        windowShape
+          .stroke(Color.white.opacity(0.6), lineWidth: 0.8)
+          .frame(width: windowWidth, height: windowHeight)
+          .shadow(color: Color.black.opacity(0.25), radius: 3, x: 0, y: 2)
+      )
+    }
+    .onAppear {
+      if currentDigit == nil {
+        currentDigit = Int(digit) ?? 0
+      }
+    }
+    .onChange(of: digitStyle) { _, _ in
+      wheelRotation = 0
+      rollProgress = 0
+    }
+    .onChange(of: digit) { _, newValue in
+      guard let newDigit = Int(newValue) else { return }
+      guard let oldDigit = currentDigit else {
+        currentDigit = newDigit
+        return
+      }
+      if newDigit == oldDigit { return }
+
+      let forward = (newDigit - oldDigit + 10) % 10
+      // For disk: clockwise rotation when increasing (direction: 1)
+      // For drum: scroll up when increasing (direction: -1)
+      let diskDirection: CGFloat = digitStyle == .disk ? 1 : -1
+      if forward == 1 {
+        animateRoll(to: newDigit, direction: diskDirection)
+      } else if forward == 9 {
+        animateRoll(to: newDigit, direction: -diskDirection)
+      } else {
+        currentDigit = newDigit
+        wheelRotation = 0
+        rollProgress = 0
+      }
+    }
+  }
+
+  private func steppedDigit(from value: Int, by step: Int) -> String {
+    let newValue = (value + step + 10) % 10
+    return String(newValue)
+  }
+
+  private func animateRoll(to newDigit: Int, direction: CGFloat) {
+    let animationDuration: Double = digitStyle == .disk ? 0.24 : 0.22
+    let completionDelay = animationDuration + 0.02
+
+    if digitStyle == .disk {
+      wheelRotation = 0
+      withAnimation(.easeInOut(duration: animationDuration)) {
+        wheelRotation = direction * 36
+      }
+    } else {
+      rollDirection = direction
+      rollProgress = 0
+      withAnimation(.easeInOut(duration: animationDuration)) {
+        rollProgress = 1
+      }
+    }
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + completionDelay) {
+      currentDigit = newDigit
+      wheelRotation = 0
+      rollProgress = 0
+    }
+  }
+
+  private func digitFont(for value: String, size: CGFloat) -> Font {
+    if value == "0" {
+      return .system(size: size, weight: .bold, design: .rounded)
+    }
+    return .system(size: size, weight: .bold, design: .monospaced)
+  }
+
+  private func digitColor(isAccent: Bool) -> Color {
+    isAccent ? Color(red: 0.78, green: 0.16, blue: 0.18) : Color.black.opacity(0.85)
+  }
+
+  private func diskDigit(_ value: String, angle: CGFloat, radius: CGFloat, fontSize: CGFloat, opacity: CGFloat) -> some View {
+    Text(value)
+      .font(digitFont(for: value, size: fontSize))
+      .foregroundStyle(digitColor(isAccent: isAccent).opacity(opacity))
+      .scaleEffect(x: 0.94, y: 1.08)
+      .rotationEffect(.degrees(-angle))
+      .offset(y: -radius)
+      .rotationEffect(.degrees(angle))
+  }
+
+  private func drumDigit(_ value: String, offset: CGFloat, fontSize: CGFloat, opacity: CGFloat) -> some View {
+    Text(value)
+      .font(digitFont(for: value, size: fontSize))
+      .foregroundStyle(digitColor(isAccent: isAccent).opacity(opacity))
+      .scaleEffect(x: 0.94, y: 1.08)
+      .offset(y: offset)
+  }
+}
+
 
 struct FlipSignView: View {
   let isOnTrip: Bool
