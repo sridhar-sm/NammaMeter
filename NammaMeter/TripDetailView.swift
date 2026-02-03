@@ -99,11 +99,7 @@ struct TripDetailView: View {
         SummaryChip(title: "Wait", value: formattedElapsed(trip.waitingDuration))
       }
 
-      HStack(spacing: 8) {
-        ConditionBadge(title: "Rain", subtitle: "ಮಳೆ", isOn: trip.conditions.isRaining)
-        ConditionBadge(title: "Night", subtitle: "ರಾತ್ರಿ", isOn: trip.conditions.isNight)
-        ConditionBadge(title: "Traffic", subtitle: "ಟ್ರಾಫಿಕ್", isOn: trip.conditions.isHeavyTraffic)
-      }
+      ConditionBadge(title: "Night", subtitle: "ರಾತ್ರಿ", isOn: trip.conditions.isNight)
     }
     .cardStyle()
   }

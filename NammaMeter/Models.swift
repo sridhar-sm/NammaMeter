@@ -33,58 +33,118 @@ struct TripPoint: Codable, Hashable, Identifiable, Sendable {
   }
 }
 
-struct TripConditions: Codable, Equatable, Sendable {
-  var isRaining: Bool
+struct TripConditions: Equatable, Sendable {
   var isNight: Bool
-  var isHeavyTraffic: Bool
 
-  static let clear = TripConditions(isRaining: false, isNight: false, isHeavyTraffic: false)
+  static let clear = TripConditions(isNight: false)
 
   func multiplier(using settings: MeterSettings) -> Double {
-    let rain = isRaining ? settings.rainMultiplier : 1
-    let night = isNight ? settings.nightMultiplier : 1
-    let traffic = isHeavyTraffic ? settings.trafficMultiplier : 1
-    return rain * night * traffic
+    isNight ? settings.nightMultiplier : 1
   }
 }
 
-struct MeterSettings: Codable, Equatable, Sendable {
+extension TripConditions: Codable {
+  enum CodingKeys: String, CodingKey {
+    case isNight
+    case isRaining // legacy, ignored on decode
+    case isHeavyTraffic // legacy, ignored on decode
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    isNight = try container.decode(Bool.self, forKey: .isNight)
+    // Discard legacy rain/traffic fields if present
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(isNight, forKey: .isNight)
+  }
+}
+
+struct MeterSettings: Equatable, Sendable {
   var baseFare: Double
   var perKmRate: Double
   var perMinuteRate: Double
   var minFare: Double
-  var rainMultiplier: Double
   var nightMultiplier: Double
-  var trafficMultiplier: Double
 
   static let bengaluruDefault = MeterSettings(
     baseFare: 30,
     perKmRate: 15,
     perMinuteRate: 1.5,
     minFare: 30,
-    rainMultiplier: 1.2,
-    nightMultiplier: 1.25,
-    trafficMultiplier: 1.15
+    nightMultiplier: 1.25
   )
 }
 
-struct RateSnapshot: Codable, Equatable, Sendable {
+extension MeterSettings: Codable {
+  enum CodingKeys: String, CodingKey {
+    case baseFare, perKmRate, perMinuteRate, minFare, nightMultiplier
+    case rainMultiplier // legacy, ignored on decode
+    case trafficMultiplier // legacy, ignored on decode
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    baseFare = try container.decode(Double.self, forKey: .baseFare)
+    perKmRate = try container.decode(Double.self, forKey: .perKmRate)
+    perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
+    minFare = try container.decode(Double.self, forKey: .minFare)
+    nightMultiplier = try container.decode(Double.self, forKey: .nightMultiplier)
+    // Discard legacy rain/traffic multipliers if present
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(baseFare, forKey: .baseFare)
+    try container.encode(perKmRate, forKey: .perKmRate)
+    try container.encode(perMinuteRate, forKey: .perMinuteRate)
+    try container.encode(minFare, forKey: .minFare)
+    try container.encode(nightMultiplier, forKey: .nightMultiplier)
+  }
+}
+
+struct RateSnapshot: Equatable, Sendable {
   let baseFare: Double
   let perKmRate: Double
   let perMinuteRate: Double
   let minFare: Double
-  let rainMultiplier: Double
   let nightMultiplier: Double
-  let trafficMultiplier: Double
 
   init(settings: MeterSettings) {
     baseFare = settings.baseFare
     perKmRate = settings.perKmRate
     perMinuteRate = settings.perMinuteRate
     minFare = settings.minFare
-    rainMultiplier = settings.rainMultiplier
     nightMultiplier = settings.nightMultiplier
-    trafficMultiplier = settings.trafficMultiplier
+  }
+}
+
+extension RateSnapshot: Codable {
+  enum CodingKeys: String, CodingKey {
+    case baseFare, perKmRate, perMinuteRate, minFare, nightMultiplier
+    case rainMultiplier // legacy, ignored on decode
+    case trafficMultiplier // legacy, ignored on decode
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    baseFare = try container.decode(Double.self, forKey: .baseFare)
+    perKmRate = try container.decode(Double.self, forKey: .perKmRate)
+    perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
+    minFare = try container.decode(Double.self, forKey: .minFare)
+    nightMultiplier = try container.decode(Double.self, forKey: .nightMultiplier)
+    // Discard legacy rain/traffic multipliers if present
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(baseFare, forKey: .baseFare)
+    try container.encode(perKmRate, forKey: .perKmRate)
+    try container.encode(perMinuteRate, forKey: .perMinuteRate)
+    try container.encode(minFare, forKey: .minFare)
+    try container.encode(nightMultiplier, forKey: .nightMultiplier)
   }
 }
 
