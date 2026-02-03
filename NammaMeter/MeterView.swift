@@ -119,6 +119,8 @@ struct MeterView: View {
         meterPanelWithNotch(height: meterHeight, topInset: topInset)
           .frame(height: referenceMeterHeight)
           .frame(maxWidth: .infinity)
+          .contentShape(Rectangle())
+          .gesture(meterStyleSwipeGesture)
 
         controlBar(height: controlBarHeight)
         .padding(.horizontal, 12)
@@ -221,6 +223,24 @@ struct MeterView: View {
         .padding(.horizontal, 12)
       }
     }
+  }
+
+  private var meterStyleSwipeGesture: some Gesture {
+    DragGesture(minimumDistance: 24, coordinateSpace: .local)
+      .onEnded { value in
+        let horizontal = value.translation.width
+        let vertical = value.translation.height
+        guard abs(horizontal) > abs(vertical) else { return }
+        guard abs(horizontal) > 32 else { return }
+        advanceMeterStyle(by: horizontal < 0 ? 1 : -1)
+      }
+  }
+
+  private func advanceMeterStyle(by offset: Int) {
+    let styles = MeterFaceStyle.allCases
+    guard let currentIndex = styles.firstIndex(of: meterFaceStyle) else { return }
+    let nextIndex = (currentIndex + offset + styles.count) % styles.count
+    meterFaceStyle = styles[nextIndex]
   }
 
   // MARK: - Control Bar
