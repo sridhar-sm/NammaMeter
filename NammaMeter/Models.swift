@@ -65,22 +65,29 @@ extension TripConditions: Codable {
 struct MeterSettings: Equatable, Sendable {
   var baseFare: Double
   var perKmRate: Double
-  var perMinuteRate: Double
+  var perMinuteRate: Double // Legacy, kept for backward compatibility
   var minFare: Double
   var nightMultiplier: Double
+  var freeWaitMinutes: Double
+  var waitIntervalMinutes: Double
+  var waitIntervalCharge: Double
 
   static let bengaluruDefault = MeterSettings(
     baseFare: 30,
     perKmRate: 15,
     perMinuteRate: 1.5,
     minFare: 30,
-    nightMultiplier: 1.25
+    nightMultiplier: 1.25,
+    freeWaitMinutes: 5,
+    waitIntervalMinutes: 15,
+    waitIntervalCharge: 10
   )
 }
 
 extension MeterSettings: Codable {
   enum CodingKeys: String, CodingKey {
     case baseFare, perKmRate, perMinuteRate, minFare, nightMultiplier
+    case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
     case rainMultiplier // legacy, ignored on decode
     case trafficMultiplier // legacy, ignored on decode
   }
@@ -92,7 +99,13 @@ extension MeterSettings: Codable {
     perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
     minFare = try container.decode(Double.self, forKey: .minFare)
     nightMultiplier = try container.decode(Double.self, forKey: .nightMultiplier)
-    // Discard legacy rain/traffic multipliers if present
+    // New fields with backward-compatible defaults for old persisted data
+    freeWaitMinutes = try container.decodeIfPresent(Double.self, forKey: .freeWaitMinutes)
+      ?? MeterSettings.bengaluruDefault.freeWaitMinutes
+    waitIntervalMinutes = try container.decodeIfPresent(Double.self, forKey: .waitIntervalMinutes)
+      ?? MeterSettings.bengaluruDefault.waitIntervalMinutes
+    waitIntervalCharge = try container.decodeIfPresent(Double.self, forKey: .waitIntervalCharge)
+      ?? MeterSettings.bengaluruDefault.waitIntervalCharge
   }
 
   func encode(to encoder: Encoder) throws {
@@ -102,15 +115,21 @@ extension MeterSettings: Codable {
     try container.encode(perMinuteRate, forKey: .perMinuteRate)
     try container.encode(minFare, forKey: .minFare)
     try container.encode(nightMultiplier, forKey: .nightMultiplier)
+    try container.encode(freeWaitMinutes, forKey: .freeWaitMinutes)
+    try container.encode(waitIntervalMinutes, forKey: .waitIntervalMinutes)
+    try container.encode(waitIntervalCharge, forKey: .waitIntervalCharge)
   }
 }
 
 struct RateSnapshot: Equatable, Sendable {
   let baseFare: Double
   let perKmRate: Double
-  let perMinuteRate: Double
+  let perMinuteRate: Double // Legacy, kept for backward compatibility
   let minFare: Double
   let nightMultiplier: Double
+  let freeWaitMinutes: Double
+  let waitIntervalMinutes: Double
+  let waitIntervalCharge: Double
 
   init(settings: MeterSettings) {
     baseFare = settings.baseFare
@@ -118,12 +137,16 @@ struct RateSnapshot: Equatable, Sendable {
     perMinuteRate = settings.perMinuteRate
     minFare = settings.minFare
     nightMultiplier = settings.nightMultiplier
+    freeWaitMinutes = settings.freeWaitMinutes
+    waitIntervalMinutes = settings.waitIntervalMinutes
+    waitIntervalCharge = settings.waitIntervalCharge
   }
 }
 
 extension RateSnapshot: Codable {
   enum CodingKeys: String, CodingKey {
     case baseFare, perKmRate, perMinuteRate, minFare, nightMultiplier
+    case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
     case rainMultiplier // legacy, ignored on decode
     case trafficMultiplier // legacy, ignored on decode
   }
@@ -135,7 +158,13 @@ extension RateSnapshot: Codable {
     perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
     minFare = try container.decode(Double.self, forKey: .minFare)
     nightMultiplier = try container.decode(Double.self, forKey: .nightMultiplier)
-    // Discard legacy rain/traffic multipliers if present
+    // New fields with backward-compatible defaults for old persisted trips
+    freeWaitMinutes = try container.decodeIfPresent(Double.self, forKey: .freeWaitMinutes)
+      ?? MeterSettings.bengaluruDefault.freeWaitMinutes
+    waitIntervalMinutes = try container.decodeIfPresent(Double.self, forKey: .waitIntervalMinutes)
+      ?? MeterSettings.bengaluruDefault.waitIntervalMinutes
+    waitIntervalCharge = try container.decodeIfPresent(Double.self, forKey: .waitIntervalCharge)
+      ?? MeterSettings.bengaluruDefault.waitIntervalCharge
   }
 
   func encode(to encoder: Encoder) throws {
@@ -145,6 +174,9 @@ extension RateSnapshot: Codable {
     try container.encode(perMinuteRate, forKey: .perMinuteRate)
     try container.encode(minFare, forKey: .minFare)
     try container.encode(nightMultiplier, forKey: .nightMultiplier)
+    try container.encode(freeWaitMinutes, forKey: .freeWaitMinutes)
+    try container.encode(waitIntervalMinutes, forKey: .waitIntervalMinutes)
+    try container.encode(waitIntervalCharge, forKey: .waitIntervalCharge)
   }
 }
 

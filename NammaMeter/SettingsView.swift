@@ -33,14 +33,27 @@ struct SettingsView: View {
               value: $settingsStore.settings.perKmRate
             )
             LabeledNumberField(
-              title: "Wait Per Minute",
-              subtitle: "ನಿಲ್ಲಿಕೆ ಪ್ರತಿ ನಿಮಿಷ",
-              value: $settingsStore.settings.perMinuteRate
-            )
-            LabeledNumberField(
               title: "Minimum Fare",
               subtitle: "ಕನಿಷ್ಠ ಬಾಡಿಗೆ",
               value: $settingsStore.settings.minFare
+            )
+          }
+
+          Section(header: SectionHeader(title: "Waiting Charges", subtitle: "ನಿಲ್ಲಿಕೆ ಶುಲ್ಕಗಳು")) {
+            LabeledNumberField(
+              title: "Free Wait (min)",
+              subtitle: "ಉಚಿತ ನಿಲ್ಲಿಕೆ (ನಿಮಿಷ)",
+              value: $settingsStore.settings.freeWaitMinutes
+            )
+            LabeledNumberField(
+              title: "Interval (min)",
+              subtitle: "ಮಧ್ಯಂತರ (ನಿಮಿಷ)",
+              value: $settingsStore.settings.waitIntervalMinutes
+            )
+            LabeledNumberField(
+              title: "Per Interval",
+              subtitle: "ಪ್ರತಿ ಮಧ್ಯಂತರ",
+              value: $settingsStore.settings.waitIntervalCharge
             )
           }
 

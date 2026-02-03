@@ -172,10 +172,28 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     let distanceKm = distanceMeters / 1000
     let includedKm = 2.0
     let chargeableDistanceKm = max(0, distanceKm - includedKm)
-    let waitingMinutes = waitingDuration / 60
-    let rawFare = settings.baseFare + (chargeableDistanceKm * settings.perKmRate) + (waitingMinutes * settings.perMinuteRate)
+    let waitingCharge = calculateWaitingCharge(
+      waitingDuration: waitingDuration,
+      freeWaitMinutes: settings.freeWaitMinutes,
+      waitIntervalMinutes: settings.waitIntervalMinutes,
+      waitIntervalCharge: settings.waitIntervalCharge
+    )
+    let rawFare = settings.baseFare + (chargeableDistanceKm * settings.perKmRate) + waitingCharge
     let adjusted = rawFare * multiplier
     fare = max(settings.minFare, adjusted)
+  }
+
+  private func calculateWaitingCharge(
+    waitingDuration: TimeInterval,
+    freeWaitMinutes: Double,
+    waitIntervalMinutes: Double,
+    waitIntervalCharge: Double
+  ) -> Double {
+    let waitingMinutes = waitingDuration / 60
+    let chargeableMinutes = max(0, waitingMinutes - freeWaitMinutes)
+    guard waitIntervalMinutes > 0 else { return 0 }
+    let intervals = ceil(chargeableMinutes / waitIntervalMinutes)
+    return intervals * waitIntervalCharge
   }
 
   func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
