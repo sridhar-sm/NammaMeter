@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		A5261D162EFC1AA700AABD5D /* NammaMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NammaMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A49A67CF1EFF40B89B436DA6 /* NammaMeterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NammaMeterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +17,30 @@
 			path = NammaMeter;
 			sourceTree = "<group>";
 		};
+		EB9085CEBB0940BCAAFBC434 /* NammaMeterTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NammaMeterTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXContainerItemProxy section */
+		F4069BEB393B4F44AE0590EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A5261D0E2EFC1AA700AABD5D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A5261D152EFC1AA700AABD5D /* NammaMeter */;
+			remoteInfo = NammaMeter;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A5261D132EFC1AA700AABD5D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		F2EB115D87D44BBDAF05CD95 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -31,6 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				A5261D182EFC1AA700AABD5D /* NammaMeter */,
+				EB9085CEBB0940BCAAFBC434 /* NammaMeterTests */,
 				A5261D172EFC1AA700AABD5D /* Products */,
 			);
 			indentWidth = 2;
@@ -41,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				A5261D162EFC1AA700AABD5D /* NammaMeter.app */,
+				A49A67CF1EFF40B89B436DA6 /* NammaMeterTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -66,6 +89,27 @@
 			productReference = A5261D162EFC1AA700AABD5D /* NammaMeter.app */;
 			productType = "com.apple.product-type.application";
 		};
+		4F81EC053778400FA0524DB5 /* NammaMeterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D6290B7C0D84D16AC87897D /* Build configuration list for PBXNativeTarget "NammaMeterTests" */;
+			buildPhases = (
+				6453F9572394437797E1BFAF /* Sources */,
+				F2EB115D87D44BBDAF05CD95 /* Frameworks */,
+				2E95E8ED2B634481BAB664C1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3999EED70155462080480770 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				EB9085CEBB0940BCAAFBC434 /* NammaMeterTests */,
+			);
+			name = NammaMeterTests;
+			productName = NammaMeterTests;
+			productReference = A49A67CF1EFF40B89B436DA6 /* NammaMeterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -77,6 +121,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					A5261D152EFC1AA700AABD5D = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					4F81EC053778400FA0524DB5 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -96,12 +143,18 @@
 			projectRoot = "";
 			targets = (
 				A5261D152EFC1AA700AABD5D /* NammaMeter */,
+				4F81EC053778400FA0524DB5 /* NammaMeterTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A5261D142EFC1AA700AABD5D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		2E95E8ED2B634481BAB664C1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -114,7 +167,20 @@
 			files = (
 			);
 		};
+		6453F9572394437797E1BFAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3999EED70155462080480770 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A5261D152EFC1AA700AABD5D /* NammaMeter */;
+			targetProxy = F4069BEB393B4F44AE0590EB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A5261D1F2EFC1AA800AABD5D /* Debug configuration for PBXProject "NammaMeter" */ = {
@@ -296,6 +362,50 @@
 			};
 			name = Release;
 		};
+		DA555CE8C78B491F80C89FF8 /* Debug configuration for PBXNativeTarget "NammaMeterTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = D7JXMA95NW;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = sridharsm.NammaMeterTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NammaMeter.app/NammaMeter";
+			};
+			name = Debug;
+		};
+		4B2793479E0740D49C7F6908 /* Release configuration for PBXNativeTarget "NammaMeterTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = D7JXMA95NW;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = sridharsm.NammaMeterTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NammaMeter.app/NammaMeter";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -312,6 +422,14 @@
 			buildConfigurations = (
 				A5261D222EFC1AA800AABD5D /* Debug configuration for PBXNativeTarget "NammaMeter" */,
 				A5261D232EFC1AA800AABD5D /* Release configuration for PBXNativeTarget "NammaMeter" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		9D6290B7C0D84D16AC87897D /* Build configuration list for PBXNativeTarget "NammaMeterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA555CE8C78B491F80C89FF8 /* Debug configuration for PBXNativeTarget "NammaMeterTests" */,
+				4B2793479E0740D49C7F6908 /* Release configuration for PBXNativeTarget "NammaMeterTests" */,
 			);
 			defaultConfigurationName = Release;
 		};

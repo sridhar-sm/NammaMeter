@@ -170,7 +170,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   private func recalcFare() {
     guard let settings = currentSettings else { return }
     let distanceKm = distanceMeters / 1000
-    let includedKm = 2.0
+    let includedKm = settings.includedKm
     let chargeableDistanceKm = max(0, distanceKm - includedKm)
     let waitingCharge = calculateWaitingCharge(
       waitingDuration: waitingDuration,
@@ -268,8 +268,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func refreshTimeBasedConditions(reference: Date = Date()) {
-    let hour = Calendar.autoupdatingCurrent.component(.hour, from: reference)
-    let nightNow = hour >= 22 || hour < 6
+    let settings = currentSettings ?? MeterSettings.bengaluruDefault
+    let nightNow = settings.isNight(at: reference)
     if conditions.isNight != nightNow {
       conditions.isNight = nightNow
     }
