@@ -42,4 +42,5 @@ struct TabLabel: View {
   ContentView()
     .environment(SettingsStore())
     .environment(TripStore())
+    .environment(MeterStore())
 }

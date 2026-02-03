@@ -3,6 +3,11 @@ import SwiftUI
 
 struct SettingsView: View {
   @Environment(SettingsStore.self) private var settingsStore
+  @Environment(MeterStore.self) private var meterStore
+
+  private var canEditSettings: Bool {
+    meterStore.tripState == .forHire
+  }
 
   var body: some View {
     @Bindable var settingsStore = settingsStore
@@ -19,6 +24,50 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
+          }
+
+          Section(header: SectionHeader(title: "City", subtitle: "ನಗರ")) {
+            ForEach(settingsStore.availableCities) { city in
+              Button {
+                settingsStore.selectCity(city.cityId)
+              } label: {
+                HStack {
+                  VStack(alignment: .leading, spacing: 2) {
+                    Text(city.name)
+                      .font(.nammaDisplay(14))
+                    if let region = city.cityKey.region {
+                      Text(region)
+                        .font(.nammaBody(11))
+                        .foregroundStyle(.secondary)
+                    }
+                  }
+                  Spacer()
+                  if settingsStore.selectedCityId == city.cityId {
+                    Image(systemName: "checkmark")
+                      .foregroundStyle(Theme.ink)
+                  }
+                }
+              }
+              .buttonStyle(.plain)
+              .disabled(!canEditSettings)
+              .opacity(canEditSettings ? 1 : 0.5)
+            }
+
+            NavigationLink(destination: AddCityView()) {
+              HStack {
+                Image(systemName: "plus.circle.fill")
+                  .foregroundStyle(Theme.ink)
+                VStack(alignment: .leading, spacing: 2) {
+                  Text("Add City")
+                    .font(.nammaDisplay(14))
+                  Text("ನಗರವನ್ನು ಸೇರಿಸಿ")
+                    .font(.nammaBody(11))
+                    .foregroundStyle(.secondary)
+                }
+              }
+            }
+            .disabled(!canEditSettings)
+            .opacity(canEditSettings ? 1 : 0.5)
           }
 
           Section(header: SectionHeader(title: "Rates", subtitle: "ದರಗಳು")) {
@@ -69,7 +118,7 @@ struct SettingsView: View {
             Button {
               settingsStore.resetToDefaults()
             } label: {
-              Text("Reset to Bengaluru defaults")
+              Text("Reset to defaults")
             }
           }
         }
@@ -129,4 +178,5 @@ struct LabeledNumberField: View {
 #Preview {
   SettingsView()
     .environment(SettingsStore())
+    .environment(MeterStore())
 }

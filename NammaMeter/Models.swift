@@ -151,6 +151,8 @@ extension MeterSettings {
 }
 
 struct RateSnapshot: Equatable, Sendable {
+  let cityId: String?
+  let cityName: String?
   let baseFare: Double
   let perKmRate: Double
   let perMinuteRate: Double // Legacy, kept for backward compatibility
@@ -163,7 +165,9 @@ struct RateSnapshot: Equatable, Sendable {
   let waitIntervalMinutes: Double
   let waitIntervalCharge: Double
 
-  init(settings: MeterSettings) {
+  init(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
+    self.cityId = cityId
+    self.cityName = cityName
     baseFare = settings.baseFare
     perKmRate = settings.perKmRate
     perMinuteRate = settings.perMinuteRate
@@ -180,6 +184,7 @@ struct RateSnapshot: Equatable, Sendable {
 
 extension RateSnapshot: Codable {
   enum CodingKeys: String, CodingKey {
+    case cityId, cityName
     case baseFare, perKmRate, perMinuteRate, includedKm, minFare, nightMultiplier
     case nightStartHour, nightEndHour
     case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
@@ -189,6 +194,8 @@ extension RateSnapshot: Codable {
 
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
+    cityId = try container.decodeIfPresent(String.self, forKey: .cityId)
+    cityName = try container.decodeIfPresent(String.self, forKey: .cityName)
     baseFare = try container.decode(Double.self, forKey: .baseFare)
     perKmRate = try container.decode(Double.self, forKey: .perKmRate)
     perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
@@ -211,6 +218,8 @@ extension RateSnapshot: Codable {
 
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encodeIfPresent(cityId, forKey: .cityId)
+    try container.encodeIfPresent(cityName, forKey: .cityName)
     try container.encode(baseFare, forKey: .baseFare)
     try container.encode(perKmRate, forKey: .perKmRate)
     try container.encode(perMinuteRate, forKey: .perMinuteRate)

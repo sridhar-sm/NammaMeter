@@ -6,7 +6,7 @@ import UIKit
 struct MeterView: View {
   @Environment(SettingsStore.self) private var settingsStore
   @Environment(TripStore.self) private var tripStore
-  @State private var meterStore = MeterStore()
+  @Environment(MeterStore.self) private var meterStore
   @Environment(\.openURL) private var openURL
   @State private var showLocationAlert = false
   @State private var showAlwaysPrompt = false
@@ -250,7 +250,8 @@ struct MeterView: View {
     Button {
       switch meterStore.tripState {
       case .forHire:
-        meterStore.startTrip(settings: settingsStore.settings)
+        let cityInfo = settingsStore.activeCityInfo
+        meterStore.startTrip(settings: settingsStore.settings, cityId: cityInfo.cityId, cityName: cityInfo.cityName)
       case .inProgress:
         meterStore.stopTrip(tripStore: tripStore)
       case .complete:
@@ -500,4 +501,5 @@ struct MeterView: View {
   MeterView()
     .environment(SettingsStore())
     .environment(TripStore())
+    .environment(MeterStore())
 }

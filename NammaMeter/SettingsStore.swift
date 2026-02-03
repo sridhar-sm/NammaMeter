@@ -19,6 +19,20 @@ final class SettingsStore {
     state.selectedCityId
   }
 
+  var availableCities: [CityFareProfile] {
+    var latestByCityId: [String: CityFareProfile] = [:]
+    for profile in state.profiles {
+      if let existing = latestByCityId[profile.cityId] {
+        if profile.effectiveFrom > existing.effectiveFrom {
+          latestByCityId[profile.cityId] = profile
+        }
+      } else {
+        latestByCityId[profile.cityId] = profile
+      }
+    }
+    return latestByCityId.values.sorted { $0.name < $1.name }
+  }
+
   @ObservationIgnored private let persistence: FareProfilePersistence
   @ObservationIgnored private var isLoaded = false
   @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -48,6 +62,26 @@ final class SettingsStore {
     }
     syncSettingsFromActiveProfile()
     scheduleSave()
+  }
+
+  func selectCity(_ cityId: String) {
+    guard state.profiles.contains(where: { $0.cityId == cityId }) else { return }
+    state.selectedCityId = cityId
+    syncSettingsFromActiveProfile()
+    scheduleSave()
+  }
+
+  func addCity(_ profile: CityFareProfile) {
+    state.profiles.append(profile)
+    state.selectedCityId = profile.cityId
+    syncSettingsFromActiveProfile()
+    scheduleSave()
+  }
+
+  var activeCityInfo: (cityId: String, cityName: String) {
+    let cityId = effectiveCityId
+    let profile = activeProfile(for: cityId, on: Date()) ?? FareCatalog.defaultProfile
+    return (cityId: cityId, cityName: profile.name)
   }
 
   private func load() async {

@@ -64,10 +64,10 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     locationManager.requestAlwaysAuthorization()
   }
 
-  func startTrip(settings: MeterSettings) {
+  func startTrip(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
     guard !isOnTrip else { return }
     currentSettings = settings
-    rateSnapshot = RateSnapshot(settings: settings)
+    rateSnapshot = RateSnapshot(settings: settings, cityId: cityId, cityName: cityName)
     refreshTimeBasedConditions(reference: Date())
     multiplier = conditions.multiplier(using: settings)
     isOnTrip = true

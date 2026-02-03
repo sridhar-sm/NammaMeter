@@ -116,6 +116,106 @@ final class FareProfileTests: XCTestCase {
     XCTAssertTrue(store.profiles.contains { $0.cityId == FareCatalog.defaultCityId })
   }
 
+  func testCitySelectionUpdatesMeterSettings() async throws {
+    let url = try makeTempURL()
+    let store = SettingsStore(fileURL: url)
+    await waitForProfiles(store)
+
+    let bengaluruBaseFare = store.settings.baseFare
+    store.selectCity("mandya")
+
+    XCTAssertEqual(store.selectedCityId, "mandya")
+    XCTAssertNotEqual(store.settings.baseFare, bengaluruBaseFare)
+    XCTAssertEqual(store.settings.baseFare, 30)
+  }
+
+  func testAvailableCitiesReturnsLatestProfiles() async throws {
+    let url = try makeTempURL()
+    let store = SettingsStore(fileURL: url)
+    await waitForProfiles(store)
+
+    let cities = store.availableCities
+    XCTAssertEqual(cities.count, FareCatalog.entries.count)
+    XCTAssertTrue(cities.allSatisfy { city in
+      cities.filter { $0.cityId == city.cityId }.count == 1
+    })
+  }
+
+  func testAddCustomCity() async throws {
+    let url = try makeTempURL()
+    let store = SettingsStore(fileURL: url)
+    await waitForProfiles(store)
+
+    let initialCount = store.profiles.count
+
+    let customProfile = CityFareProfile(
+      id: UUID().uuidString,
+      cityId: "custom-test",
+      name: "Test City",
+      cityKey: CityKey(city: "Test", region: nil, countryCode: "IN"),
+      rates: FareRates(baseFare: 25, perKmRate: 12, perMinuteRate: 0, includedKm: 1.5, minFare: 25),
+      multipliers: FareMultipliers(night: 1.5),
+      nightWindow: NightFareWindow.defaultWindow,
+      waitCharges: WaitingChargePolicy(freeWaitMinutes: 5, waitIntervalMinutes: 15, waitIntervalCharge: 5),
+      effectiveFrom: Date()
+    )
+
+    store.addCity(customProfile)
+
+    XCTAssertEqual(store.profiles.count, initialCount + 1)
+    XCTAssertEqual(store.selectedCityId, "custom-test")
+    XCTAssertEqual(store.settings.baseFare, 25)
+  }
+
+  func testRateSnapshotIncludesCityInfo() {
+    let settings = MeterSettings.bengaluruDefault
+    let snapshot = RateSnapshot(settings: settings, cityId: "bengaluru", cityName: "Bengaluru")
+
+    XCTAssertEqual(snapshot.cityId, "bengaluru")
+    XCTAssertEqual(snapshot.cityName, "Bengaluru")
+  }
+
+  func testRateSnapshotBackwardCompatibility() throws {
+    let json = """
+    {
+      "baseFare": 36,
+      "perKmRate": 18,
+      "perMinuteRate": 0,
+      "includedKm": 2.0,
+      "minFare": 36,
+      "nightMultiplier": 1.5,
+      "nightStartHour": 22,
+      "nightEndHour": 5,
+      "freeWaitMinutes": 5,
+      "waitIntervalMinutes": 15,
+      "waitIntervalCharge": 10
+    }
+    """
+
+    let data = try XCTUnwrap(json.data(using: .utf8))
+    let decoder = JSONDecoder()
+    let snapshot = try decoder.decode(RateSnapshot.self, from: data)
+
+    XCTAssertNil(snapshot.cityId)
+    XCTAssertNil(snapshot.cityName)
+    XCTAssertEqual(snapshot.baseFare, 36)
+  }
+
+  func testActiveCityInfo() async throws {
+    let url = try makeTempURL()
+    let store = SettingsStore(fileURL: url)
+    await waitForProfiles(store)
+
+    let cityInfo = store.activeCityInfo
+    XCTAssertEqual(cityInfo.cityId, FareCatalog.defaultCityId)
+    XCTAssertEqual(cityInfo.cityName, "Bengaluru")
+
+    store.selectCity("mysuru")
+    let updatedInfo = store.activeCityInfo
+    XCTAssertEqual(updatedInfo.cityId, "mysuru")
+    XCTAssertEqual(updatedInfo.cityName, "Mysuru")
+  }
+
   private func makeTempURL() throws -> URL {
     let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
