@@ -64,10 +64,10 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     locationManager.requestAlwaysAuthorization()
   }
 
-  func startTrip(settings: MeterSettings) {
+  func startTrip(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
     guard !isOnTrip else { return }
     currentSettings = settings
-    rateSnapshot = RateSnapshot(settings: settings)
+    rateSnapshot = RateSnapshot(settings: settings, cityId: cityId, cityName: cityName)
     refreshTimeBasedConditions(reference: Date())
     multiplier = conditions.multiplier(using: settings)
     isOnTrip = true
@@ -170,7 +170,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   private func recalcFare() {
     guard let settings = currentSettings else { return }
     let distanceKm = distanceMeters / 1000
-    let includedKm = 2.0
+    let includedKm = settings.includedKm
     let chargeableDistanceKm = max(0, distanceKm - includedKm)
     let waitingCharge = calculateWaitingCharge(
       waitingDuration: waitingDuration,
@@ -268,8 +268,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func refreshTimeBasedConditions(reference: Date = Date()) {
-    let hour = Calendar.autoupdatingCurrent.component(.hour, from: reference)
-    let nightNow = hour >= 22 || hour < 6
+    let settings = currentSettings ?? MeterSettings.bengaluruDefault
+    let nightNow = settings.isNight(at: reference)
     if conditions.isNight != nightNow {
       conditions.isNight = nightNow
     }

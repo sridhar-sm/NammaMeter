@@ -89,6 +89,17 @@ struct TripDetailView: View {
           .foregroundStyle(Theme.ink.opacity(0.7))
       }
 
+      if let cityName = trip.rateSnapshot.cityName {
+        HStack(spacing: 6) {
+          Image(systemName: "building.2")
+            .font(.system(size: 12))
+            .foregroundStyle(Theme.ink.opacity(0.7))
+          Text(cityName)
+            .font(.nammaBody(12))
+            .foregroundStyle(Theme.ink.opacity(0.7))
+        }
+      }
+
       HStack(spacing: 12) {
         SummaryChip(title: "Fare", value: trip.fare.formatted(.currency(code: "INR")))
         SummaryChip(title: "Distance", value: "\((trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2)))) km")
@@ -189,9 +200,15 @@ struct TripDetailView: View {
         VStack(alignment: .leading, spacing: 2) {
           Text("Rates Used")
             .font(.nammaDisplay(16))
-          Text("ಬಳಸಿದ ದರಗಳು")
-            .font(.nammaBody(12))
-            .foregroundStyle(Theme.ink.opacity(0.7))
+          if let cityName = trip.rateSnapshot.cityName {
+            Text("\(cityName) rates")
+              .font(.nammaBody(12))
+              .foregroundStyle(Theme.ink.opacity(0.7))
+          } else {
+            Text("ಬಳಸಿದ ದರಗಳು")
+              .font(.nammaBody(12))
+              .foregroundStyle(Theme.ink.opacity(0.7))
+          }
         }
         Spacer()
         Text("x\(trip.multiplier.formatted(.number.precision(.fractionLength(2))))")

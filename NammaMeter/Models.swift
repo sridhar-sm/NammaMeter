@@ -66,18 +66,24 @@ struct MeterSettings: Equatable, Sendable {
   var baseFare: Double
   var perKmRate: Double
   var perMinuteRate: Double // Legacy, kept for backward compatibility
+  var includedKm: Double
   var minFare: Double
   var nightMultiplier: Double
+  var nightStartHour: Int
+  var nightEndHour: Int
   var freeWaitMinutes: Double
   var waitIntervalMinutes: Double
   var waitIntervalCharge: Double
 
   static let bengaluruDefault = MeterSettings(
-    baseFare: 30,
-    perKmRate: 15,
-    perMinuteRate: 1.5,
-    minFare: 30,
-    nightMultiplier: 1.25,
+    baseFare: 36,
+    perKmRate: 18,
+    perMinuteRate: 0,
+    includedKm: 2.0,
+    minFare: 36,
+    nightMultiplier: 1.5,
+    nightStartHour: 22,
+    nightEndHour: 5,
     freeWaitMinutes: 5,
     waitIntervalMinutes: 15,
     waitIntervalCharge: 10
@@ -86,7 +92,8 @@ struct MeterSettings: Equatable, Sendable {
 
 extension MeterSettings: Codable {
   enum CodingKeys: String, CodingKey {
-    case baseFare, perKmRate, perMinuteRate, minFare, nightMultiplier
+    case baseFare, perKmRate, perMinuteRate, includedKm, minFare, nightMultiplier
+    case nightStartHour, nightEndHour
     case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
     case rainMultiplier // legacy, ignored on decode
     case trafficMultiplier // legacy, ignored on decode
@@ -97,8 +104,14 @@ extension MeterSettings: Codable {
     baseFare = try container.decode(Double.self, forKey: .baseFare)
     perKmRate = try container.decode(Double.self, forKey: .perKmRate)
     perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
+    includedKm = try container.decodeIfPresent(Double.self, forKey: .includedKm)
+      ?? MeterSettings.bengaluruDefault.includedKm
     minFare = try container.decode(Double.self, forKey: .minFare)
     nightMultiplier = try container.decode(Double.self, forKey: .nightMultiplier)
+    nightStartHour = try container.decodeIfPresent(Int.self, forKey: .nightStartHour)
+      ?? MeterSettings.bengaluruDefault.nightStartHour
+    nightEndHour = try container.decodeIfPresent(Int.self, forKey: .nightEndHour)
+      ?? MeterSettings.bengaluruDefault.nightEndHour
     // New fields with backward-compatible defaults for old persisted data
     freeWaitMinutes = try container.decodeIfPresent(Double.self, forKey: .freeWaitMinutes)
       ?? MeterSettings.bengaluruDefault.freeWaitMinutes
@@ -113,30 +126,56 @@ extension MeterSettings: Codable {
     try container.encode(baseFare, forKey: .baseFare)
     try container.encode(perKmRate, forKey: .perKmRate)
     try container.encode(perMinuteRate, forKey: .perMinuteRate)
+    try container.encode(includedKm, forKey: .includedKm)
     try container.encode(minFare, forKey: .minFare)
     try container.encode(nightMultiplier, forKey: .nightMultiplier)
+    try container.encode(nightStartHour, forKey: .nightStartHour)
+    try container.encode(nightEndHour, forKey: .nightEndHour)
     try container.encode(freeWaitMinutes, forKey: .freeWaitMinutes)
     try container.encode(waitIntervalMinutes, forKey: .waitIntervalMinutes)
     try container.encode(waitIntervalCharge, forKey: .waitIntervalCharge)
   }
 }
 
+extension MeterSettings {
+  func isNight(at date: Date) -> Bool {
+    let hour = Calendar.autoupdatingCurrent.component(.hour, from: date)
+    if nightStartHour == nightEndHour {
+      return false
+    }
+    if nightStartHour < nightEndHour {
+      return hour >= nightStartHour && hour < nightEndHour
+    }
+    return hour >= nightStartHour || hour < nightEndHour
+  }
+}
+
 struct RateSnapshot: Equatable, Sendable {
+  let cityId: String?
+  let cityName: String?
   let baseFare: Double
   let perKmRate: Double
   let perMinuteRate: Double // Legacy, kept for backward compatibility
+  let includedKm: Double
   let minFare: Double
   let nightMultiplier: Double
+  let nightStartHour: Int
+  let nightEndHour: Int
   let freeWaitMinutes: Double
   let waitIntervalMinutes: Double
   let waitIntervalCharge: Double
 
-  init(settings: MeterSettings) {
+  init(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
+    self.cityId = cityId
+    self.cityName = cityName
     baseFare = settings.baseFare
     perKmRate = settings.perKmRate
     perMinuteRate = settings.perMinuteRate
+    includedKm = settings.includedKm
     minFare = settings.minFare
     nightMultiplier = settings.nightMultiplier
+    nightStartHour = settings.nightStartHour
+    nightEndHour = settings.nightEndHour
     freeWaitMinutes = settings.freeWaitMinutes
     waitIntervalMinutes = settings.waitIntervalMinutes
     waitIntervalCharge = settings.waitIntervalCharge
@@ -145,7 +184,9 @@ struct RateSnapshot: Equatable, Sendable {
 
 extension RateSnapshot: Codable {
   enum CodingKeys: String, CodingKey {
-    case baseFare, perKmRate, perMinuteRate, minFare, nightMultiplier
+    case cityId, cityName
+    case baseFare, perKmRate, perMinuteRate, includedKm, minFare, nightMultiplier
+    case nightStartHour, nightEndHour
     case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
     case rainMultiplier // legacy, ignored on decode
     case trafficMultiplier // legacy, ignored on decode
@@ -153,11 +194,19 @@ extension RateSnapshot: Codable {
 
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
+    cityId = try container.decodeIfPresent(String.self, forKey: .cityId)
+    cityName = try container.decodeIfPresent(String.self, forKey: .cityName)
     baseFare = try container.decode(Double.self, forKey: .baseFare)
     perKmRate = try container.decode(Double.self, forKey: .perKmRate)
     perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
+    includedKm = try container.decodeIfPresent(Double.self, forKey: .includedKm)
+      ?? MeterSettings.bengaluruDefault.includedKm
     minFare = try container.decode(Double.self, forKey: .minFare)
     nightMultiplier = try container.decode(Double.self, forKey: .nightMultiplier)
+    nightStartHour = try container.decodeIfPresent(Int.self, forKey: .nightStartHour)
+      ?? MeterSettings.bengaluruDefault.nightStartHour
+    nightEndHour = try container.decodeIfPresent(Int.self, forKey: .nightEndHour)
+      ?? MeterSettings.bengaluruDefault.nightEndHour
     // New fields with backward-compatible defaults for old persisted trips
     freeWaitMinutes = try container.decodeIfPresent(Double.self, forKey: .freeWaitMinutes)
       ?? MeterSettings.bengaluruDefault.freeWaitMinutes
@@ -169,11 +218,16 @@ extension RateSnapshot: Codable {
 
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encodeIfPresent(cityId, forKey: .cityId)
+    try container.encodeIfPresent(cityName, forKey: .cityName)
     try container.encode(baseFare, forKey: .baseFare)
     try container.encode(perKmRate, forKey: .perKmRate)
     try container.encode(perMinuteRate, forKey: .perMinuteRate)
+    try container.encode(includedKm, forKey: .includedKm)
     try container.encode(minFare, forKey: .minFare)
     try container.encode(nightMultiplier, forKey: .nightMultiplier)
+    try container.encode(nightStartHour, forKey: .nightStartHour)
+    try container.encode(nightEndHour, forKey: .nightEndHour)
     try container.encode(freeWaitMinutes, forKey: .freeWaitMinutes)
     try container.encode(waitIntervalMinutes, forKey: .waitIntervalMinutes)
     try container.encode(waitIntervalCharge, forKey: .waitIntervalCharge)
