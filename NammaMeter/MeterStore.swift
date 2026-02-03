@@ -32,7 +32,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
 
   @ObservationIgnored private let locationManager: CLLocationManager
   @ObservationIgnored private var tickTask: Task<Void, Never>?
-  @ObservationIgnored private var locationUpdatesTask: Task<Void, Never>?
+  @ObservationIgnored private var isUpdatingLocation = false
   @ObservationIgnored private let clock = ContinuousClock()
   @ObservationIgnored private var startDate: Date?
   @ObservationIgnored private var lastLocation: CLLocation?
@@ -54,7 +54,14 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func requestAuthorization() {
-    locationManager.requestWhenInUseAuthorization()
+    if authorizationStatus == .notDetermined {
+      locationManager.requestWhenInUseAuthorization()
+    }
+  }
+
+  func requestAlwaysAuthorization() {
+    guard authorizationStatus == .authorizedWhenInUse else { return }
+    locationManager.requestAlwaysAuthorization()
   }
 
   func startTrip(settings: MeterSettings) {
@@ -78,9 +85,11 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     lastLocation = nil
     locationError = nil
 
+    authorizationStatus = locationManager.authorizationStatus
     requestAuthorization()
-    locationManager.requestAlwaysAuthorization()
-    startLocationUpdates()
+    if isAuthorizedForLocationUpdates {
+      startLocationUpdates()
+    }
     updateBackgroundLocationState()
     startTicking()
   }
@@ -136,24 +145,15 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   private func startLocationUpdates() {
-    locationUpdatesTask?.cancel()
-    locationUpdatesTask = Task { @MainActor [weak self] in
-      guard let self else { return }
-      do {
-        for try await update in CLLocationUpdate.liveUpdates() {
-          if Task.isCancelled { break }
-          guard let location = update.location else { continue }
-          self.handleLocation(location)
-        }
-      } catch {
-        locationError = error.localizedDescription
-      }
-    }
+    guard !isUpdatingLocation else { return }
+    isUpdatingLocation = true
+    locationManager.startUpdatingLocation()
   }
 
   private func stopLocationUpdates() {
-    locationUpdatesTask?.cancel()
-    locationUpdatesTask = nil
+    guard isUpdatingLocation else { return }
+    isUpdatingLocation = false
+    locationManager.stopUpdatingLocation()
   }
 
   private func tick() {
@@ -181,12 +181,22 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
     authorizationStatus = manager.authorizationStatus
     if isOnTrip {
+      if isAuthorizedForLocationUpdates {
+        startLocationUpdates()
+      } else {
+        stopLocationUpdates()
+      }
       updateBackgroundLocationState()
     }
   }
 
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     locationError = error.localizedDescription
+  }
+
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let location = locations.last else { return }
+    handleLocation(location)
   }
 
   private func handleLocation(_ location: CLLocation) {
@@ -260,5 +270,14 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   private var hasBackgroundLocationMode: Bool {
     guard let modes = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String] else { return false }
     return modes.contains("location")
+  }
+
+  private var isAuthorizedForLocationUpdates: Bool {
+    switch authorizationStatus {
+    case .authorizedAlways, .authorizedWhenInUse:
+      return true
+    default:
+      return false
+    }
   }
 }
