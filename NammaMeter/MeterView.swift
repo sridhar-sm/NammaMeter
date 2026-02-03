@@ -9,12 +9,12 @@ struct MeterView: View {
   @State private var meterStore = MeterStore()
   @Environment(\.openURL) private var openURL
   @State private var showLocationAlert = false
-  @State private var showMeterPanel = false
+  @State private var showMeterSettings = false
+  @State private var showControlOverflow = false
+  @State private var pagerSelection = 0
   @State private var meterFaceStyle: MeterFaceStyle = .superMeter
   @State private var meterRenderMode: MeterRenderMode = .full
   @State private var digitWheelStyle: DigitWheelStyle = .disk
-  private let fareTileSize = CGSize(width: 124, height: 50)
-  private let fareTileSpacing: CGFloat = 6
 
   var body: some View {
     NavigationStack {
@@ -47,6 +47,12 @@ struct MeterView: View {
       } message: {
         Text("Enable location to track distance and replay routes.")
       }
+      .sheet(isPresented: $showMeterSettings) {
+        meterSettingsSheet
+      }
+      .sheet(isPresented: $showControlOverflow) {
+        controlOverflowSheet
+      }
     }
   }
 
@@ -56,10 +62,10 @@ struct MeterView: View {
       let bottomPadding: CGFloat = 8
       let spacing: CGFloat = 4
       let minMapHeight: CGFloat = 100
-      let controlsHeight: CGFloat = 56
+      let controlBarHeight: CGFloat = 64
 
       // Available height after accounting for all fixed elements
-      let availableHeight = geo.size.height - bottomPadding - controlsHeight - (spacing * 2)
+      let availableHeight = geo.size.height - bottomPadding - controlBarHeight - (spacing * 2)
 
       // Use the largest meter height (Super Mechanical) to determine fixed map height
       // This ensures map size and position stay constant regardless of meter style
@@ -88,33 +94,10 @@ struct MeterView: View {
           .frame(height: referenceMeterHeight)
           .frame(maxWidth: .infinity)
 
-        ZStack {
-          LiveRouteMap(points: meterStore.points, followLatest: meterStore.isOnTrip)
-            .frame(height: fixedMapHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(
-              RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.4), lineWidth: 1)
-            )
-            .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
-        }
-        .overlay(alignment: .topLeading) {
-          conditionsOverlay
-            .padding(.top, 10)
-            .padding(.leading, 10)
-        }
-        .overlay(alignment: .topTrailing) {
-          meterSettingsButton
-            .padding(.top, 10)
-            .padding(.trailing, 10)
-        }
+        controlBar(height: controlBarHeight)
         .padding(.horizontal, 12)
 
-        HStack {
-          Spacer()
-          bottomControls
-        }
-        .frame(height: controlsHeight)
+        meterPager(height: fixedMapHeight)
         .padding(.horizontal, 12)
       }
       .padding(.bottom, bottomPadding)
@@ -194,42 +177,8 @@ struct MeterView: View {
   }
 
   private var meterSettingsButton: some View {
-    Menu {
-      Section("Meter Style") {
-        ForEach(MeterFaceStyle.allCases) { style in
-          Button {
-            meterFaceStyle = style
-          } label: {
-            Label(style.label, systemImage: style.systemImage)
-          }
-        }
-      }
-      Section("Display Mode") {
-        ForEach(MeterRenderMode.allCases) { mode in
-          Button {
-            meterRenderMode = mode
-          } label: {
-            if meterRenderMode == mode {
-              Label(mode.label, systemImage: "checkmark")
-            } else {
-              Text(mode.label)
-            }
-          }
-        }
-      }
-      Section("Digit Style") {
-        ForEach(DigitWheelStyle.allCases) { style in
-          Button {
-            digitWheelStyle = style
-          } label: {
-            if digitWheelStyle == style {
-              Label(style.label, systemImage: "checkmark")
-            } else {
-              Text(style.label)
-            }
-          }
-        }
-      }
+    Button {
+      showMeterSettings = true
     } label: {
       Image(systemName: "gearshape.fill")
         .font(.system(size: 14, weight: .semibold))
@@ -242,18 +191,25 @@ struct MeterView: View {
     .accessibilityLabel("Meter settings")
   }
 
+  private var controlOverflowButton: some View {
+    Button {
+      showControlOverflow = true
+    } label: {
+      Image(systemName: "slider.horizontal.3")
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundStyle(Theme.ink)
+        .frame(width: 32, height: 32)
+        .background(Theme.card.opacity(0.92))
+        .clipShape(Circle())
+        .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
+    }
+    .accessibilityLabel("More controls")
+  }
+
   private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
   private var safeAreaBottom: CGFloat { windowSafeAreaInsets.bottom }
 
-  private var bottomControls: some View {
-    HStack(alignment: .bottom, spacing: 8) {
-      tripToggleButton
-      waitToggleButton
-      meterControlCluster
-    }
-  }
-
-  private var conditionsOverlay: some View {
+  private var conditionsControls: some View {
     HStack(spacing: 6) {
       MiniConditionChip(title: "Rain", subtitle: "ಮಳೆ", isOn: bindingFor(\.isRaining))
       MiniConditionChip(title: "Night", subtitle: "ರಾತ್ರಿ", isOn: bindingFor(\.isNight))
@@ -304,47 +260,218 @@ struct MeterView: View {
     .opacity(meterStore.isOnTrip ? 1 : 0.6)
   }
 
-  private var meterControlCluster: some View {
-    let details: [(String, String)] = [
-      ((meterStore.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km", "Distance · ದೂರ"),
-      (formattedElapsed(meterStore.elapsed), "Time · ಸಮಯ"),
-      (formattedElapsed(meterStore.waitingDuration), "Wait · ನಿಲ್ಲಿಕೆ"),
-      (meterStore.currentSpeedKph.formatted(.number.precision(.fractionLength(1))) + " km/h", "Speed · ವೇಗ")
-    ]
-    let expandedHeight = (fareTileSize.height * CGFloat(details.count + 1)) + (fareTileSpacing * CGFloat(details.count))
-
-    return VStack(alignment: .trailing, spacing: fareTileSpacing) {
-      ForEach(details.indices, id: \.self) { index in
-        FareInfoTile(
-          valueText: details[index].0,
-          labelText: details[index].1,
-          size: fareTileSize,
-          showsChevron: false,
-          isExpanded: showMeterPanel
-        )
-        .opacity(showMeterPanel ? 1 : 0)
-        .scaleEffect(showMeterPanel ? 1 : 0.96, anchor: .bottomTrailing)
-      }
-      Button {
-        showMeterPanel.toggle()
-      } label: {
-        FareInfoTile(
-          valueText: meterStore.fare.formatted(.currency(code: "INR").precision(.fractionLength(0))),
-          labelText: "Fare · ಭಾಡೆ",
-          size: fareTileSize,
-          showsChevron: true,
-          isExpanded: showMeterPanel
-        )
-      }
-      .buttonStyle(.plain)
+  private func controlBar(height: CGFloat) -> some View {
+    ViewThatFits(in: .horizontal) {
+      fullControlBar
+      compactControlBar
     }
-    .frame(
-      width: fareTileSize.width,
-      height: showMeterPanel ? expandedHeight : fareTileSize.height,
-      alignment: .bottom
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 10)
+    .padding(.vertical, 6)
+    .frame(height: height)
+    .background(Theme.card.opacity(0.92))
+    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
+  }
+
+  private var fullControlBar: some View {
+    HStack(spacing: 8) {
+      tripToggleButton
+      waitToggleButton
+      conditionsControls
+      meterSettingsButton
+    }
+    .fixedSize(horizontal: true, vertical: false)
+  }
+
+  private var compactControlBar: some View {
+    HStack(spacing: 8) {
+      tripToggleButton
+      waitToggleButton
+      controlOverflowButton
+    }
+    .fixedSize(horizontal: true, vertical: false)
+  }
+
+  private func meterPager(height: CGFloat) -> some View {
+    TabView(selection: $pagerSelection) {
+      mapPage
+        .tag(0)
+      tripDetailsPage
+        .tag(1)
+    }
+    .tabViewStyle(.page(indexDisplayMode: .always))
+    .indexViewStyle(.page(backgroundDisplayMode: .always))
+    .frame(height: height)
+  }
+
+  private var mapPage: some View {
+    meterPageContainer {
+      LiveRouteMap(points: meterStore.points, followLatest: meterStore.isOnTrip)
+    }
+  }
+
+  private var tripDetailsPage: some View {
+    meterPageContainer {
+      GeometryReader { geo in
+        let horizontalPadding: CGFloat = 12
+        let columnSpacing: CGFloat = 12
+        let availableWidth = geo.size.width - (horizontalPadding * 2)
+        let columnWidth = (availableWidth - columnSpacing) / 2
+        let tileHeight: CGFloat = 52
+
+        let detailItems: [(String, String)] = [
+          ((meterStore.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km", "Distance · ದೂರ"),
+          (formattedElapsed(meterStore.elapsed), "Time · ಸಮಯ"),
+          (formattedElapsed(meterStore.waitingDuration), "Wait · ನಿಲ್ಲಿಕೆ"),
+          (meterStore.currentSpeedKph.formatted(.number.precision(.fractionLength(1))) + " km/h", "Speed · ವೇಗ")
+        ]
+
+        VStack(spacing: 12) {
+          FareInfoTile(
+            valueText: meterStore.fare.formatted(.currency(code: "INR").precision(.fractionLength(0))),
+            labelText: "Fare · ಭಾಡೆ",
+            size: CGSize(width: availableWidth, height: 56),
+            showsChevron: false,
+            isExpanded: false
+          )
+
+          LazyVGrid(
+            columns: [
+              GridItem(.fixed(columnWidth), spacing: columnSpacing),
+              GridItem(.fixed(columnWidth), spacing: columnSpacing)
+            ],
+            spacing: columnSpacing
+          ) {
+            ForEach(detailItems.indices, id: \.self) { index in
+              FareInfoTile(
+                valueText: detailItems[index].0,
+                labelText: detailItems[index].1,
+                size: CGSize(width: columnWidth, height: tileHeight),
+                showsChevron: false,
+                isExpanded: false
+              )
+            }
+          }
+
+          Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, 12)
+      }
+    }
+  }
+
+  private func meterPageContainer<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    ZStack {
+      content()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    .background(Theme.card.opacity(0.95))
+    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    .overlay(
+      RoundedRectangle(cornerRadius: 24, style: .continuous)
+        .stroke(Color.white.opacity(0.4), lineWidth: 1)
     )
-    .clipped()
-    .animation(.spring(response: 0.34, dampingFraction: 0.82), value: showMeterPanel)
+    .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
+  }
+
+  private var meterSettingsSheet: some View {
+    NavigationStack {
+      Form {
+        meterSettingsSections
+      }
+      .navigationTitle("Meter Settings")
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") {
+            showMeterSettings = false
+          }
+        }
+      }
+    }
+  }
+
+  private var controlOverflowSheet: some View {
+    NavigationStack {
+      Form {
+        Section("Trip") {
+          HStack(spacing: 12) {
+            tripToggleButton
+            waitToggleButton
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
+        Section("Conditions") {
+          conditionsControls
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
+        meterSettingsSections
+      }
+      .navigationTitle("Controls")
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") {
+            showControlOverflow = false
+          }
+        }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var meterSettingsSections: some View {
+    Section("Meter Style") {
+      ForEach(MeterFaceStyle.allCases) { style in
+        Button {
+          meterFaceStyle = style
+        } label: {
+          HStack {
+            Label(style.label, systemImage: style.systemImage)
+            Spacer()
+            if meterFaceStyle == style {
+              Image(systemName: "checkmark")
+                .foregroundStyle(Theme.ink)
+            }
+          }
+        }
+      }
+    }
+    Section("Display Mode") {
+      ForEach(MeterRenderMode.allCases) { mode in
+        Button {
+          meterRenderMode = mode
+        } label: {
+          HStack {
+            Text(mode.label)
+            Spacer()
+            if meterRenderMode == mode {
+              Image(systemName: "checkmark")
+                .foregroundStyle(Theme.ink)
+            }
+          }
+        }
+      }
+    }
+    Section("Digit Style") {
+      ForEach(DigitWheelStyle.allCases) { style in
+        Button {
+          digitWheelStyle = style
+        } label: {
+          HStack {
+            Text(style.label)
+            Spacer()
+            if digitWheelStyle == style {
+              Image(systemName: "checkmark")
+                .foregroundStyle(Theme.ink)
+            }
+          }
+        }
+      }
+    }
   }
 
   private func bindingFor(_ keyPath: WritableKeyPath<TripConditions, Bool>) -> Binding<Bool> {
