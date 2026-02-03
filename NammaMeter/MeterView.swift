@@ -309,6 +309,7 @@ struct MeterView: View {
     .tabViewStyle(.page(indexDisplayMode: .always))
     .indexViewStyle(.page(backgroundDisplayMode: .always))
     .frame(height: height)
+    .background(PageSwipeDisabler().allowsHitTesting(false))
   }
 
   private var mapPage: some View {
@@ -1577,6 +1578,71 @@ struct ConditionTileButton: View {
     }
     .accessibilityLabel(label)
     .accessibilityValue(isOn ? "On" : "Off")
+  }
+}
+
+private struct PageSwipeDisabler: UIViewRepresentable {
+  func makeUIView(context: Context) -> UIView {
+    UIView(frame: .zero)
+  }
+
+  func updateUIView(_ uiView: UIView, context: Context) {
+    DispatchQueue.main.async {
+      guard let scrollView = findPagingScrollView(from: uiView) else { return }
+      if scrollView.isScrollEnabled {
+        scrollView.isScrollEnabled = false
+      }
+    }
+  }
+
+  private func findPagingScrollView(from view: UIView) -> UIScrollView? {
+    var root: UIView? = view
+    while let parent = root?.superview {
+      root = parent
+    }
+    guard let rootView = root else { return nil }
+    return findPagingScrollView(in: rootView)
+  }
+
+  private func findPagingScrollView(in view: UIView) -> UIScrollView? {
+    if let scrollView = view as? UIScrollView, scrollView.isPagingEnabled {
+      return scrollView
+    }
+    for subview in view.subviews {
+      if let found = findPagingScrollView(in: subview) {
+        return found
+      }
+    }
+    return nil
+  }
+}
+
+struct MiniConditionChip: View {
+  let title: String
+  let subtitle: String
+  @Binding var isOn: Bool
+
+  var body: some View {
+    Button {
+      isOn.toggle()
+    } label: {
+      VStack(spacing: 2) {
+        Text(title)
+          .font(.nammaDisplay(9))
+        Text(subtitle)
+          .font(.nammaBody(7))
+      }
+      .foregroundStyle(isOn ? Theme.ink : Theme.ink.opacity(0.6))
+      .padding(.vertical, 4)
+      .padding(.horizontal, 6)
+      .background(isOn ? Theme.mango.opacity(0.6) : Theme.card)
+      .clipShape(Capsule())
+      .overlay(
+        Capsule()
+          .stroke(Theme.ink.opacity(isOn ? 0.2 : 0.1), lineWidth: 1)
+      )
+    }
+    .buttonStyle(.plain)
   }
 }
 
