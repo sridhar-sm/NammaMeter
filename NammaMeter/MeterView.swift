@@ -85,6 +85,8 @@ struct MeterView: View {
           return GoldenEagleDimensions.naturalHeight(for: geo.size.width)
         case .digital:
           return SuperMeterDimensions.naturalHeight(for: geo.size.width)
+        case .brightDigital:
+          return BrightDigitalDimensions.naturalHeight(for: geo.size.width)
         }
       }()
       let meterHeight = min(meterNaturalHeight, maxMeterHeight)
@@ -172,6 +174,25 @@ struct MeterView: View {
         DigitalDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare)
           .padding(.top, topInset + 8)
           .padding(.horizontal, 12)
+      }
+    case .brightDigital:
+      if meterRenderMode == .full {
+        BrightDigitalFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          waitingDuration: meterStore.waitingDuration,
+          distanceMeters: meterStore.distanceMeters,
+          topInset: topInset
+        )
+      } else {
+        BrightDigitalFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          waitingDuration: meterStore.waitingDuration,
+          distanceMeters: meterStore.distanceMeters,
+          topInset: topInset + 8
+        )
+        .padding(.horizontal, 12)
       }
     }
   }
@@ -487,6 +508,7 @@ enum MeterFaceStyle: String, CaseIterable, Identifiable {
   case superElectronic = "Super Electronic"
   case goldenEagle = "Golden Eagle"
   case digital = "Neo Digital"
+  case brightDigital = "Bright Digital"
 
   var id: String { rawValue }
   var label: String { rawValue }
@@ -500,6 +522,8 @@ enum MeterFaceStyle: String, CaseIterable, Identifiable {
       return "bird"
     case .digital:
       return "display"
+    case .brightDigital:
+      return "rectangle.3.offgrid"
     }
   }
 }
