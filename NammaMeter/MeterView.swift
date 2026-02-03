@@ -242,16 +242,8 @@ struct MeterView: View {
   private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
   private var safeAreaBottom: CGFloat { windowSafeAreaInsets.bottom }
 
-  private func rainConditionButton(metrics: ControlBarMetrics) -> some View {
-    ConditionTileButton(systemImage: "cloud.rain.fill", label: "Rain", isOn: bindingFor(\.isRaining), metrics: metrics)
-  }
-
   private func nightConditionButton(metrics: ControlBarMetrics) -> some View {
     ConditionTileButton(systemImage: "moon.stars.fill", label: "Night", isOn: bindingFor(\.isNight), isInteractive: false, metrics: metrics)
-  }
-
-  private func trafficConditionButton(metrics: ControlBarMetrics) -> some View {
-    ConditionTileButton(systemImage: "car.2.fill", label: "Traffic", isOn: bindingFor(\.isHeavyTraffic), metrics: metrics)
   }
 
   private func tripToggleButton(metrics: ControlBarMetrics) -> some View {
@@ -304,7 +296,7 @@ struct MeterView: View {
       let horizontalPadding: CGFloat = 10
       let verticalPadding: CGFloat = 6
       let spacing: CGFloat = 6
-      let tileCount = CGFloat(6)
+      let tileCount = CGFloat(4)
       let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
       let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
       let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
@@ -316,9 +308,7 @@ struct MeterView: View {
       HStack(spacing: spacing) {
         tripToggleButton(metrics: metrics)
         waitToggleButton(metrics: metrics)
-        rainConditionButton(metrics: metrics)
         nightConditionButton(metrics: metrics)
-        trafficConditionButton(metrics: metrics)
         meterSettingsButton(metrics: metrics)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)

@@ -46,19 +46,9 @@ struct SettingsView: View {
 
           Section(header: SectionHeader(title: "Modifiers", subtitle: "ಗುಣಕಗಳು")) {
             LabeledNumberField(
-              title: "Rain Multiplier",
-              subtitle: "ಮಳೆ ಗುಣಕ",
-              value: $settingsStore.settings.rainMultiplier
-            )
-            LabeledNumberField(
               title: "Night Multiplier",
               subtitle: "ರಾತ್ರಿ ಗುಣಕ",
               value: $settingsStore.settings.nightMultiplier
-            )
-            LabeledNumberField(
-              title: "Traffic Multiplier",
-              subtitle: "ಟ್ರಾಫಿಕ್ ಗುಣಕ",
-              value: $settingsStore.settings.trafficMultiplier
             )
           }
 
