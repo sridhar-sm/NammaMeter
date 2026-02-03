@@ -1,0 +1,162 @@
+import SwiftUI
+import UIKit
+
+// MARK: - Meter Face Style
+
+enum MeterFaceStyle: String, CaseIterable, Identifiable {
+  case superMeter = "Super Mechanical"
+  case superElectronic = "Super Electronic"
+  case goldenEagle = "Golden Eagle"
+  case digital = "Neo Digital"
+  case brightDigital = "Bright Digital"
+
+  var id: String { rawValue }
+  var label: String { rawValue }
+  var systemImage: String {
+    switch self {
+    case .superMeter:
+      return "gauge.with.dots.needle.67percent"
+    case .superElectronic:
+      return "digitalcrown.horizontal.arrow.counterclockwise"
+    case .goldenEagle:
+      return "bird"
+    case .digital:
+      return "display"
+    case .brightDigital:
+      return "rectangle.3.offgrid"
+    }
+  }
+}
+
+// MARK: - Meter Render Mode
+
+enum MeterRenderMode: String, CaseIterable, Identifiable {
+  case full = "Full"
+  case displayOnly = "Display"
+
+  var id: String { rawValue }
+  var label: String { rawValue }
+}
+
+// MARK: - Digit Wheel Style
+
+enum DigitWheelStyle: String, CaseIterable, Identifiable {
+  case drum = "Drum"
+  case disk = "Disk"
+
+  var id: String { rawValue }
+  var label: String { rawValue }
+}
+
+// MARK: - Shared Meter Dimensions
+
+/// Shared width ratio for all meters - ensures consistent width across meter styles
+enum MeterDimensions {
+  static let widthRatio: CGFloat = 1.0
+}
+
+// MARK: - Super Mechanical Meter Dimensions
+
+/// Dimension ratios for the Super Mechanical meter
+enum SuperMeterDimensions {
+  static var widthRatio: CGFloat { MeterDimensions.widthRatio }
+  static let bodyAspect: CGFloat = 1.1
+  static let canopyRatio: CGFloat = 0.18
+  static let baseRatio: CGFloat = 0.14
+  static let canopyOverlap: CGFloat = 0.85
+
+  /// Calculate the natural height of the meter given a container width
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    let bodyWidth = containerWidth * widthRatio
+    let bodyHeight = bodyWidth * bodyAspect
+    let canopyHeight = bodyHeight * canopyRatio
+    let baseHeight = bodyHeight * baseRatio
+    return bodyHeight + canopyHeight * canopyOverlap + baseHeight
+  }
+}
+
+// MARK: - Super Electronic Meter Dimensions
+
+/// Dimension ratios for the Super Electronic meter
+enum SuperElectronicDimensions {
+  static var widthRatio: CGFloat { MeterDimensions.widthRatio }
+  static let bodyAspect: CGFloat = 1.1
+
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    let bodyWidth = containerWidth * widthRatio
+    return bodyWidth * bodyAspect
+  }
+}
+
+// MARK: - Golden Eagle Meter Dimensions
+
+/// Dimension ratios for the Golden Eagle meter
+enum GoldenEagleDimensions {
+  static var widthRatio: CGFloat { MeterDimensions.widthRatio }
+  static let bodyAspect: CGFloat = 1.12
+
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    let bodyWidth = containerWidth * widthRatio
+    return bodyWidth * bodyAspect
+  }
+}
+
+// MARK: - Bright Digital Meter Dimensions
+
+/// Dimension ratios for the Bright Digital meter
+enum BrightDigitalDimensions {
+  static var widthRatio: CGFloat { MeterDimensions.widthRatio }
+  static let bodyAspect: CGFloat = 1.08
+
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    let bodyWidth = containerWidth * widthRatio
+    return bodyWidth * bodyAspect
+  }
+}
+
+// MARK: - Safe Area Insets Helper
+
+@MainActor
+var windowSafeAreaInsets: UIEdgeInsets {
+  UIApplication.shared.connectedScenes
+    .compactMap { $0 as? UIWindowScene }
+    .flatMap { $0.windows }
+    .first { $0.isKeyWindow }?
+    .safeAreaInsets ?? .zero
+}
+
+// MARK: - Hire Pulse Animation
+
+struct HirePulseModifier: ViewModifier {
+  let tripState: TripMeterState
+  let duration: Double
+  @Binding var pulse: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .onAppear {
+        if tripState == .forHire {
+          startPulse()
+        }
+      }
+      .onChange(of: tripState) { _, newValue in
+        if newValue == .forHire {
+          startPulse()
+        } else {
+          pulse = false
+        }
+      }
+  }
+
+  private func startPulse() {
+    withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+      pulse = true
+    }
+  }
+}
+
+extension View {
+  func hirePulse(tripState: TripMeterState, duration: Double = 1.2, pulse: Binding<Bool>) -> some View {
+    modifier(HirePulseModifier(tripState: tripState, duration: duration, pulse: pulse))
+  }
+}

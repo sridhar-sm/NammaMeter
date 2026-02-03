@@ -1,17 +1,5 @@
 import SwiftUI
 
-// MARK: - Dimensions
-
-enum BrightDigitalDimensions {
-  static let widthRatio: CGFloat = SuperElectronicDimensions.widthRatio
-  static let bodyAspect: CGFloat = 1.08
-
-  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
-  }
-}
-
 // MARK: - Main Panel
 
 struct BrightDigitalFullMeterPanel: View {
