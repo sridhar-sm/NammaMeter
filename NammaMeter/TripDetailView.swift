@@ -207,8 +207,12 @@ struct TripDetailView: View {
         RateLine(title: "Per Km", subtitle: "ಪ್ರತಿ ಕಿಮೀ", value: trip.rateSnapshot.perKmRate)
       }
       HStack {
-        RateLine(title: "Wait Per Minute", subtitle: "ನಿಲ್ಲಿಕೆ ಪ್ರತಿ ನಿಮಿಷ", value: trip.rateSnapshot.perMinuteRate)
         RateLine(title: "Min Fare", subtitle: "ಕನಿಷ್ಠ ಬಾಡಿಗೆ", value: trip.rateSnapshot.minFare)
+        RateLine(title: "Free Wait", subtitle: "ಉಚಿತ ನಿಲ್ಲಿಕೆ", value: trip.rateSnapshot.freeWaitMinutes)
+      }
+      HStack {
+        RateLine(title: "Wait Interval", subtitle: "ನಿಲ್ಲಿಕೆ ಮಧ್ಯಂತರ", value: trip.rateSnapshot.waitIntervalMinutes)
+        RateLine(title: "Per Interval", subtitle: "ಪ್ರತಿ ಮಧ್ಯಂತರ", value: trip.rateSnapshot.waitIntervalCharge)
       }
     }
     .cardStyle()
