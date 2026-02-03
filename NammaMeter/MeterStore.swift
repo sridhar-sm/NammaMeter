@@ -183,7 +183,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     fare = max(settings.minFare, adjusted)
   }
 
-  private func calculateWaitingCharge(
+  func calculateWaitingCharge(
     waitingDuration: TimeInterval,
     freeWaitMinutes: Double,
     waitIntervalMinutes: Double,
