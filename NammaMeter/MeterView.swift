@@ -75,6 +75,8 @@ struct MeterView: View {
           return SuperMeterDimensions.naturalHeight(for: geo.size.width)
         case .superElectronic:
           return SuperElectronicDimensions.naturalHeight(for: geo.size.width)
+        case .goldenEagle:
+          return GoldenEagleDimensions.naturalHeight(for: geo.size.width)
         case .digital:
           return SuperMeterDimensions.naturalHeight(for: geo.size.width)
         }
@@ -148,6 +150,27 @@ struct MeterView: View {
         )
       } else {
         SuperElectronicFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          waitingDuration: meterStore.waitingDuration,
+          distanceMeters: meterStore.distanceMeters,
+          isNight: meterStore.conditions.isNight,
+          topInset: topInset + 8
+        )
+        .padding(.horizontal, 12)
+      }
+    case .goldenEagle:
+      if meterRenderMode == .full {
+        GoldenEagleFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          waitingDuration: meterStore.waitingDuration,
+          distanceMeters: meterStore.distanceMeters,
+          isNight: meterStore.conditions.isNight,
+          topInset: topInset
+        )
+      } else {
+        GoldenEagleFullMeterPanel(
           tripState: meterStore.tripState,
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
@@ -335,6 +358,7 @@ struct MeterView: View {
 enum MeterFaceStyle: String, CaseIterable, Identifiable {
   case superMeter = "Super Mechanical"
   case superElectronic = "Super Electronic"
+  case goldenEagle = "Golden Eagle"
   case digital = "Neo Digital"
 
   var id: String { rawValue }
@@ -345,6 +369,8 @@ enum MeterFaceStyle: String, CaseIterable, Identifiable {
       return "gauge.with.dots.needle.67percent"
     case .superElectronic:
       return "digitalcrown.horizontal.arrow.counterclockwise"
+    case .goldenEagle:
+      return "bird"
     case .digital:
       return "display"
     }
