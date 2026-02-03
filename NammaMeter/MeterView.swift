@@ -10,7 +10,6 @@ struct MeterView: View {
   @Environment(\.openURL) private var openURL
   @State private var showLocationAlert = false
   @State private var showMeterSettings = false
-  @State private var showControlOverflow = false
   @State private var pagerSelection = 0
   @State private var meterFaceStyle: MeterFaceStyle = .superMeter
   @State private var meterRenderMode: MeterRenderMode = .full
@@ -50,9 +49,6 @@ struct MeterView: View {
       .sheet(isPresented: $showMeterSettings) {
         meterSettingsSheet
       }
-      .sheet(isPresented: $showControlOverflow) {
-        controlOverflowSheet
-      }
     }
   }
 
@@ -62,7 +58,7 @@ struct MeterView: View {
       let bottomPadding: CGFloat = 8
       let spacing: CGFloat = 4
       let minMapHeight: CGFloat = 100
-      let controlBarHeight: CGFloat = 64
+      let controlBarHeight = min(max(geo.size.height * 0.085, 56), 72)
 
       // Available height after accounting for all fixed elements
       let availableHeight = geo.size.height - bottomPadding - controlBarHeight - (spacing * 2)
@@ -176,52 +172,36 @@ struct MeterView: View {
     }
   }
 
-  private var meterSettingsButton: some View {
+  private func meterSettingsButton(metrics: ControlBarMetrics) -> some View {
     Button {
       showMeterSettings = true
     } label: {
-      Image(systemName: "gearshape.fill")
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(Theme.ink)
-        .frame(width: 32, height: 32)
-        .background(Theme.card.opacity(0.92))
-        .clipShape(Circle())
-        .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
+      ControlTile(background: Theme.card.opacity(0.9), size: metrics.tileSize) {
+        Image(systemName: "gauge.with.dots.needle.67percent")
+          .font(.system(size: metrics.iconSize, weight: .semibold))
+          .foregroundStyle(Theme.ink)
+      }
     }
+    .buttonStyle(.plain)
     .accessibilityLabel("Meter settings")
-  }
-
-  private var controlOverflowButton: some View {
-    Button {
-      showControlOverflow = true
-    } label: {
-      Image(systemName: "slider.horizontal.3")
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(Theme.ink)
-        .frame(width: 32, height: 32)
-        .background(Theme.card.opacity(0.92))
-        .clipShape(Circle())
-        .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
-    }
-    .accessibilityLabel("More controls")
   }
 
   private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
   private var safeAreaBottom: CGFloat { windowSafeAreaInsets.bottom }
 
-  private var conditionsControls: some View {
-    HStack(spacing: 6) {
-      MiniConditionChip(title: "Rain", subtitle: "ಮಳೆ", isOn: bindingFor(\.isRaining))
-      MiniConditionChip(title: "Night", subtitle: "ರಾತ್ರಿ", isOn: bindingFor(\.isNight))
-        .allowsHitTesting(false)
-      MiniConditionChip(title: "Traffic", subtitle: "ಟ್ರಾಫಿಕ್", isOn: bindingFor(\.isHeavyTraffic))
-    }
-    .padding(6)
-    .background(Theme.card.opacity(0.85))
-    .clipShape(Capsule())
+  private func rainConditionButton(metrics: ControlBarMetrics) -> some View {
+    ConditionTileButton(systemImage: "cloud.rain.fill", label: "Rain", isOn: bindingFor(\.isRaining), metrics: metrics)
   }
 
-  private var tripToggleButton: some View {
+  private func nightConditionButton(metrics: ControlBarMetrics) -> some View {
+    ConditionTileButton(systemImage: "moon.stars.fill", label: "Night", isOn: bindingFor(\.isNight), isInteractive: false, metrics: metrics)
+  }
+
+  private func trafficConditionButton(metrics: ControlBarMetrics) -> some View {
+    ConditionTileButton(systemImage: "car.2.fill", label: "Traffic", isOn: bindingFor(\.isHeavyTraffic), metrics: metrics)
+  }
+
+  private func tripToggleButton(metrics: ControlBarMetrics) -> some View {
     Button {
       switch meterStore.tripState {
       case .forHire:
@@ -232,65 +212,70 @@ struct MeterView: View {
         meterStore.resetToForHire()
       }
     } label: {
-      MiniTripStateSign(tripState: meterStore.tripState)
+      MiniTripStateSign(tripState: meterStore.tripState, metrics: metrics)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(tripToggleAccessibilityLabel)
   }
 
-  private var waitToggleButton: some View {
+  private func waitToggleButton(metrics: ControlBarMetrics) -> some View {
     Button {
       meterStore.toggleWaiting()
     } label: {
-      VStack(spacing: 2) {
-        Image(systemName: meterStore.isWaiting ? "pause.circle.fill" : "pause.circle")
-          .font(.system(size: 16, weight: .semibold))
-        Text("Wait")
-          .font(.nammaBody(8))
-        Text("ನಿಲ್ಲಿಕೆ")
-          .font(.nammaBody(7))
+      let isWaiting = meterStore.isWaiting
+      ControlTile(background: (isWaiting ? Theme.coral.opacity(0.85) : Theme.card.opacity(0.9)), size: metrics.tileSize) {
+        Image(systemName: isWaiting ? "play.fill" : "pause.fill")
+          .font(.system(size: metrics.iconSize, weight: .semibold))
+          .foregroundStyle(Theme.ink)
       }
-      .foregroundStyle(Theme.ink)
-      .frame(width: 64, height: 48)
-      .background(meterStore.isWaiting ? Theme.coral.opacity(0.8) : Theme.card.opacity(0.9))
-      .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-      .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
     }
     .buttonStyle(.plain)
     .disabled(!meterStore.isOnTrip)
     .opacity(meterStore.isOnTrip ? 1 : 0.6)
+    .accessibilityLabel(meterStore.isWaiting ? "Resume trip" : "Pause trip")
+  }
+
+  private var tripToggleAccessibilityLabel: String {
+    switch meterStore.tripState {
+    case .forHire:
+      return "Start trip"
+    case .inProgress:
+      return "Stop trip"
+    case .complete:
+      return "Reset trip"
+    }
   }
 
   private func controlBar(height: CGFloat) -> some View {
-    ViewThatFits(in: .horizontal) {
-      fullControlBar
-      compactControlBar
+    GeometryReader { geo in
+      let horizontalPadding: CGFloat = 10
+      let verticalPadding: CGFloat = 6
+      let spacing: CGFloat = 6
+      let tileCount = CGFloat(6)
+      let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
+      let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
+      let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
+      let metrics = ControlBarMetrics(
+        tileSize: CGSize(width: tileWidth, height: availableHeight),
+        iconSize: min(14, max(12, tileWidth * 0.35))
+      )
+
+      HStack(spacing: spacing) {
+        tripToggleButton(metrics: metrics)
+        waitToggleButton(metrics: metrics)
+        rainConditionButton(metrics: metrics)
+        nightConditionButton(metrics: metrics)
+        trafficConditionButton(metrics: metrics)
+        meterSettingsButton(metrics: metrics)
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+      .padding(.horizontal, horizontalPadding)
+      .padding(.vertical, verticalPadding)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 10)
-    .padding(.vertical, 6)
     .frame(height: height)
     .background(Theme.card.opacity(0.92))
     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
-  }
-
-  private var fullControlBar: some View {
-    HStack(spacing: 8) {
-      tripToggleButton
-      waitToggleButton
-      conditionsControls
-      meterSettingsButton
-    }
-    .fixedSize(horizontal: true, vertical: false)
-  }
-
-  private var compactControlBar: some View {
-    HStack(spacing: 8) {
-      tripToggleButton
-      waitToggleButton
-      controlOverflowButton
-    }
-    .fixedSize(horizontal: true, vertical: false)
   }
 
   private func meterPager(height: CGFloat) -> some View {
@@ -387,35 +372,6 @@ struct MeterView: View {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") {
             showMeterSettings = false
-          }
-        }
-      }
-    }
-  }
-
-  private var controlOverflowSheet: some View {
-    NavigationStack {
-      Form {
-        Section("Trip") {
-          HStack(spacing: 12) {
-            tripToggleButton
-            waitToggleButton
-          }
-          .frame(maxWidth: .infinity, alignment: .leading)
-        }
-
-        Section("Conditions") {
-          conditionsControls
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-
-        meterSettingsSections
-      }
-      .navigationTitle("Controls")
-      .toolbar {
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Done") {
-            showControlOverflow = false
           }
         }
       }
@@ -1447,37 +1403,61 @@ struct MiniFlipSignView: View {
 
 struct MiniTripStateSign: View {
   let tripState: TripMeterState
+  let metrics: ControlBarMetrics
 
   var body: some View {
-    ZStack {
-      // For Hire
-      MiniSignFace(
-        title: "For Hire",
-        subtitle: "ಬಾಡಿಗೆಗೆ",
-        color: Theme.coral
-      )
-      .opacity(tripState == .forHire ? 1 : 0)
-      .rotation3DEffect(.degrees(tripState == .forHire ? 0 : -180), axis: (x: 0, y: 1, z: 0))
-
-      // On Trip (Hired)
-      MiniSignFace(
-        title: "On Trip",
-        subtitle: "ಪ್ರಯಾಣ",
-        color: Theme.mint
-      )
-      .opacity(tripState == .inProgress ? 1 : 0)
-      .rotation3DEffect(.degrees(tripState == .inProgress ? 0 : 180), axis: (x: 0, y: 1, z: 0))
-
-      // Stop (Complete)
-      MiniSignFace(
-        title: "Stop",
-        subtitle: "ನಿಲ್ಲಿಸಿ",
-        color: Theme.mango
-      )
-      .opacity(tripState == .complete ? 1 : 0)
-      .rotation3DEffect(.degrees(tripState == .complete ? 0 : 180), axis: (x: 0, y: 1, z: 0))
+    ControlTile(background: backgroundColor.opacity(0.85), size: metrics.tileSize) {
+      Image(systemName: iconName)
+        .font(.system(size: metrics.iconSize, weight: .semibold))
+        .foregroundStyle(Theme.ink)
     }
-    .animation(.spring(response: 0.5, dampingFraction: 0.85), value: tripState)
+  }
+
+  private var iconName: String {
+    switch tripState {
+    case .forHire:
+      return "play.fill"
+    case .inProgress:
+      return "stop.fill"
+    case .complete:
+      return "arrow.counterclockwise"
+    }
+  }
+
+  private var backgroundColor: Color {
+    switch tripState {
+    case .forHire:
+      return Theme.coral
+    case .inProgress:
+      return Theme.mint
+    case .complete:
+      return Theme.mango
+    }
+  }
+}
+
+struct ControlBarMetrics {
+  let tileSize: CGSize
+  let iconSize: CGFloat
+}
+
+private struct ControlTile<Content: View>: View {
+  let background: Color
+  let size: CGSize
+  let content: Content
+
+  init(background: Color, size: CGSize, @ViewBuilder content: () -> Content) {
+    self.background = background
+    self.size = size
+    self.content = content()
+  }
+
+  var body: some View {
+    content
+      .frame(width: size.width, height: size.height)
+      .background(background)
+      .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+      .shadow(color: Theme.pastelShadow(), radius: 6, x: 0, y: 3)
   }
 }
 
@@ -1545,32 +1525,34 @@ struct FareInfoTile: View {
   }
 }
 
-struct MiniConditionChip: View {
-  let title: String
-  let subtitle: String
+struct ConditionTileButton: View {
+  let systemImage: String
+  let label: String
   @Binding var isOn: Bool
+  var isInteractive: Bool = true
+  let metrics: ControlBarMetrics
 
   var body: some View {
-    Button {
-      isOn.toggle()
-    } label: {
-      VStack(spacing: 2) {
-        Text(title)
-          .font(.nammaDisplay(9))
-        Text(subtitle)
-          .font(.nammaBody(7))
+    if isInteractive {
+      Button {
+        isOn.toggle()
+      } label: {
+        tile
       }
-      .foregroundStyle(isOn ? Theme.ink : Theme.ink.opacity(0.6))
-      .padding(.vertical, 4)
-      .padding(.horizontal, 6)
-      .background(isOn ? Theme.mango.opacity(0.6) : Theme.card)
-      .clipShape(Capsule())
-      .overlay(
-        Capsule()
-          .stroke(Theme.ink.opacity(isOn ? 0.2 : 0.1), lineWidth: 1)
-      )
+      .buttonStyle(.plain)
+    } else {
+      tile
     }
-    .buttonStyle(.plain)
+  }
+
+  private var tile: some View {
+    ControlTile(background: isOn ? Theme.coral.opacity(0.85) : Theme.card.opacity(0.9), size: metrics.tileSize) {
+      Image(systemName: systemImage)
+        .font(.system(size: metrics.iconSize, weight: .semibold))
+        .foregroundStyle(Theme.ink)
+    }
+    .accessibilityLabel(label)
+    .accessibilityValue(isOn ? "On" : "Off")
   }
 }
 
