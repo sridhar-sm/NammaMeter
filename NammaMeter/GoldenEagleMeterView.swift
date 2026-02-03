@@ -1,17 +1,5 @@
 import SwiftUI
 
-// MARK: - Dimensions
-
-enum GoldenEagleDimensions {
-  static let widthRatio: CGFloat = SuperElectronicDimensions.widthRatio
-  static let bodyAspect: CGFloat = 1.12
-
-  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
-  }
-}
-
 // MARK: - Main Panel
 
 struct GoldenEagleFullMeterPanel: View {

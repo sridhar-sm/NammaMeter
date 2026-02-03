@@ -1,17 +1,5 @@
 import SwiftUI
 
-// MARK: - Dimensions
-
-enum SuperElectronicDimensions {
-  static let widthRatio: CGFloat = 0.88
-  static let bodyAspect: CGFloat = 1.1
-
-  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
-  }
-}
-
 // MARK: - Main Panel
 
 struct SuperElectronicFullMeterPanel: View {
