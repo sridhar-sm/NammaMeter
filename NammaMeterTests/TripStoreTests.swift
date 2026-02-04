@@ -8,12 +8,12 @@ final class TripStoreTests: XCTestCase {
   // MARK: - Add Tests
 
   func testAddTripInsertsAtFront() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip1 = makeTrip(fare: 100)
-    let trip2 = makeTrip(fare: 200)
+    let trip1 = TestHelpers.makeTrip(fare: 100)
+    let trip2 = TestHelpers.makeTrip(fare: 200)
 
     store.add(trip1)
     store.add(trip2)
@@ -26,13 +26,13 @@ final class TripStoreTests: XCTestCase {
   // MARK: - Delete Tests
 
   func testDeleteAtOffsets() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip1 = makeTrip(fare: 100)
-    let trip2 = makeTrip(fare: 200)
-    let trip3 = makeTrip(fare: 300)
+    let trip1 = TestHelpers.makeTrip(fare: 100)
+    let trip2 = TestHelpers.makeTrip(fare: 200)
+    let trip3 = TestHelpers.makeTrip(fare: 300)
 
     store.add(trip1)
     store.add(trip2)
@@ -47,11 +47,11 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testDeleteAtMultipleOffsets() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trips = (0..<5).map { makeTrip(fare: Double($0 * 100)) }
+    let trips = (0..<5).map { TestHelpers.makeTrip(fare: Double($0 * 100)) }
     trips.forEach { store.add($0) }
 
     // Delete indices 1 and 3
@@ -61,13 +61,13 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testDeleteByIds() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip1 = makeTrip(fare: 100)
-    let trip2 = makeTrip(fare: 200)
-    let trip3 = makeTrip(fare: 300)
+    let trip1 = TestHelpers.makeTrip(fare: 100)
+    let trip2 = TestHelpers.makeTrip(fare: 200)
+    let trip3 = TestHelpers.makeTrip(fare: 300)
 
     store.add(trip1)
     store.add(trip2)
@@ -80,11 +80,11 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testDeleteByEmptyIdsDoesNothing() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip = makeTrip(fare: 100)
+    let trip = TestHelpers.makeTrip(fare: 100)
     store.add(trip)
 
     store.delete(ids: Set())
@@ -93,11 +93,11 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testDeleteAll() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trips = (0..<5).map { makeTrip(fare: Double($0 * 100)) }
+    let trips = (0..<5).map { TestHelpers.makeTrip(fare: Double($0 * 100)) }
     trips.forEach { store.add($0) }
 
     store.deleteAll()
@@ -108,11 +108,11 @@ final class TripStoreTests: XCTestCase {
   // MARK: - Update Tests
 
   func testUpdateTrip() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip = makeTrip(fare: 100)
+    let trip = TestHelpers.makeTrip(fare: 100)
     store.add(trip)
 
     store.update(trip.id) { $0.name = "Updated Name" }
@@ -121,11 +121,11 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testUpdateNonExistentTripDoesNothing() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip = makeTrip(fare: 100)
+    let trip = TestHelpers.makeTrip(fare: 100)
     store.add(trip)
 
     let nonExistentId = UUID()
@@ -137,12 +137,12 @@ final class TripStoreTests: XCTestCase {
   // MARK: - Lookup Tests
 
   func testTripForId() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip1 = makeTrip(fare: 100)
-    let trip2 = makeTrip(fare: 200)
+    let trip1 = TestHelpers.makeTrip(fare: 100)
+    let trip2 = TestHelpers.makeTrip(fare: 200)
 
     store.add(trip1)
     store.add(trip2)
@@ -153,11 +153,11 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testTripForIdReturnsNilForUnknown() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
-    let trip = makeTrip(fare: 100)
+    let trip = TestHelpers.makeTrip(fare: 100)
     store.add(trip)
 
     let found = store.trip(for: UUID())
@@ -167,14 +167,14 @@ final class TripStoreTests: XCTestCase {
   // MARK: - Persistence Tests
 
   func testTripsPersistedAndLoaded() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
 
     // Create store and add trips
     let store1 = TripStore(fileURL: url)
-    await waitForLoad(store1)
+    await TestHelpers.waitForTripStoreLoad(store1)
 
-    let trip1 = makeTrip(fare: 100, name: "Trip One")
-    let trip2 = makeTrip(fare: 200, name: "Trip Two")
+    let trip1 = TestHelpers.makeTrip(fare: 100, name: "Trip One")
+    let trip2 = TestHelpers.makeTrip(fare: 200, name: "Trip Two")
     store1.add(trip1)
     store1.add(trip2)
 
@@ -183,7 +183,7 @@ final class TripStoreTests: XCTestCase {
 
     // Create new store from same file
     let store2 = TripStore(fileURL: url)
-    await waitForLoad(store2)
+    await TestHelpers.waitForTripStoreLoad(store2)
 
     XCTAssertEqual(store2.trips.count, 2)
     XCTAssertEqual(store2.trips[0].name, "Trip Two")
@@ -191,74 +191,41 @@ final class TripStoreTests: XCTestCase {
   }
 
   func testEmptyFileReturnsEmptyArray() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
     // File doesn't exist - should load as empty
 
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
     XCTAssertTrue(store.trips.isEmpty)
   }
 
   func testCorruptedFileHandledGracefully() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
 
     // Write invalid JSON to file
     let corruptedData = "not valid json".data(using: .utf8)!
     try corruptedData.write(to: url)
 
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
     // Should gracefully handle and return empty
     XCTAssertTrue(store.trips.isEmpty)
   }
 
   func testPartiallyCorruptedJsonHandledGracefully() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
 
     // Write JSON that's valid but wrong schema
     let wrongSchema = "[{\"wrong\": \"schema\"}]".data(using: .utf8)!
     try wrongSchema.write(to: url)
 
     let store = TripStore(fileURL: url)
-    await waitForLoad(store)
+    await TestHelpers.waitForTripStoreLoad(store)
 
     // Should gracefully handle and return empty
     XCTAssertTrue(store.trips.isEmpty)
   }
 
-  // MARK: - Helpers
-
-  private func makeTempURL() throws -> URL {
-    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    return dir.appendingPathComponent("trips-test.json")
-  }
-
-  private func makeTrip(fare: Double, name: String? = nil) -> Trip {
-    Trip(
-      id: UUID(),
-      startDate: Date(timeIntervalSince1970: 1000000),
-      endDate: Date(timeIntervalSince1970: 1001800),
-      distanceMeters: 5000,
-      duration: 1800,
-      fare: fare,
-      points: [],
-      conditions: .clear,
-      rateSnapshot: RateSnapshot(settings: .bengaluruDefault),
-      multiplier: 1.0,
-      name: name
-    )
-  }
-
-  private func waitForLoad(_ store: TripStore) async {
-    // TripStore loads async in init, give it time to complete
-    for _ in 0..<60 {
-      try? await Task.sleep(for: .milliseconds(50))
-      // We can't directly check isLoaded, but after initial load trips is set
-      // Just wait a reasonable amount for async init
-    }
-    try? await Task.sleep(for: .milliseconds(100))
-  }
 }
