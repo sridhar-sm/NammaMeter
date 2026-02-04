@@ -185,6 +185,161 @@ enum BrightDigitalDimensions {
   }
 }
 
+// MARK: - Digital Meter Dimensions
+
+/// Dimension ratios for the Neo Digital meter
+enum DigitalDimensions {
+  static let widthRatio: CGFloat = 0.78
+  static let bodyAspect: CGFloat = 0.7
+
+  static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
+    containerWidth * widthRatio * bodyAspect
+  }
+}
+
+// MARK: - Meter Shell Style
+
+/// Configuration for meter shell appearance
+struct MeterShellStyle {
+  let widthRatio: CGFloat
+  let bodyAspect: CGFloat
+  let cornerRadiusRatio: CGFloat
+  let bodyGradientColors: [Color]
+  let strokeOpacity: Double
+  let strokeLineWidth: CGFloat
+  let shadowOpacity: Double
+  let shadowRadius: CGFloat
+  let shadowYOffset: CGFloat
+  let alignment: Alignment
+}
+
+extension MeterShellStyle {
+  static let superMechanical = MeterShellStyle(
+    widthRatio: SuperMeterDimensions.widthRatio,
+    bodyAspect: SuperMeterDimensions.bodyAspect,
+    cornerRadiusRatio: 0.08,
+    bodyGradientColors: [Color(red: 0.17, green: 0.18, blue: 0.19), Color(red: 0.06, green: 0.06, blue: 0.07)],
+    strokeOpacity: 0.08,
+    strokeLineWidth: 1.2,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowYOffset: 10,
+    alignment: .top
+  )
+
+  static let superElectronic = MeterShellStyle(
+    widthRatio: SuperElectronicDimensions.widthRatio,
+    bodyAspect: SuperElectronicDimensions.bodyAspect,
+    cornerRadiusRatio: 0.08,
+    bodyGradientColors: [Color(red: 0.17, green: 0.18, blue: 0.19), Color(red: 0.06, green: 0.06, blue: 0.07)],
+    strokeOpacity: 0.08,
+    strokeLineWidth: 1.2,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowYOffset: 10,
+    alignment: .top
+  )
+
+  static let goldenEagle = MeterShellStyle(
+    widthRatio: GoldenEagleDimensions.widthRatio,
+    bodyAspect: GoldenEagleDimensions.bodyAspect,
+    cornerRadiusRatio: 0.08,
+    bodyGradientColors: [
+      Color(red: 0.78, green: 0.78, blue: 0.76),
+      Color(red: 0.6, green: 0.6, blue: 0.58),
+      Color(red: 0.36, green: 0.36, blue: 0.35)
+    ],
+    strokeOpacity: 0.4,
+    strokeLineWidth: 1.2,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowYOffset: 10,
+    alignment: .top
+  )
+
+  static let brightDigital = MeterShellStyle(
+    widthRatio: BrightDigitalDimensions.widthRatio,
+    bodyAspect: BrightDigitalDimensions.bodyAspect,
+    cornerRadiusRatio: 0.08,
+    bodyGradientColors: [Color(red: 0.14, green: 0.15, blue: 0.16), Color(red: 0.05, green: 0.05, blue: 0.06)],
+    strokeOpacity: 0.08,
+    strokeLineWidth: 1.2,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    shadowYOffset: 10,
+    alignment: .top
+  )
+
+  static let digital = MeterShellStyle(
+    widthRatio: DigitalDimensions.widthRatio,
+    bodyAspect: DigitalDimensions.bodyAspect,
+    cornerRadiusRatio: 0.08,
+    bodyGradientColors: [Color(red: 0.09, green: 0.1, blue: 0.12), .black],
+    strokeOpacity: 0.08,
+    strokeLineWidth: 1,
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    shadowYOffset: 8,
+    alignment: .center
+  )
+}
+
+// MARK: - Meter Shell
+
+/// Container that handles geometry scaling and shell rendering for meter panels
+struct MeterShell<Content: View>: View {
+  let style: MeterShellStyle
+  let topInset: CGFloat
+  @ViewBuilder let content: (_ bodyWidth: CGFloat, _ bodyHeight: CGFloat) -> Content
+
+  init(
+    style: MeterShellStyle,
+    topInset: CGFloat = 0,
+    @ViewBuilder content: @escaping (_ bodyWidth: CGFloat, _ bodyHeight: CGFloat) -> Content
+  ) {
+    self.style = style
+    self.topInset = topInset
+    self.content = content
+  }
+
+  var body: some View {
+    GeometryReader { geo in
+      let desiredWidth = geo.size.width * style.widthRatio
+      let bodyHeightForWidth = desiredWidth * style.bodyAspect
+      let scale = min(1, geo.size.height / bodyHeightForWidth)
+      let bodyWidth = desiredWidth * scale
+      let bodyHeight = bodyHeightForWidth * scale
+      let cornerRadius = bodyWidth * style.cornerRadiusRatio
+
+      ZStack {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+          .fill(
+            LinearGradient(
+              colors: style.bodyGradientColors,
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+              .stroke(Color.white.opacity(style.strokeOpacity), lineWidth: style.strokeLineWidth)
+          )
+          .shadow(
+            color: .black.opacity(style.shadowOpacity),
+            radius: style.shadowRadius,
+            x: 0,
+            y: style.shadowYOffset
+          )
+
+        content(bodyWidth, bodyHeight)
+      }
+      .frame(width: bodyWidth, height: bodyHeight)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.alignment)
+      .offset(y: style.alignment == .top ? topInset : 0)
+    }
+  }
+}
+
 // MARK: - Safe Area Insets Helper
 
 @MainActor

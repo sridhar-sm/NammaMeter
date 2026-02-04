@@ -7,48 +7,23 @@ struct DigitalFullMeterPanel: View {
   let fare: Double
   @State private var glowPulse = false
 
-  private let bodyColor = Color(red: 0.09, green: 0.1, blue: 0.12)
   private let bezel = Color(red: 0.18, green: 0.2, blue: 0.24)
   private let accent = Color(red: 0.15, green: 0.8, blue: 0.9)
 
   var body: some View {
-    GeometryReader { geo in
-      let desiredWidth = geo.size.width * 0.78
-      let bodyHeightForWidth = desiredWidth * 0.7
-      let scale = min(1, geo.size.height / bodyHeightForWidth)
-      let bodyWidth = desiredWidth * scale
-      let bodyHeight = bodyHeightForWidth * scale
+    MeterShell(style: .digital) { bodyWidth, bodyHeight in
+      VStack(spacing: bodyHeight * 0.08) {
+        Text("DIGITAL FARE METER")
+          .font(.system(size: bodyWidth * 0.05, weight: .semibold, design: .rounded))
+          .foregroundStyle(Color.white.opacity(0.7))
 
-      ZStack {
-        RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [bodyColor, Color.black],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-              .stroke(Color.white.opacity(0.08), lineWidth: 1)
-          )
-          .shadow(color: Color.black.opacity(0.4), radius: 14, x: 0, y: 8)
+        DigitalMeterScreen(tripState: tripState, fare: fare, glow: glowPulse, accent: accent, bezel: bezel)
+          .frame(height: bodyHeight * 0.32)
 
-        VStack(spacing: bodyHeight * 0.08) {
-          Text("DIGITAL FARE METER")
-            .font(.system(size: bodyWidth * 0.05, weight: .semibold, design: .rounded))
-            .foregroundStyle(Color.white.opacity(0.7))
-
-          DigitalMeterScreen(tripState: tripState, fare: fare, glow: glowPulse, accent: accent, bezel: bezel)
-            .frame(height: bodyHeight * 0.32)
-
-          DigitalButtonRow(width: bodyWidth)
-        }
-        .padding(.horizontal, bodyWidth * 0.12)
-        .padding(.vertical, bodyHeight * 0.12)
+        DigitalButtonRow(width: bodyWidth)
       }
-      .frame(width: bodyWidth, height: bodyHeight)
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .padding(.horizontal, bodyWidth * 0.12)
+      .padding(.vertical, bodyHeight * 0.12)
     }
     .onAppear {
       withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
