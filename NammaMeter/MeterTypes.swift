@@ -1,6 +1,42 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Meter Category
+
+enum MeterCategory {
+  case mechanical
+  case electronic
+}
+
+// MARK: - Display Fields
+
+enum MeterDisplayField {
+  case fare
+  case waitTime
+  case distance
+}
+
+// MARK: - Status Indicators
+
+enum MeterStatusIndicator {
+  case forHire
+  case hired
+  case stop
+  case nightMode
+}
+
+// MARK: - Meter Capabilities
+
+struct MeterCapabilities {
+  let category: MeterCategory
+  let displayFields: Set<MeterDisplayField>
+  let statusIndicators: Set<MeterStatusIndicator>
+
+  var isMechanical: Bool { category == .mechanical }
+  var showsWaitTime: Bool { displayFields.contains(.waitTime) }
+  var showsDistance: Bool { displayFields.contains(.distance) }
+}
+
 // MARK: - Meter Face Style
 
 enum MeterFaceStyle: String, CaseIterable, Identifiable {
@@ -24,6 +60,41 @@ enum MeterFaceStyle: String, CaseIterable, Identifiable {
       return "display"
     case .brightDigital:
       return "rectangle.3.offgrid"
+    }
+  }
+
+  var capabilities: MeterCapabilities {
+    switch self {
+    case .superMeter:
+      return MeterCapabilities(
+        category: .mechanical,
+        displayFields: [.fare],
+        statusIndicators: [.forHire]
+      )
+    case .superElectronic:
+      return MeterCapabilities(
+        category: .electronic,
+        displayFields: [.fare, .waitTime, .distance],
+        statusIndicators: [.forHire, .hired, .stop, .nightMode]
+      )
+    case .goldenEagle:
+      return MeterCapabilities(
+        category: .electronic,
+        displayFields: [.fare, .waitTime, .distance],
+        statusIndicators: [.forHire]
+      )
+    case .digital:
+      return MeterCapabilities(
+        category: .electronic,
+        displayFields: [.fare],
+        statusIndicators: [.forHire]
+      )
+    case .brightDigital:
+      return MeterCapabilities(
+        category: .electronic,
+        displayFields: [.fare, .waitTime, .distance],
+        statusIndicators: [.forHire]
+      )
     }
   }
 }

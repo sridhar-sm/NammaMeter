@@ -481,17 +481,19 @@ struct MeterView: View {
         }
       }
     }
-    Section("Digit Style") {
-      ForEach(DigitWheelStyle.allCases) { style in
-        Button {
-          digitWheelStyle = style
-        } label: {
-          HStack {
-            Text(style.label)
-            Spacer()
-            if digitWheelStyle == style {
-              Image(systemName: "checkmark")
-                .foregroundStyle(Theme.ink)
+    if meterFaceStyle.capabilities.isMechanical {
+      Section("Digit Style") {
+        ForEach(DigitWheelStyle.allCases) { style in
+          Button {
+            digitWheelStyle = style
+          } label: {
+            HStack {
+              Text(style.label)
+              Spacer()
+              if digitWheelStyle == style {
+                Image(systemName: "checkmark")
+                  .foregroundStyle(Theme.ink)
+              }
             }
           }
         }
