@@ -27,12 +27,7 @@ private struct HistoryContentView: View {
     }
     .toolbar {
       ToolbarItem(placement: .principal) {
-        VStack(spacing: 2) {
-          Text("Trips")
-            .font(.nammaDisplay(18))
-          Text("ಪ್ರಯಾಣಗಳು")
-            .font(.nammaBody(12))
-        }
+        HistoryToolbarTitle()
       }
     }
     .navigationBarTitleDisplayMode(.inline)
@@ -50,81 +45,33 @@ private struct HistoryContentView: View {
 
   private var tripList: some View {
     List(selection: $selection) {
-      listContent
+      HistoryListContent(
+        trips: tripStore.trips,
+        filteredTrips: filteredTrips,
+        isEditing: isEditing,
+        onDeleteFiltered: deleteFiltered
+      )
     }
     .listStyle(.plain)
     .scrollContentBackground(.hidden)
     .safeAreaInset(edge: .top, spacing: 0) {
       VStack(spacing: 6) {
-        searchBar
+        HistorySearchBar(searchText: $searchText, searchFocused: $searchFocused)
         if !tripStore.trips.isEmpty {
-          actionBar
+          HistoryActionBar(
+            isEditing: isEditing,
+            showSelectAll: isEditing && !filteredTrips.isEmpty,
+            showDelete: isEditing && !selection.isEmpty,
+            isAllSelected: isAllSelected,
+            onToggleSelectAll: toggleSelectAll,
+            onDeleteSelected: deleteSelected,
+            onToggleEdit: { editMode = isEditing ? .inactive : .active }
+          )
         }
       }
       .padding(.horizontal, 16)
       .padding(.top, 4)
       .padding(.bottom, 4)
-    }
-  }
-
-  @ViewBuilder
-  private var listContent: some View {
-    if tripStore.trips.isEmpty {
-      emptyState
-    } else if filteredTrips.isEmpty {
-      noResultsState
-    } else {
-      tripRows
-    }
-  }
-
-  private var emptyState: some View {
-    VStack(alignment: .center, spacing: 12) {
-      Text("No trips yet")
-        .font(.nammaDisplay(16))
-        .foregroundStyle(Theme.ink)
-      Text("ಯಾವುದೇ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
-        .font(.nammaBody(12))
-        .foregroundStyle(Theme.ink.opacity(0.7))
-    }
-    .frame(maxWidth: .infinity, minHeight: 120)
-    .listRowBackground(Color.clear)
-  }
-
-  private var noResultsState: some View {
-    VStack(alignment: .center, spacing: 12) {
-      Text("No matching trips")
-        .font(.nammaDisplay(16))
-        .foregroundStyle(Theme.ink)
-      Text("ಹೊಂದುವ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
-        .font(.nammaBody(12))
-        .foregroundStyle(Theme.ink.opacity(0.7))
-    }
-    .frame(maxWidth: .infinity, minHeight: 120)
-    .listRowBackground(Color.clear)
-  }
-
-  private var tripRows: some View {
-    ForEach(filteredTrips) { trip in
-      tripRow(for: trip)
-    }
-    .onDelete(perform: deleteFiltered)
-  }
-
-  @ViewBuilder
-  private func tripRow(for trip: Trip) -> some View {
-    if editMode == .active {
-      TripRow(trip: trip)
-        .tag(trip.id)
-        .listRowBackground(Theme.card)
-    } else {
-      NavigationLink {
-        TripDetailView(tripId: trip.id)
-      } label: {
-        TripRow(trip: trip)
-      }
-      .tag(trip.id)
-      .listRowBackground(Theme.card)
     }
   }
 
@@ -147,55 +94,57 @@ private struct HistoryContentView: View {
     !filteredTripIds.isEmpty && selection == filteredTripIds
   }
 
-  private var selectAllButton: some View {
-    Button {
-      toggleSelectAll()
-    } label: {
-      mangoPillLabel(isAllSelected ? "Deselect All" : "Select All")
+  private func tripSearchText(_ trip: Trip) -> String {
+    let dateText = trip.startDate.formatted(date: .abbreviated, time: .shortened)
+    let durationText = formattedElapsed(trip.duration)
+    let distanceText = (trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
+    return [
+      trip.name,
+      trip.startLocationName,
+      dateText,
+      durationText,
+      distanceText
+    ]
+    .compactMap { $0 }
+    .joined(separator: " ")
+    .lowercased()
+  }
+
+  private func deleteFiltered(at offsets: IndexSet) {
+    let ids = offsets.map { filteredTrips[$0].id }
+    tripStore.delete(ids: Set(ids))
+  }
+
+  private func deleteSelected() {
+    tripStore.delete(ids: selection)
+    selection.removeAll()
+  }
+
+  private func toggleSelectAll() {
+    if isAllSelected {
+      selection.removeAll()
+    } else {
+      selection = filteredTripIds
     }
-    .accessibilityLabel(isAllSelected ? "Deselect All" : "Select All")
   }
+}
 
-  private var actionBar: some View {
-    HStack(spacing: 12) {
-      if isEditing && !filteredTrips.isEmpty {
-        selectAllButton
-      }
-      Spacer()
-      if isEditing && !selection.isEmpty {
-        Button(role: .destructive) {
-          deleteSelected()
-        } label: {
-          Label("Delete", systemImage: "trash")
-        }
-        .tint(.red)
-        .buttonStyle(.bordered)
-        .controlSize(.small)
-      }
-      editToggleButton
+private struct HistoryToolbarTitle: View {
+  var body: some View {
+    VStack(spacing: 2) {
+      Text("Trips")
+        .font(.nammaDisplay(18))
+      Text("ಪ್ರಯಾಣಗಳು")
+        .font(.nammaBody(12))
     }
   }
+}
 
-  private var editToggleButton: some View {
-    Button {
-      editMode = isEditing ? .inactive : .active
-    } label: {
-      mangoPillLabel(isEditing ? "Done" : "Edit")
-    }
-    .accessibilityLabel(isEditing ? "Done" : "Edit")
-  }
+private struct HistorySearchBar: View {
+  @Binding var searchText: String
+  @FocusState.Binding var searchFocused: Bool
 
-  private func mangoPillLabel(_ title: String) -> some View {
-    Text(title)
-      .font(.nammaDisplay(13))
-      .foregroundStyle(Theme.ink)
-      .padding(.horizontal, 14)
-      .padding(.vertical, 6)
-      .background(Theme.mango.opacity(0.6))
-      .clipShape(Capsule())
-  }
-
-  private var searchBar: some View {
+  var body: some View {
     HStack(spacing: 12) {
       Image(systemName: "magnifyingglass")
         .foregroundStyle(Color(uiColor: .secondaryLabel))
@@ -236,38 +185,122 @@ private struct HistoryContentView: View {
     )
     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
   }
+}
 
-  private func tripSearchText(_ trip: Trip) -> String {
-    let dateText = trip.startDate.formatted(date: .abbreviated, time: .shortened)
-    let durationText = formattedElapsed(trip.duration)
-    let distanceText = (trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2))) + " km"
-    return [
-      trip.name,
-      trip.startLocationName,
-      dateText,
-      durationText,
-      distanceText
-    ]
-    .compactMap { $0 }
-    .joined(separator: " ")
-    .lowercased()
+private struct HistoryActionBar: View {
+  let isEditing: Bool
+  let showSelectAll: Bool
+  let showDelete: Bool
+  let isAllSelected: Bool
+  let onToggleSelectAll: () -> Void
+  let onDeleteSelected: () -> Void
+  let onToggleEdit: () -> Void
+
+  var body: some View {
+    HStack(spacing: 12) {
+      if showSelectAll {
+        Button {
+          onToggleSelectAll()
+        } label: {
+          mangoPillLabel(isAllSelected ? "Deselect All" : "Select All")
+        }
+        .accessibilityLabel(isAllSelected ? "Deselect All" : "Select All")
+      }
+      Spacer()
+      if showDelete {
+        Button(role: .destructive) {
+          onDeleteSelected()
+        } label: {
+          Label("Delete", systemImage: "trash")
+        }
+        .tint(.red)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+      }
+      Button {
+        onToggleEdit()
+      } label: {
+        mangoPillLabel(isEditing ? "Done" : "Edit")
+      }
+      .accessibilityLabel(isEditing ? "Done" : "Edit")
+    }
   }
 
-  private func deleteFiltered(at offsets: IndexSet) {
-    let ids = offsets.map { filteredTrips[$0].id }
-    tripStore.delete(ids: Set(ids))
+  private func mangoPillLabel(_ title: String) -> some View {
+    Text(title)
+      .font(.nammaDisplay(13))
+      .foregroundStyle(Theme.ink)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 6)
+      .background(Theme.mango.opacity(0.6))
+      .clipShape(Capsule())
   }
+}
 
-  private func deleteSelected() {
-    tripStore.delete(ids: selection)
-    selection.removeAll()
-  }
+private struct HistoryListContent: View {
+  let trips: [Trip]
+  let filteredTrips: [Trip]
+  let isEditing: Bool
+  let onDeleteFiltered: (IndexSet) -> Void
 
-  private func toggleSelectAll() {
-    if isAllSelected {
-      selection.removeAll()
+  @ViewBuilder
+  var body: some View {
+    if trips.isEmpty {
+      emptyState
+    } else if filteredTrips.isEmpty {
+      noResultsState
     } else {
-      selection = filteredTripIds
+      tripRows
+    }
+  }
+
+  private var emptyState: some View {
+    VStack(alignment: .center, spacing: 12) {
+      Text("No trips yet")
+        .font(.nammaDisplay(16))
+        .foregroundStyle(Theme.ink)
+      Text("ಯಾವುದೇ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
+        .font(.nammaBody(12))
+        .foregroundStyle(Theme.ink.opacity(0.7))
+    }
+    .frame(maxWidth: .infinity, minHeight: 120)
+    .listRowBackground(Color.clear)
+  }
+
+  private var noResultsState: some View {
+    VStack(alignment: .center, spacing: 12) {
+      Text("No matching trips")
+        .font(.nammaDisplay(16))
+        .foregroundStyle(Theme.ink)
+      Text("ಹೊಂದುವ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
+        .font(.nammaBody(12))
+        .foregroundStyle(Theme.ink.opacity(0.7))
+    }
+    .frame(maxWidth: .infinity, minHeight: 120)
+    .listRowBackground(Color.clear)
+  }
+
+  private var tripRows: some View {
+    ForEach(filteredTrips) { trip in
+      tripRow(for: trip)
+    }
+    .onDelete(perform: onDeleteFiltered)
+  }
+
+  @ViewBuilder
+  private func tripRow(for trip: Trip) -> some View {
+    if isEditing {
+      TripRow(trip: trip)
+        .tag(trip.id)
+        .listRowBackground(Theme.card)
+    } else {
+      NavigationLink {
+        TripDetailView(tripId: trip.id)
+      } label: {
+        TripRow(trip: trip)
+      }
+      .tag(trip.id)
+      .listRowBackground(Theme.card)
     }
   }
 }

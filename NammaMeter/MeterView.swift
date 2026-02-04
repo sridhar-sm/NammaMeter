@@ -81,6 +81,45 @@ struct MeterView: View {
   // MARK: - Layout
 
   private var mapArea: some View {
+    MeterLayoutContainer(
+      pagerSelection: $pagerSelection,
+      meterFaceStyle: $meterFaceStyle,
+      meterRenderMode: $meterRenderMode,
+      digitWheelStyle: $digitWheelStyle,
+      showMeterSettings: $showMeterSettings
+    )
+  }
+
+  // MARK: - Settings Sheet
+
+  private var meterSettingsSheet: some View {
+    MeterSettingsSheetView(
+      meterFaceStyle: $meterFaceStyle,
+      meterRenderMode: $meterRenderMode,
+      digitWheelStyle: $digitWheelStyle,
+      isPresented: $showMeterSettings
+    )
+  }
+
+  // MARK: - Helpers
+
+  private func evaluateAlwaysPrompt() {
+    guard meterStore.isOnTrip else { return }
+    guard meterStore.authorizationStatus == .authorizedWhenInUse else { return }
+    guard !hasPromptedForAlways else { return }
+    hasPromptedForAlways = true
+    showAlwaysPrompt = true
+  }
+}
+
+private struct MeterLayoutContainer: View {
+  @Binding var pagerSelection: Int
+  @Binding var meterFaceStyle: MeterFaceStyle
+  @Binding var meterRenderMode: MeterRenderMode
+  @Binding var digitWheelStyle: DigitWheelStyle
+  @Binding var showMeterSettings: Bool
+
+  var body: some View {
     GeometryReader { geo in
       let topInset = safeAreaTop
       let bottomPadding: CGFloat = 8
@@ -98,45 +137,58 @@ struct MeterView: View {
       let referenceMeterHeight = min(maxMeterNaturalHeight, maxMeterHeight)
       let fixedMapHeight = availableHeight - referenceMeterHeight
 
-      // Calculate actual meter height for the selected style
-      let meterNaturalHeight: CGFloat = {
-        switch meterFaceStyle {
-        case .superMeter:
-          return SuperMeterDimensions.naturalHeight(for: geo.size.width)
-        case .superElectronic:
-          return SuperElectronicDimensions.naturalHeight(for: geo.size.width)
-        case .goldenEagle:
-          return GoldenEagleDimensions.naturalHeight(for: geo.size.width)
-        case .digital:
-          return SuperMeterDimensions.naturalHeight(for: geo.size.width)
-        case .brightDigital:
-          return BrightDigitalDimensions.naturalHeight(for: geo.size.width)
-        }
-      }()
-      let meterHeight = min(meterNaturalHeight, maxMeterHeight)
-
       VStack(spacing: spacing) {
-        meterPanelWithNotch(height: meterHeight, topInset: topInset)
-          .frame(height: referenceMeterHeight)
-          .frame(maxWidth: .infinity)
-          .contentShape(Rectangle())
-          .gesture(meterStyleSwipeGesture)
+        MeterPanelWithNotch(
+          meterFaceStyle: meterFaceStyle,
+          meterRenderMode: meterRenderMode,
+          digitWheelStyle: digitWheelStyle,
+          topInset: topInset
+        )
+        .frame(height: referenceMeterHeight)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .gesture(meterStyleSwipeGesture)
 
-        controlBar(height: controlBarHeight)
-        .padding(.horizontal, 12)
+        MeterControlBar(height: controlBarHeight, showMeterSettings: $showMeterSettings)
+          .padding(.horizontal, 12)
 
-        meterPager(height: fixedMapHeight)
-        .padding(.horizontal, 12)
+        MeterPagerView(pagerSelection: $pagerSelection, height: fixedMapHeight)
+          .padding(.horizontal, 12)
       }
       .padding(.bottom, bottomPadding)
       .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
     }
   }
 
-  // MARK: - Meter Panel Selection
+  private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
 
-  @ViewBuilder
-  private func meterPanelWithNotch(height: CGFloat, topInset: CGFloat) -> some View {
+  private var meterStyleSwipeGesture: some Gesture {
+    DragGesture(minimumDistance: 24, coordinateSpace: .local)
+      .onEnded { value in
+        let horizontal = value.translation.width
+        let vertical = value.translation.height
+        guard abs(horizontal) > abs(vertical) else { return }
+        guard abs(horizontal) > 32 else { return }
+        advanceMeterStyle(by: horizontal < 0 ? 1 : -1)
+      }
+  }
+
+  private func advanceMeterStyle(by offset: Int) {
+    let styles = MeterFaceStyle.allCases
+    guard let currentIndex = styles.firstIndex(of: meterFaceStyle) else { return }
+    let nextIndex = (currentIndex + offset + styles.count) % styles.count
+    meterFaceStyle = styles[nextIndex]
+  }
+}
+
+private struct MeterPanelWithNotch: View {
+  @Environment(MeterStore.self) private var meterStore
+  let meterFaceStyle: MeterFaceStyle
+  let meterRenderMode: MeterRenderMode
+  let digitWheelStyle: DigitWheelStyle
+  let topInset: CGFloat
+
+  var body: some View {
     switch meterFaceStyle {
     case .superMeter:
       if meterRenderMode == .full {
@@ -224,26 +276,44 @@ struct MeterView: View {
       }
     }
   }
+}
 
-  private var meterStyleSwipeGesture: some Gesture {
-    DragGesture(minimumDistance: 24, coordinateSpace: .local)
-      .onEnded { value in
-        let horizontal = value.translation.width
-        let vertical = value.translation.height
-        guard abs(horizontal) > abs(vertical) else { return }
-        guard abs(horizontal) > 32 else { return }
-        advanceMeterStyle(by: horizontal < 0 ? 1 : -1)
+private struct MeterControlBar: View {
+  @Environment(SettingsStore.self) private var settingsStore
+  @Environment(TripStore.self) private var tripStore
+  @Environment(MeterStore.self) private var meterStore
+  let height: CGFloat
+  @Binding var showMeterSettings: Bool
+
+  var body: some View {
+    GeometryReader { geo in
+      let horizontalPadding: CGFloat = 10
+      let verticalPadding: CGFloat = 6
+      let spacing: CGFloat = 6
+      let tileCount = CGFloat(4)
+      let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
+      let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
+      let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
+      let metrics = ControlBarMetrics(
+        tileSize: CGSize(width: tileWidth, height: availableHeight),
+        iconSize: min(14, max(12, tileWidth * 0.35))
+      )
+
+      HStack(spacing: spacing) {
+        tripToggleButton(metrics: metrics)
+        waitToggleButton(metrics: metrics)
+        nightConditionButton(metrics: metrics)
+        meterSettingsButton(metrics: metrics)
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+      .padding(.horizontal, horizontalPadding)
+      .padding(.vertical, verticalPadding)
+    }
+    .frame(height: height)
+    .background(Theme.card.opacity(0.92))
+    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
   }
-
-  private func advanceMeterStyle(by offset: Int) {
-    let styles = MeterFaceStyle.allCases
-    guard let currentIndex = styles.firstIndex(of: meterFaceStyle) else { return }
-    let nextIndex = (currentIndex + offset + styles.count) % styles.count
-    meterFaceStyle = styles[nextIndex]
-  }
-
-  // MARK: - Control Bar
 
   private func meterSettingsButton(metrics: ControlBarMetrics) -> some View {
     Button {
@@ -259,11 +329,14 @@ struct MeterView: View {
     .accessibilityLabel("Meter settings")
   }
 
-  private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
-  private var safeAreaBottom: CGFloat { windowSafeAreaInsets.bottom }
-
   private func nightConditionButton(metrics: ControlBarMetrics) -> some View {
-    ConditionTileButton(systemImage: "moon.stars.fill", label: "Night", isOn: bindingFor(\.isNight), isInteractive: false, metrics: metrics)
+    ConditionTileButton(
+      systemImage: "moon.stars.fill",
+      label: "Night",
+      isOn: bindingFor(\.isNight),
+      isInteractive: false,
+      metrics: metrics
+    )
   }
 
   private func tripToggleButton(metrics: ControlBarMetrics) -> some View {
@@ -312,39 +385,20 @@ struct MeterView: View {
     }
   }
 
-  private func controlBar(height: CGFloat) -> some View {
-    GeometryReader { geo in
-      let horizontalPadding: CGFloat = 10
-      let verticalPadding: CGFloat = 6
-      let spacing: CGFloat = 6
-      let tileCount = CGFloat(4)
-      let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
-      let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
-      let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
-      let metrics = ControlBarMetrics(
-        tileSize: CGSize(width: tileWidth, height: availableHeight),
-        iconSize: min(14, max(12, tileWidth * 0.35))
-      )
-
-      HStack(spacing: spacing) {
-        tripToggleButton(metrics: metrics)
-        waitToggleButton(metrics: metrics)
-        nightConditionButton(metrics: metrics)
-        meterSettingsButton(metrics: metrics)
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-      .padding(.horizontal, horizontalPadding)
-      .padding(.vertical, verticalPadding)
-    }
-    .frame(height: height)
-    .background(Theme.card.opacity(0.92))
-    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-    .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
+  private func bindingFor(_ keyPath: WritableKeyPath<TripConditions, Bool>) -> Binding<Bool> {
+    Binding(
+      get: { meterStore.conditions[keyPath: keyPath] },
+      set: { meterStore.conditions[keyPath: keyPath] = $0 }
+    )
   }
+}
 
-  // MARK: - Pager
+private struct MeterPagerView: View {
+  @Environment(MeterStore.self) private var meterStore
+  @Binding var pagerSelection: Int
+  let height: CGFloat
 
-  private func meterPager(height: CGFloat) -> some View {
+  var body: some View {
     TabView(selection: $pagerSelection) {
       mapPage
         .tag(0)
@@ -428,10 +482,15 @@ struct MeterView: View {
     )
     .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
   }
+}
 
-  // MARK: - Settings Sheet
+private struct MeterSettingsSheetView: View {
+  @Binding var meterFaceStyle: MeterFaceStyle
+  @Binding var meterRenderMode: MeterRenderMode
+  @Binding var digitWheelStyle: DigitWheelStyle
+  @Binding var isPresented: Bool
 
-  private var meterSettingsSheet: some View {
+  var body: some View {
     NavigationStack {
       Form {
         meterSettingsSections
@@ -440,7 +499,7 @@ struct MeterView: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") {
-            showMeterSettings = false
+            isPresented = false
           }
         }
       }
@@ -499,23 +558,6 @@ struct MeterView: View {
         }
       }
     }
-  }
-
-  // MARK: - Helpers
-
-  private func bindingFor(_ keyPath: WritableKeyPath<TripConditions, Bool>) -> Binding<Bool> {
-    Binding(
-      get: { meterStore.conditions[keyPath: keyPath] },
-      set: { meterStore.conditions[keyPath: keyPath] = $0 }
-    )
-  }
-
-  private func evaluateAlwaysPrompt() {
-    guard meterStore.isOnTrip else { return }
-    guard meterStore.authorizationStatus == .authorizedWhenInUse else { return }
-    guard !hasPromptedForAlways else { return }
-    hasPromptedForAlways = true
-    showAlwaysPrompt = true
   }
 }
 
