@@ -14,7 +14,7 @@ struct MeterPagerView: View {
     }
     .tabViewStyle(.page(indexDisplayMode: .always))
     .indexViewStyle(.page(backgroundDisplayMode: .always))
-    .frame(height: height)
+    .frame(height: max(height, 0))
     .background(PageSwipeDisabler().allowsHitTesting(false))
   }
 
@@ -29,8 +29,8 @@ struct MeterPagerView: View {
       GeometryReader { geo in
         let horizontalPadding: CGFloat = 12
         let columnSpacing: CGFloat = 12
-        let availableWidth = geo.size.width - (horizontalPadding * 2)
-        let columnWidth = (availableWidth - columnSpacing) / 2
+        let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
+        let columnWidth = max((availableWidth - columnSpacing) / 2, 0)
         let tileHeight: CGFloat = 52
 
         let detailItems: [(String, String)] = [

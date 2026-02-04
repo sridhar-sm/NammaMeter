@@ -300,9 +300,10 @@ struct MeterShell<Content: View>: View {
 
   var body: some View {
     GeometryReader { geo in
-      let desiredWidth = geo.size.width * style.widthRatio
+      let desiredWidth = max(geo.size.width * style.widthRatio, 0)
       let bodyHeightForWidth = desiredWidth * style.bodyAspect
-      let scale = min(1, geo.size.height / bodyHeightForWidth)
+      let rawScale = bodyHeightForWidth > 0 ? geo.size.height / bodyHeightForWidth : 0
+      let scale = rawScale.isFinite ? min(1, max(rawScale, 0)) : 0
       let bodyWidth = desiredWidth * scale
       let bodyHeight = bodyHeightForWidth * scale
       let cornerRadius = bodyWidth * style.cornerRadiusRatio

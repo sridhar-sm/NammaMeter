@@ -19,14 +19,15 @@ struct SuperFullMeterPanel: View {
   var body: some View {
     GeometryReader { geo in
       // Calculate meter dimensions using shared constants
-      let desiredBodyWidth = geo.size.width * SuperMeterDimensions.widthRatio
+      let desiredBodyWidth = max(geo.size.width * SuperMeterDimensions.widthRatio, 0)
       let bodyHeightForWidth = desiredBodyWidth * SuperMeterDimensions.bodyAspect
       let canopyHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.canopyRatio
       let baseHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.baseRatio
       let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap + baseHeightForWidth
 
       // Scale to fit available height
-      let scale = min(1, geo.size.height / totalHeightForWidth)
+      let rawScale = totalHeightForWidth > 0 ? geo.size.height / totalHeightForWidth : 0
+      let scale = rawScale.isFinite ? min(1, max(rawScale, 0)) : 0
       let bodyWidth = desiredBodyWidth * scale
       let bodyHeight = bodyHeightForWidth * scale
       let canopyHeight = canopyHeightForWidth * scale
