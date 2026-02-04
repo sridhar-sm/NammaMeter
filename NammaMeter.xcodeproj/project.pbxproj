@@ -106,6 +106,9 @@
 				EB9085CEBB0940BCAAFBC434 /* NammaMeterTests */,
 			);
 			name = NammaMeterTests;
+			packageProductDependencies = (
+				SNAPSHOT_TESTING_DEP /* SnapshotTesting */,
+			);
 			productName = NammaMeterTests;
 			productReference = A49A67CF1EFF40B89B436DA6 /* NammaMeterTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -137,6 +140,9 @@
 			);
 			mainGroup = A5261D0D2EFC1AA700AABD5D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				SNAPSHOT_PKG_REF /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = A5261D172EFC1AA700AABD5D /* Products */;
 			projectDirPath = "";
@@ -434,6 +440,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		SNAPSHOT_PKG_REF /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.15.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		SNAPSHOT_TESTING_DEP /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = SNAPSHOT_PKG_REF /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A5261D0E2EFC1AA700AABD5D /* Project object */;
 }

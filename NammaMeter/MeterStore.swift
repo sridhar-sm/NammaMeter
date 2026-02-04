@@ -8,6 +8,26 @@ enum TripMeterState {
   case complete
 }
 
+// MARK: - Location Provider Protocol
+
+protocol LocationProviding: AnyObject {
+  var authorizationStatus: CLAuthorizationStatus { get }
+  var delegate: CLLocationManagerDelegate? { get set }
+  var activityType: CLActivityType { get set }
+  var desiredAccuracy: CLLocationAccuracy { get set }
+  var distanceFilter: CLLocationDistance { get set }
+  var pausesLocationUpdatesAutomatically: Bool { get set }
+  var allowsBackgroundLocationUpdates: Bool { get set }
+  var showsBackgroundLocationIndicator: Bool { get set }
+
+  func requestWhenInUseAuthorization()
+  func requestAlwaysAuthorization()
+  func startUpdatingLocation()
+  func stopUpdatingLocation()
+}
+
+extension CLLocationManager: LocationProviding {}
+
 @MainActor
 @Observable
 final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
@@ -30,7 +50,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     }
   }
 
-  @ObservationIgnored private let locationManager: CLLocationManager
+  @ObservationIgnored private let locationManager: LocationProviding
   @ObservationIgnored private var tickTask: Task<Void, Never>?
   @ObservationIgnored private var isUpdatingLocation = false
   @ObservationIgnored private let clock = ContinuousClock()
@@ -42,8 +62,12 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var waitingStartedAt: Date?
   @ObservationIgnored private var waitingAccumulated: TimeInterval = 0
 
-  override init() {
-    locationManager = CLLocationManager()
+  override convenience init() {
+    self.init(locationProvider: CLLocationManager())
+  }
+
+  init(locationProvider: LocationProviding) {
+    locationManager = locationProvider
     super.init()
     locationManager.delegate = self
     locationManager.activityType = .automotiveNavigation
@@ -220,6 +244,12 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   private func handleLocation(_ location: CLLocation) {
     guard isOnTrip else { return }
     guard location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= 40 else { return }
+    processLocation(location)
+  }
+
+  /// Process a location update. Exposed for testing with mock location providers.
+  func processLocation(_ location: CLLocation) {
+    guard isOnTrip else { return }
 
     currentSpeedKph = max(location.speed, 0) * 3.6
     let point = TripPoint(location: location)
