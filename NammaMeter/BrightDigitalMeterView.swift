@@ -9,8 +9,8 @@ struct BrightDigitalFullMeterPanel: View {
   let distanceMeters: Double
   let topInset: CGFloat
 
-  private let faceTop = ThemeColors.BrightDigital.faceTop
-  private let faceBottom = ThemeColors.BrightDigital.faceBottom
+  private let faceTop = MeterColorSchemes.BrightDigital.faceTop
+  private let faceBottom = MeterColorSchemes.BrightDigital.faceBottom
 
   var body: some View {
     MeterShell(style: .brightDigital, topInset: topInset) { bodyWidth, bodyHeight in
@@ -66,9 +66,9 @@ struct BrightDigitalDisplayWindow: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let windowBackground = ThemeColors.BrightDigital.windowBackground
-  private let lineColor = ThemeColors.BrightDigital.line
-  private let labelColor = ThemeColors.BrightDigital.label
+  private let windowBackground = MeterColorSchemes.BrightDigital.windowBackground
+  private let lineColor = MeterColorSchemes.BrightDigital.line
+  private let labelColor = MeterColorSchemes.BrightDigital.label
   private let ledScheme = LEDColorScheme.red
 
   var body: some View {
@@ -272,9 +272,9 @@ struct BrightDigitalLEDPanel<Content: View>: View {
   let digitScale: CGFloat
   let content: (CGFloat) -> Content
 
-  private let panelTop = ThemeColors.BrightDigital.panelTop
-  private let panelBottom = ThemeColors.BrightDigital.panelBottom
-  private let panelEdge = ThemeColors.BrightDigital.panelEdge
+  private let panelTop = MeterColorSchemes.BrightDigital.panelTop
+  private let panelBottom = MeterColorSchemes.BrightDigital.panelBottom
+  private let panelEdge = MeterColorSchemes.BrightDigital.panelEdge
 
   var body: some View {
     RoundedRectangle(cornerRadius: height * 0.25, style: .continuous)
@@ -378,7 +378,7 @@ struct BrightDigitalNameStrip: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let textColor = ThemeColors.BrightDigital.text
+  private let textColor = MeterColorSchemes.BrightDigital.text
 
   var body: some View {
     ZStack {
@@ -399,8 +399,8 @@ struct BrightDigitalBadge: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let badgeTop = ThemeColors.BrightDigital.badgeTop
-  private let badgeBottom = ThemeColors.BrightDigital.badgeBottom
+  private let badgeTop = MeterColorSchemes.BrightDigital.badgeTop
+  private let badgeBottom = MeterColorSchemes.BrightDigital.badgeBottom
 
   var body: some View {
     RoundedRectangle(cornerRadius: height * 0.25, style: .continuous)

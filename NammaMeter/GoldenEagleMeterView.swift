@@ -51,17 +51,17 @@ struct GoldenEagleDisplayWindow: View {
   let height: CGFloat
 
   // Perforated face colors
-  private let faceColor = ThemeColors.GoldenEagle.face
-  private let dotColor = ThemeColors.GoldenEagle.dot
+  private let faceColor = MeterColorSchemes.GoldenEagle.face
+  private let dotColor = MeterColorSchemes.GoldenEagle.dot
 
   // Row background colors (from real meter)
-  private let fareRowColor = ThemeColors.GoldenEagle.fareRow
-  private let distRowColor = ThemeColors.GoldenEagle.distRow
-  private let waitRowColor = ThemeColors.GoldenEagle.waitRow
+  private let fareRowColor = MeterColorSchemes.GoldenEagle.fareRow
+  private let distRowColor = MeterColorSchemes.GoldenEagle.distRow
+  private let waitRowColor = MeterColorSchemes.GoldenEagle.waitRow
 
   private var ledScheme: LEDColorScheme {
-    let active = ThemeColors.GoldenEagle.ledActive(isNight: isNight)
-    let dim = ThemeColors.GoldenEagle.ledDim
+    let active = MeterColorSchemes.GoldenEagle.ledActive(isNight: isNight)
+    let dim = MeterColorSchemes.GoldenEagle.ledDim
     return LEDColorScheme(active: active, dim: dim)
   }
 
@@ -69,7 +69,7 @@ struct GoldenEagleDisplayWindow: View {
     ZStack {
       // Layer 1: Dial bezel - dark gray border creating inset effect for the display dial
       RoundedRectangle(cornerRadius: width * 0.04, style: .continuous)
-        .fill(ThemeColors.GoldenEagle.caseEdge)
+        .fill(MeterColorSchemes.GoldenEagle.caseEdge)
         .shadow(color: Color.black.opacity(0.4), radius: 3, x: 2, y: 2)
 
       // Layer 2: Perforated face - dotted texture background visible on real meter
@@ -342,9 +342,9 @@ struct GoldenEagleDigitField<Content: View>: View {
   let widthFactor: CGFloat
   let content: (CGFloat) -> Content
 
-  private let dialTop = ThemeColors.GoldenEagle.dialTop
-  private let dialBottom = ThemeColors.GoldenEagle.dialBottom
-  private let dialEdge = ThemeColors.GoldenEagle.dialEdge
+  private let dialTop = MeterColorSchemes.GoldenEagle.dialTop
+  private let dialBottom = MeterColorSchemes.GoldenEagle.dialBottom
+  private let dialEdge = MeterColorSchemes.GoldenEagle.dialEdge
 
   init(width: CGFloat, height: CGFloat, widthFactor: CGFloat, @ViewBuilder content: @escaping (CGFloat) -> Content) {
     self.width = width
@@ -454,7 +454,7 @@ struct GoldenEagleBadge: View {
   var body: some View {
     ZStack {
       RoundedRectangle(cornerRadius: height * 0.2, style: .continuous)
-        .fill(ThemeColors.GoldenEagle.accentBlue)
+        .fill(MeterColorSchemes.GoldenEagle.accentBlue)
         .overlay(
           RoundedRectangle(cornerRadius: height * 0.2, style: .continuous)
             .stroke(Color.white.opacity(0.4), lineWidth: 0.8)
@@ -467,10 +467,10 @@ struct GoldenEagleBadge: View {
           .minimumScaleFactor(0.7)
         ZStack {
           Circle()
-            .fill(ThemeColors.GoldenEagle.accentGold)
+            .fill(MeterColorSchemes.GoldenEagle.accentGold)
           Text("GE")
             .font(.system(size: height * 0.18, weight: .heavy, design: .rounded))
-            .foregroundStyle(ThemeColors.GoldenEagle.accentBlue)
+            .foregroundStyle(MeterColorSchemes.GoldenEagle.accentBlue)
         }
         .frame(width: width * 0.45, height: width * 0.45)
         Text("EAGLE")
@@ -494,7 +494,7 @@ struct GoldenEagleManufacturerPlate: View {
     ZStack {
       // Inset bezel effect
       RoundedRectangle(cornerRadius: height * 0.25, style: .continuous)
-        .fill(ThemeColors.GoldenEagle.caseEdge)
+        .fill(MeterColorSchemes.GoldenEagle.caseEdge)
         .shadow(color: Color.black.opacity(0.4), radius: 2, x: 1, y: 1)
 
       // Main plate background (inset)
@@ -542,7 +542,7 @@ struct PlateScrew: View {
 
   var body: some View {
     Circle()
-      .fill(ThemeColors.GoldenEagle.caseLight)
+      .fill(MeterColorSchemes.GoldenEagle.caseLight)
       .overlay(
         Circle()
           .stroke(Color.black.opacity(0.6), lineWidth: 1)
@@ -555,7 +555,7 @@ struct PlateScrew: View {
 
 #Preview {
   ZStack {
-    ThemeColors.Metal.highlight
+    MeterColorSchemes.Metal.highlight
       .ignoresSafeArea()
 
     GoldenEagleFullMeterPanel(

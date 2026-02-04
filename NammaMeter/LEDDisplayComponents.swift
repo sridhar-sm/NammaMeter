@@ -10,28 +10,28 @@ struct LEDColorScheme: Equatable, Sendable {
 
     // Common LED color presets
     static let red = LEDColorScheme(
-        active: ThemeColors.LED.red,
-        dim: ThemeColors.LED.redDim
+        active: MeterColorSchemes.LED.red,
+        dim: MeterColorSchemes.LED.redDim
     )
 
     static let green = LEDColorScheme(
-        active: ThemeColors.LED.green,
-        dim: ThemeColors.LED.greenDim
+        active: MeterColorSchemes.LED.green,
+        dim: MeterColorSchemes.LED.greenDim
     )
 
     static let amber = LEDColorScheme(
-        active: ThemeColors.LED.amber,
-        dim: ThemeColors.LED.amberDim
+        active: MeterColorSchemes.LED.amber,
+        dim: MeterColorSchemes.LED.amberDim
     )
 
     static let blue = LEDColorScheme(
-        active: ThemeColors.LED.blue,
-        dim: ThemeColors.LED.blueDim
+        active: MeterColorSchemes.LED.blue,
+        dim: MeterColorSchemes.LED.blueDim
     )
 
     static let white = LEDColorScheme(
-        active: ThemeColors.LED.white,
-        dim: ThemeColors.LED.whiteDim
+        active: MeterColorSchemes.LED.white,
+        dim: MeterColorSchemes.LED.whiteDim
     )
 }
 
@@ -377,7 +377,7 @@ struct LEDPanel<Content: View>: View {
     let height: CGFloat
     var leftLabel: String? = nil
     var rightLabel: String? = nil
-    var labelColor: Color = ThemeColors.LED.labelLight
+    var labelColor: Color = MeterColorSchemes.LED.labelLight
     let content: () -> Content
 
     var body: some View {
@@ -414,7 +414,7 @@ struct LEDStatusIndicator: View {
     let isActive: Bool
     let height: CGFloat
     var colorScheme: LEDColorScheme = .red
-    var labelColor: Color = ThemeColors.LED.labelMuted
+    var labelColor: Color = MeterColorSchemes.LED.labelMuted
 
     var body: some View {
         VStack(spacing: height * 0.08) {
@@ -444,8 +444,8 @@ struct LEDStatusIndicator: View {
 struct LEDDisplayContainer<Content: View>: View {
     let width: CGFloat
     let height: CGFloat
-    var backgroundColor: Color = ThemeColors.LED.background
-    var bezelColor: Color = ThemeColors.LED.bezel
+    var backgroundColor: Color = MeterColorSchemes.LED.background
+    var bezelColor: Color = MeterColorSchemes.LED.bezel
     var cornerRadius: CGFloat? = nil
     var bezelWidth: CGFloat = 3
     let content: () -> Content
