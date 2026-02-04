@@ -151,9 +151,9 @@ struct AddFareView: View {
       ToolbarItem(placement: .principal) {
         VStack(spacing: 2) {
           Text("Add Fare")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text(cityName)
-            .font(.nammaBody(11))
+            .font(FontPresets.Body.small)
         }
       }
     }

@@ -9,12 +9,12 @@ struct SuperFullMeterPanel: View {
   let topInset: CGFloat
   @State private var hirePulse = false
 
-  private let caseTop = Color(red: 0.17, green: 0.18, blue: 0.19)
-  private let caseBottom = Color(red: 0.06, green: 0.06, blue: 0.07)
-  private let metalPanel = Color(red: 0.9, green: 0.9, blue: 0.88)
-  private let metalEdge = Color(red: 0.7, green: 0.7, blue: 0.68)
-  private let displayEdge = Color(red: 0.22, green: 0.22, blue: 0.24)
-  private let printInk = Color.black.opacity(0.82)
+  private let caseTop = ThemeColors.SuperMechanical.caseTop
+  private let caseBottom = ThemeColors.SuperMechanical.caseBottom
+  private let metalPanel = ThemeColors.SuperMechanical.metalPanel
+  private let metalEdge = ThemeColors.SuperMechanical.metalEdge
+  private let displayEdge = ThemeColors.SuperMechanical.displayEdge
+  private let printInk = ThemeColors.SuperMechanical.printInk
 
   var body: some View {
     GeometryReader { geo in
@@ -146,7 +146,7 @@ struct SuperDisplayPanel: View {
   let digitStyle: DigitWheelStyle
   @State private var hirePulse = false
 
-  private let displayEdge = Color(red: 0.22, green: 0.22, blue: 0.24)
+  private let displayEdge = ThemeColors.SuperMechanical.displayEdge
 
   var body: some View {
     GeometryReader { geo in
@@ -212,7 +212,7 @@ struct SuperMeterFace: View {
           .tracking(1.2)
         Text("FARE")
           .font(.system(size: bodyWidth * 0.08, weight: .heavy, design: .rounded))
-          .foregroundStyle(Color(red: 0.78, green: 0.18, blue: 0.18))
+          .foregroundStyle(ThemeColors.SuperMechanical.accentRed)
           .tracking(1.0)
         Text("PAISE")
           .font(.system(size: bodyWidth * 0.038, weight: .semibold, design: .rounded))
@@ -275,8 +275,8 @@ struct SuperMeterBaseView: View {
         .fill(
           LinearGradient(
             colors: [
-              Color(red: 0.12, green: 0.12, blue: 0.13),
-              Color(red: 0.05, green: 0.05, blue: 0.06)
+              ThemeColors.SuperMechanical.shadowTop,
+              ThemeColors.SuperMechanical.shadowBottom
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -314,7 +314,7 @@ struct MeterDisplayWindow: View {
       let textSize = min(geo.size.height * 0.55, 28)
       ZStack {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .fill(Color(red: 0.96, green: 0.95, blue: 0.93))
+          .fill(ThemeColors.SuperMechanical.displayBackground)
           .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
               .stroke(displayEdge, lineWidth: 2)
@@ -322,7 +322,7 @@ struct MeterDisplayWindow: View {
 
         if tripState == .forHire {
           RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(Color(red: 0.78, green: 0.18, blue: 0.18))
+            .fill(ThemeColors.SuperMechanical.accentRed)
             .overlay(
               Text("FOR HIRE")
                 .font(.system(size: textSize, weight: .heavy, design: .rounded))
@@ -423,9 +423,9 @@ struct MeterDigitCell: View {
           RadialGradient(
             colors: [
               Color.white,
-              Color(red: 0.94, green: 0.94, blue: 0.94),
-              Color(red: 0.86, green: 0.86, blue: 0.86),
-              Color(red: 0.97, green: 0.97, blue: 0.97)
+              ThemeColors.SuperMechanical.highlightPanel[0],
+              ThemeColors.SuperMechanical.highlightPanel[1],
+              ThemeColors.SuperMechanical.highlightPanel[2]
             ],
             center: .center,
             startRadius: 2,
@@ -436,9 +436,9 @@ struct MeterDigitCell: View {
           LinearGradient(
             colors: [
               Color.white,
-              Color(red: 0.95, green: 0.95, blue: 0.95),
-              Color(red: 0.88, green: 0.88, blue: 0.88),
-              Color(red: 0.98, green: 0.98, blue: 0.98)
+              ThemeColors.SuperMechanical.highlightPanelAlt[0],
+              ThemeColors.SuperMechanical.highlightPanelAlt[1],
+              ThemeColors.SuperMechanical.highlightPanelAlt[2]
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -617,7 +617,7 @@ struct MeterDigitCell: View {
   }
 
   private func digitColor(isAccent: Bool) -> Color {
-    isAccent ? Color(red: 0.78, green: 0.16, blue: 0.18) : Color.black.opacity(0.85)
+    isAccent ? ThemeColors.SuperMechanical.accentDigit : ThemeColors.SuperMechanical.digitInk
   }
 
   private func diskDigit(_ value: String, angle: CGFloat, radius: CGFloat, fontSize: CGFloat, opacity: CGFloat) -> some View {

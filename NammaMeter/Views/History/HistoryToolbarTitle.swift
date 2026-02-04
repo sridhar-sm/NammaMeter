@@ -4,9 +4,9 @@ struct HistoryToolbarTitle: View {
   var body: some View {
     VStack(spacing: 2) {
       Text("Trips")
-        .font(.nammaDisplay(18))
+        .font(FontPresets.Display.header)
       Text("ಪ್ರಯಾಣಗಳು")
-        .font(.nammaBody(12))
+        .font(FontPresets.Body.base)
     }
   }
 }

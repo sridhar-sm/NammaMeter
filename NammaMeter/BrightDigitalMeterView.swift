@@ -9,8 +9,8 @@ struct BrightDigitalFullMeterPanel: View {
   let distanceMeters: Double
   let topInset: CGFloat
 
-  private let faceTop = Color(red: 0.2, green: 0.21, blue: 0.22)
-  private let faceBottom = Color(red: 0.1, green: 0.1, blue: 0.11)
+  private let faceTop = ThemeColors.BrightDigital.faceTop
+  private let faceBottom = ThemeColors.BrightDigital.faceBottom
 
   var body: some View {
     MeterShell(style: .brightDigital, topInset: topInset) { bodyWidth, bodyHeight in
@@ -66,9 +66,9 @@ struct BrightDigitalDisplayWindow: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let windowBackground = Color(red: 0.9, green: 0.9, blue: 0.88)
-  private let lineColor = Color.black.opacity(0.25)
-  private let labelColor = Color.black.opacity(0.8)
+  private let windowBackground = ThemeColors.BrightDigital.windowBackground
+  private let lineColor = ThemeColors.BrightDigital.line
+  private let labelColor = ThemeColors.BrightDigital.label
   private let ledScheme = LEDColorScheme.red
 
   var body: some View {
@@ -272,9 +272,9 @@ struct BrightDigitalLEDPanel<Content: View>: View {
   let digitScale: CGFloat
   let content: (CGFloat) -> Content
 
-  private let panelTop = Color(red: 0.4, green: 0.06, blue: 0.06)
-  private let panelBottom = Color(red: 0.2, green: 0.03, blue: 0.03)
-  private let panelEdge = Color(red: 0.1, green: 0.02, blue: 0.02)
+  private let panelTop = ThemeColors.BrightDigital.panelTop
+  private let panelBottom = ThemeColors.BrightDigital.panelBottom
+  private let panelEdge = ThemeColors.BrightDigital.panelEdge
 
   var body: some View {
     RoundedRectangle(cornerRadius: height * 0.25, style: .continuous)
@@ -378,7 +378,7 @@ struct BrightDigitalNameStrip: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let textColor = Color(red: 0.1, green: 0.32, blue: 0.7)
+  private let textColor = ThemeColors.BrightDigital.text
 
   var body: some View {
     ZStack {
@@ -399,8 +399,8 @@ struct BrightDigitalBadge: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let badgeTop = Color(red: 0.15, green: 0.35, blue: 0.78)
-  private let badgeBottom = Color(red: 0.08, green: 0.22, blue: 0.6)
+  private let badgeTop = ThemeColors.BrightDigital.badgeTop
+  private let badgeBottom = ThemeColors.BrightDigital.badgeBottom
 
   var body: some View {
     RoundedRectangle(cornerRadius: height * 0.25, style: .continuous)

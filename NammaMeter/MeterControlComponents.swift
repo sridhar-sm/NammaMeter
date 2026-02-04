@@ -111,11 +111,11 @@ struct FareInfoTile: View {
   var body: some View {
     VStack(spacing: 2) {
       Text(valueText)
-        .font(.nammaDisplay(12))
+        .font(FontPresets.Display.small)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
       Text(labelText)
-        .font(.nammaBody(7))
+        .font(FontPresets.Body.mini)
         .lineLimit(1)
     }
     .foregroundStyle(Theme.ink)
@@ -147,9 +147,9 @@ struct MiniConditionChip: View {
     } label: {
       VStack(spacing: 2) {
         Text(title)
-          .font(.nammaDisplay(9))
+          .font(FontPresets.Display.mini)
         Text(subtitle)
-          .font(.nammaBody(7))
+          .font(FontPresets.Body.mini)
       }
       .foregroundStyle(isOn ? Theme.ink : Theme.ink.opacity(0.6))
       .padding(.vertical, 4)

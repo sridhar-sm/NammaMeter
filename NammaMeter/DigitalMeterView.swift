@@ -7,8 +7,8 @@ struct DigitalFullMeterPanel: View {
   let fare: Double
   @State private var glowPulse = false
 
-  private let bezel = Color(red: 0.18, green: 0.2, blue: 0.24)
-  private let accent = Color(red: 0.15, green: 0.8, blue: 0.9)
+  private let bezel = ThemeColors.Digital.bezel
+  private let accent = ThemeColors.Digital.accent
 
   var body: some View {
     MeterShell(style: .digital) { bodyWidth, bodyHeight in
@@ -40,8 +40,8 @@ struct DigitalDisplayPanel: View {
   let fare: Double
   @State private var glowPulse = false
 
-  private let bezel = Color(red: 0.2, green: 0.22, blue: 0.26)
-  private let accent = Color(red: 0.15, green: 0.8, blue: 0.9)
+  private let bezel = ThemeColors.Digital.bezelAlt
+  private let accent = ThemeColors.Digital.accent
 
   var body: some View {
     GeometryReader { geo in
@@ -83,7 +83,7 @@ struct DigitalMeterScreen: View {
 
       ZStack {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-          .fill(Color(red: 0.03, green: 0.06, blue: 0.08))
+          .fill(ThemeColors.Digital.screenBackground)
           .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
               .stroke(bezel, lineWidth: 2)
@@ -122,7 +122,7 @@ struct DigitalButtonRow: View {
     HStack(spacing: width * 0.07) {
       ForEach(0..<3) { index in
         Circle()
-          .fill(Color(red: 0.18, green: 0.19, blue: 0.22))
+          .fill(ThemeColors.Digital.button)
           .overlay(
             Circle()
               .stroke(Color.white.opacity(0.12), lineWidth: 1)

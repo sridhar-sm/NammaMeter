@@ -41,7 +41,7 @@ struct HistoryActionBar: View {
 
   private func mangoPillLabel(_ title: String) -> some View {
     Text(title)
-      .font(.nammaDisplay(13))
+      .font(FontPresets.Display.caption)
       .foregroundStyle(Theme.ink)
       .padding(.horizontal, 14)
       .padding(.vertical, 6)

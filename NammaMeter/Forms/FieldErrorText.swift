@@ -11,7 +11,7 @@ struct FieldErrorText: View {
 
   var body: some View {
     Text(message)
-      .font(.nammaBody(11))
+      .font(FontPresets.Body.small)
       .foregroundStyle(color)
   }
 

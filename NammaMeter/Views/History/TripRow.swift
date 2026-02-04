@@ -8,19 +8,19 @@ struct TripRow: View {
       HStack {
         if let name = trip.name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
           Text(name)
-            .font(.nammaDisplay(14))
+            .font(FontPresets.Display.label)
         } else {
           Text(trip.startDate, format: .dateTime.day().month().hour().minute())
-            .font(.nammaDisplay(14))
+            .font(FontPresets.Display.label)
         }
         Spacer()
         Text(trip.fare, format: .currency(code: "INR"))
-          .font(.nammaDisplay(14))
+          .font(FontPresets.Display.label)
       }
 
       if let name = trip.name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         Text(trip.startDate, format: .dateTime.day().month().year().hour().minute())
-          .font(.nammaBody(11))
+          .font(FontPresets.Body.small)
           .foregroundStyle(Theme.ink.opacity(0.7))
       }
 
@@ -43,7 +43,7 @@ struct TripRow: View {
           Image(systemName: "map")
         }
       }
-      .font(.nammaBody(11))
+      .font(FontPresets.Body.small)
       .foregroundStyle(Theme.ink.opacity(0.7))
     }
     .padding(.vertical, 6)
