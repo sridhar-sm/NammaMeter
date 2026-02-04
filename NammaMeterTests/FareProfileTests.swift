@@ -74,32 +74,32 @@ final class FareProfileTests: XCTestCase {
   }
 
   func testSettingsStoreSeedsCatalogOnFirstLoad() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     XCTAssertEqual(store.profiles.count, FareCatalog.entries.count)
     XCTAssertEqual(store.selectedCityId, FareCatalog.defaultCityId)
   }
 
   func testSettingsStoreAppendsCatalogUpdates() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let seed = FareProfileSettings(
       schemaVersion: FareProfileSettings.currentSchemaVersion,
       selectedCityId: FareCatalog.defaultCityId,
       profiles: [FareCatalog.defaultProfile],
       catalogVersionApplied: max(FareCatalog.currentVersion - 1, 0)
     )
-    try write(settings: seed, to: url)
+    try TestHelpers.write(settings: seed, to: url)
 
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     XCTAssertEqual(store.profiles.count, FareCatalog.entries.count)
   }
 
   func testSettingsStoreFallbacksToBengaluru() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let fallbackProfile = try XCTUnwrap(FareCatalog.entries.first { $0.profile.cityId != FareCatalog.defaultCityId }?.profile)
     let seed = FareProfileSettings(
       schemaVersion: FareProfileSettings.currentSchemaVersion,
@@ -107,19 +107,19 @@ final class FareProfileTests: XCTestCase {
       profiles: [fallbackProfile],
       catalogVersionApplied: FareCatalog.currentVersion
     )
-    try write(settings: seed, to: url)
+    try TestHelpers.write(settings: seed, to: url)
 
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     XCTAssertEqual(store.selectedCityId, FareCatalog.defaultCityId)
     XCTAssertTrue(store.profiles.contains { $0.cityId == FareCatalog.defaultCityId })
   }
 
   func testCitySelectionUpdatesMeterSettings() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     let bengaluruBaseFare = store.settings.baseFare
     store.selectCity("mandya")
@@ -130,9 +130,9 @@ final class FareProfileTests: XCTestCase {
   }
 
   func testAvailableCitiesReturnsLatestProfiles() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     let cities = store.availableCities
     XCTAssertEqual(cities.count, FareCatalog.entries.count)
@@ -142,9 +142,9 @@ final class FareProfileTests: XCTestCase {
   }
 
   func testAddCustomCity() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     let initialCount = store.profiles.count
 
@@ -202,9 +202,9 @@ final class FareProfileTests: XCTestCase {
   }
 
   func testActiveCityInfo() async throws {
-    let url = try makeTempURL()
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
     let store = SettingsStore(fileURL: url)
-    await waitForProfiles(store)
+    await TestHelpers.waitForProfiles(store)
 
     let cityInfo = store.activeCityInfo
     XCTAssertEqual(cityInfo.cityId, FareCatalog.defaultCityId)
@@ -216,26 +216,4 @@ final class FareProfileTests: XCTestCase {
     XCTAssertEqual(updatedInfo.cityName, "Mysuru")
   }
 
-  private func makeTempURL() throws -> URL {
-    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    return dir.appendingPathComponent("fare-profiles.json")
-  }
-
-  private func write(settings: FareProfileSettings, to url: URL) throws {
-    let encoder = JSONEncoder()
-    encoder.dateEncodingStrategy = .iso8601
-    let data = try encoder.encode(settings)
-    try data.write(to: url, options: [.atomic])
-  }
-
-  private func waitForProfiles(_ store: SettingsStore) async {
-    for _ in 0..<60 {
-      if !store.profiles.isEmpty {
-        return
-      }
-      try? await Task.sleep(for: .milliseconds(50))
-    }
-    XCTFail("Timed out waiting for SettingsStore to load")
-  }
 }

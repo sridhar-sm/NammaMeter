@@ -56,16 +56,10 @@ final class MeterStoreTests: XCTestCase {
   override func setUp() async throws {
     mockLocationProvider = MockLocationProvider()
     meterStore = MeterStore(locationProvider: mockLocationProvider)
-    let tempURL = FileManager.default.temporaryDirectory
-      .appendingPathComponent(UUID().uuidString)
-      .appendingPathComponent("trips.json")
-    try FileManager.default.createDirectory(
-      at: tempURL.deletingLastPathComponent(),
-      withIntermediateDirectories: true
-    )
+    let tempURL = try TestHelpers.makeTempURL(filename: "trips.json")
     tripStore = TripStore(fileURL: tempURL)
     // Wait for TripStore to initialize
-    try await Task.sleep(for: .milliseconds(100))
+    await TestHelpers.waitForTripStoreLoad(tripStore)
   }
 
   // MARK: - Trip Lifecycle Tests
