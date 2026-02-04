@@ -78,6 +78,52 @@ final class SettingsStore {
     scheduleSave()
   }
 
+  func addFareProfile(_ profile: CityFareProfile) {
+    state.profiles.append(profile)
+    scheduleSave()
+  }
+
+  func deleteFareProfile(_ profileId: String) {
+    state.profiles.removeAll { $0.id == profileId }
+
+    if let selectedId = state.selectedCityId,
+       !state.profiles.contains(where: { $0.cityId == selectedId }) {
+      fallbackToDefaultCity()
+    }
+    scheduleSave()
+  }
+
+  func deleteCity(_ cityId: String) {
+    state.profiles.removeAll { $0.cityId == cityId }
+
+    if state.selectedCityId == cityId {
+      fallbackToDefaultCity()
+    }
+    scheduleSave()
+  }
+
+  private func fallbackToDefaultCity() {
+    if state.profiles.contains(where: { $0.cityId == FareCatalog.defaultCityId }) {
+      state.selectedCityId = FareCatalog.defaultCityId
+    } else if let first = state.profiles.first {
+      state.selectedCityId = first.cityId
+    } else {
+      state.profiles = [FareCatalog.defaultProfile]
+      state.selectedCityId = FareCatalog.defaultCityId
+    }
+    syncSettingsFromActiveProfile()
+  }
+
+  func fareProfiles(for cityId: String) -> [CityFareProfile] {
+    state.profiles
+      .filter { $0.cityId == cityId }
+      .sorted { $0.effectiveFrom > $1.effectiveFrom }
+  }
+
+  func isCatalogCity(_ cityId: String) -> Bool {
+    FareCatalog.entries.contains { $0.profile.cityId == cityId }
+  }
+
   var activeCityInfo: (cityId: String, cityName: String) {
     let cityId = effectiveCityId
     let profile = activeProfile(for: cityId, on: Date()) ?? FareCatalog.defaultProfile

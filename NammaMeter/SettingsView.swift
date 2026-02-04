@@ -10,7 +10,6 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    @Bindable var settingsStore = settingsStore
     NavigationStack {
       ZStack {
         NammaBackground()
@@ -27,40 +26,25 @@ struct SettingsView: View {
           }
 
           Section(header: SectionHeader(title: "City", subtitle: "ನಗರ")) {
-            ForEach(settingsStore.availableCities) { city in
-              Button {
-                settingsStore.selectCity(city.cityId)
-              } label: {
-                HStack {
-                  VStack(alignment: .leading, spacing: 2) {
-                    Text(city.name)
-                      .font(.nammaDisplay(14))
-                    if let region = city.cityKey.region {
-                      Text(region)
-                        .font(.nammaBody(11))
-                        .foregroundStyle(.secondary)
-                    }
-                  }
-                  Spacer()
-                  if settingsStore.selectedCityId == city.cityId {
-                    Image(systemName: "checkmark")
-                      .foregroundStyle(Theme.ink)
-                  }
-                }
+            Picker("City", selection: Binding(
+              get: { settingsStore.selectedCityId ?? "" },
+              set: { settingsStore.selectCity($0) }
+            )) {
+              ForEach(settingsStore.availableCities) { city in
+                Text(city.name).tag(city.cityId)
               }
-              .buttonStyle(.plain)
-              .disabled(!canEditSettings)
-              .opacity(canEditSettings ? 1 : 0.5)
             }
+            .pickerStyle(.menu)
+            .disabled(!canEditSettings)
 
-            NavigationLink(destination: AddCityView()) {
+            NavigationLink(destination: CityManagementView()) {
               HStack {
-                Image(systemName: "plus.circle.fill")
+                Image(systemName: "building.2")
                   .foregroundStyle(Theme.ink)
                 VStack(alignment: .leading, spacing: 2) {
-                  Text("Add City")
+                  Text("Manage Cities")
                     .font(.nammaDisplay(14))
-                  Text("ನಗರವನ್ನು ಸೇರಿಸಿ")
+                  Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
                     .font(.nammaBody(11))
                     .foregroundStyle(.secondary)
                 }
@@ -71,46 +55,46 @@ struct SettingsView: View {
           }
 
           Section(header: SectionHeader(title: "Rates", subtitle: "ದರಗಳು")) {
-            LabeledNumberField(
+            LabeledValue(
               title: "Base Fare",
               subtitle: "ಮೂಲ ಬಾಡಿಗೆ",
-              value: $settingsStore.settings.baseFare
+              value: settingsStore.settings.baseFare
             )
-            LabeledNumberField(
+            LabeledValue(
               title: "Per Km",
               subtitle: "ಪ್ರತಿ ಕಿಲೋ ಮೀಟರ್",
-              value: $settingsStore.settings.perKmRate
+              value: settingsStore.settings.perKmRate
             )
-            LabeledNumberField(
+            LabeledValue(
               title: "Minimum Fare",
               subtitle: "ಕನಿಷ್ಠ ಬಾಡಿಗೆ",
-              value: $settingsStore.settings.minFare
+              value: settingsStore.settings.minFare
             )
           }
 
           Section(header: SectionHeader(title: "Waiting Charges", subtitle: "ನಿಲ್ಲಿಕೆ ಶುಲ್ಕಗಳು")) {
-            LabeledNumberField(
+            LabeledValue(
               title: "Free Wait (min)",
               subtitle: "ಉಚಿತ ನಿಲ್ಲಿಕೆ (ನಿಮಿಷ)",
-              value: $settingsStore.settings.freeWaitMinutes
+              value: settingsStore.settings.freeWaitMinutes
             )
-            LabeledNumberField(
+            LabeledValue(
               title: "Interval (min)",
               subtitle: "ಮಧ್ಯಂತರ (ನಿಮಿಷ)",
-              value: $settingsStore.settings.waitIntervalMinutes
+              value: settingsStore.settings.waitIntervalMinutes
             )
-            LabeledNumberField(
+            LabeledValue(
               title: "Per Interval",
               subtitle: "ಪ್ರತಿ ಮಧ್ಯಂತರ",
-              value: $settingsStore.settings.waitIntervalCharge
+              value: settingsStore.settings.waitIntervalCharge
             )
           }
 
           Section(header: SectionHeader(title: "Modifiers", subtitle: "ಗುಣಕಗಳು")) {
-            LabeledNumberField(
+            LabeledValue(
               title: "Night Multiplier",
               subtitle: "ರಾತ್ರಿ ಗುಣಕ",
-              value: $settingsStore.settings.nightMultiplier
+              value: settingsStore.settings.nightMultiplier
             )
           }
 
@@ -164,6 +148,26 @@ struct LabeledNumberField: View {
       TextField("", value: $value, format: .number.precision(.fractionLength(2)))
         .keyboardType(.decimalPad)
         .multilineTextAlignment(.trailing)
+    } label: {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(title)
+        Text(subtitle)
+          .font(.nammaBody(11))
+          .foregroundStyle(.secondary)
+      }
+    }
+  }
+}
+
+struct LabeledValue: View {
+  let title: String
+  let subtitle: String
+  let value: Double
+
+  var body: some View {
+    LabeledContent {
+      Text(value, format: .number.precision(.fractionLength(2)))
+        .foregroundStyle(.secondary)
     } label: {
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
