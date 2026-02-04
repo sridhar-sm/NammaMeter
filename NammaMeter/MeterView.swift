@@ -20,7 +20,9 @@ struct MeterView: View {
           .padding(.bottom, 16)
       }
       .onAppear {
-        meterStore.requestAuthorization()
+        if !TestEnvironment.isRunningTests {
+          meterStore.requestAuthorization()
+        }
         meterStore.refreshTimeBasedConditions()
       }
       .withLocationPermissionHandling(coordinator: meterStore.locationPermissionCoordinator)

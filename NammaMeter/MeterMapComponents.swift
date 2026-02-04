@@ -10,17 +10,23 @@ struct LiveRouteMap: View {
   @State private var cameraPosition: MapCameraPosition = .automatic
 
   var body: some View {
-    Map(position: $cameraPosition) {
-      if points.count > 1 {
-        MapPolyline(coordinates: points.map { $0.coordinate })
-          .stroke(Theme.ink, lineWidth: 4)
-      }
-      if let start = points.first?.coordinate {
-        Marker("Start", coordinate: start)
-      }
-      if let end = points.last?.coordinate {
-        Annotation("Now", coordinate: end, anchor: .bottom) {
-          AutoLocationMarker()
+    Group {
+      if TestEnvironment.isRunningTests {
+        Color.clear
+      } else {
+        Map(position: $cameraPosition) {
+          if points.count > 1 {
+            MapPolyline(coordinates: points.map { $0.coordinate })
+              .stroke(Theme.ink, lineWidth: 4)
+          }
+          if let start = points.first?.coordinate {
+            Marker("Start", coordinate: start)
+          }
+          if let end = points.last?.coordinate {
+            Annotation("Now", coordinate: end, anchor: .bottom) {
+              AutoLocationMarker()
+            }
+          }
         }
       }
     }
