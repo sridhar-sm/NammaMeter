@@ -31,15 +31,12 @@ extension CLLocationManager: LocationProviding {}
 @MainActor
 @Observable
 final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
-  var isOnTrip = false
-  var distanceMeters: Double = 0
-  var elapsed: TimeInterval = 0
+  private(set) var stateMachine = TripStateMachine()
+  private(set) var metrics = TripMetrics()
   var fare: Double = 0
   var points: [TripPoint] = []
   var currentSpeedKph: Double = 0
   var isWaiting = false
-  var waitingDuration: TimeInterval = 0
-  var tripState: TripMeterState = .forHire
   var authorizationStatus: CLAuthorizationStatus = .notDetermined
   var locationError: String?
   var conditions: TripConditions = .clear {
@@ -50,17 +47,23 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     }
   }
 
+  var isOnTrip: Bool { stateMachine.isOnTrip }
+  var tripState: TripMeterState { stateMachine.tripState }
+  var distanceMeters: Double { metrics.distanceMeters }
+  var elapsed: TimeInterval { metrics.elapsedSeconds }
+  var waitingDuration: TimeInterval { metrics.waitingSeconds }
+
   @ObservationIgnored private let locationManager: LocationProviding
   @ObservationIgnored private var tickTask: Task<Void, Never>?
   @ObservationIgnored private var isUpdatingLocation = false
   @ObservationIgnored private let clock = ContinuousClock()
-  @ObservationIgnored private var startDate: Date?
   @ObservationIgnored private var lastLocation: CLLocation?
   @ObservationIgnored private var currentSettings: MeterSettings?
   @ObservationIgnored private var rateSnapshot: RateSnapshot?
   @ObservationIgnored private var multiplier: Double = 1
   @ObservationIgnored private var waitingStartedAt: Date?
   @ObservationIgnored private var waitingAccumulated: TimeInterval = 0
+  @ObservationIgnored private var fareCalculator: FareCalculator?
 
   override convenience init() {
     self.init(locationProvider: CLLocationManager())
@@ -89,25 +92,27 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func startTrip(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
-    guard !isOnTrip else { return }
+    guard tripState == .forHire else { return }
     currentSettings = settings
     rateSnapshot = RateSnapshot(settings: settings, cityId: cityId, cityName: cityName)
-    refreshTimeBasedConditions(reference: Date())
-    multiplier = conditions.multiplier(using: settings)
-    isOnTrip = true
+    fareCalculator = FareCalculator(settings: settings)
+
+    metrics = TripMetrics()
     points = []
-    distanceMeters = 0
-    elapsed = 0
-    fare = settings.minFare
     currentSpeedKph = 0
     isWaiting = false
-    waitingDuration = 0
     waitingAccumulated = 0
     waitingStartedAt = nil
-    tripState = .inProgress
-    startDate = Date()
     lastLocation = nil
     locationError = nil
+
+    let startTime = Date()
+    stateMachine.startTrip(startTime: startTime)
+
+    refreshTimeBasedConditions(reference: startTime)
+    multiplier = conditions.multiplier(using: settings)
+    fare = settings.minFare
+    recalcFare()
 
     authorizationStatus = locationManager.authorizationStatus
     requestAuthorization()
@@ -120,36 +125,52 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
 
   func stopTrip(tripStore: TripStore) {
     guard isOnTrip else { return }
-    isOnTrip = false
     stopWaiting()
     stopLocationUpdates()
-    updateBackgroundLocationState()
     stopTicking()
 
     let endDate = Date()
     let snapshot = rateSnapshot ?? RateSnapshot(settings: currentSettings ?? .bengaluruDefault)
+    let startDate = stateMachine.startTime ?? endDate
     let trip = Trip(
       id: UUID(),
-      startDate: startDate ?? endDate,
+      startDate: startDate,
       endDate: endDate,
-      distanceMeters: distanceMeters,
-      duration: elapsed,
+      distanceMeters: metrics.distanceMeters,
+      duration: metrics.elapsedSeconds,
       fare: fare,
       points: points,
       conditions: conditions,
       rateSnapshot: snapshot,
       multiplier: multiplier,
-      waitingDuration: waitingDuration
+      waitingDuration: metrics.waitingSeconds
     )
+
+    stateMachine.completeTrip(trip: trip)
+    updateBackgroundLocationState()
+
     tripStore.add(trip)
     Task { await tripStore.resolveStartLocation(for: trip) }
+    fareCalculator = nil
     currentSettings = nil
-    tripState = .complete
   }
 
   func resetToForHire() {
     guard tripState == .complete else { return }
-    tripState = .forHire
+    stateMachine.resetToForHire()
+    metrics = metrics.reset()
+    points.removeAll()
+    fare = 0
+    currentSpeedKph = 0
+    isWaiting = false
+    waitingAccumulated = 0
+    waitingStartedAt = nil
+    lastLocation = nil
+    fareCalculator = nil
+    currentSettings = nil
+    rateSnapshot = nil
+    multiplier = 1
+    locationError = nil
   }
 
   private func startTicking() {
@@ -185,26 +206,21 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     let now = Date()
     refreshTimeBasedConditions(reference: now)
     updateWaitingDuration(now)
-    if let startDate {
-      elapsed = now.timeIntervalSince(startDate)
+    if let startDate = stateMachine.startTime {
+      metrics.setElapsedTime(now.timeIntervalSince(startDate))
     }
     recalcFare()
   }
 
   private func recalcFare() {
     guard let settings = currentSettings else { return }
-    let distanceKm = distanceMeters / 1000
-    let includedKm = settings.includedKm
-    let chargeableDistanceKm = max(0, distanceKm - includedKm)
-    let waitingCharge = calculateWaitingCharge(
-      waitingDuration: waitingDuration,
-      freeWaitMinutes: settings.freeWaitMinutes,
-      waitIntervalMinutes: settings.waitIntervalMinutes,
-      waitIntervalCharge: settings.waitIntervalCharge
+    let calculator = fareCalculator ?? FareCalculator(settings: settings)
+    fare = calculator.calculateFare(
+      distanceKm: metrics.distanceKm,
+      elapsedTime: metrics.elapsedSeconds,
+      waitingTime: metrics.waitingSeconds,
+      isNight: conditions.isNight
     )
-    let rawFare = settings.baseFare + (chargeableDistanceKm * settings.perKmRate) + waitingCharge
-    let adjusted = rawFare * multiplier
-    fare = max(settings.minFare, adjusted)
   }
 
   func calculateWaitingCharge(
@@ -213,11 +229,12 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     waitIntervalMinutes: Double,
     waitIntervalCharge: Double
   ) -> Double {
-    let waitingMinutes = waitingDuration / 60
-    let chargeableMinutes = max(0, waitingMinutes - freeWaitMinutes)
-    guard waitIntervalMinutes > 0 else { return 0 }
-    let intervals = ceil(chargeableMinutes / waitIntervalMinutes)
-    return intervals * waitIntervalCharge
+    FareCalculator.calculateWaitingCharge(
+      waitingDuration: waitingDuration,
+      freeWaitMinutes: freeWaitMinutes,
+      waitIntervalMinutes: waitIntervalMinutes,
+      waitIntervalCharge: waitIntervalCharge
+    )
   }
 
   func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -261,7 +278,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
         stopWaiting()
       }
       if delta > 2 {
-        distanceMeters += delta
+        metrics.addDistance(delta)
       }
     }
     lastLocation = location
@@ -286,14 +303,14 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     }
     waitingStartedAt = nil
     isWaiting = false
-    waitingDuration = waitingAccumulated
+    metrics.setWaitingTime(waitingAccumulated)
   }
 
   private func updateWaitingDuration(_ now: Date) {
     if isWaiting, let waitingStartedAt {
-      waitingDuration = waitingAccumulated + now.timeIntervalSince(waitingStartedAt)
+      metrics.setWaitingTime(waitingAccumulated + now.timeIntervalSince(waitingStartedAt))
     } else {
-      waitingDuration = waitingAccumulated
+      metrics.setWaitingTime(waitingAccumulated)
     }
   }
 
