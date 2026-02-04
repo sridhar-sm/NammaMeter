@@ -21,7 +21,7 @@ struct AddCityView: View {
       Form {
         Section(header: SectionHeader(title: "City Name", subtitle: "ನಗರದ ಹೆಸರು")) {
           TextField("Name", text: $name)
-            .font(.nammaDisplay(14))
+            .font(FontPresets.Display.label)
         }
       }
       .scrollContentBackground(.hidden)
@@ -45,9 +45,9 @@ struct AddCityView: View {
       ToolbarItem(placement: .principal) {
         VStack(spacing: 2) {
           Text("Add City")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text("ನಗರವನ್ನು ಸೇರಿಸಿ")
-            .font(.nammaBody(11))
+            .font(FontPresets.Body.small)
         }
       }
     }

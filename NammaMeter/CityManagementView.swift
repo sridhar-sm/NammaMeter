@@ -27,9 +27,9 @@ struct CityManagementView: View {
               .foregroundStyle(Theme.ink)
             VStack(alignment: .leading, spacing: 2) {
               Text("Add City")
-                .font(.nammaDisplay(14))
+                .font(FontPresets.Display.label)
               Text("ನಗರವನ್ನು ಸೇರಿಸಿ")
-                .font(.nammaBody(11))
+                .font(FontPresets.Body.small)
                 .foregroundStyle(.secondary)
             }
           }
@@ -45,9 +45,9 @@ struct CityManagementView: View {
       ToolbarItem(placement: .principal) {
         VStack(spacing: 2) {
           Text("Manage Cities")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
-            .font(.nammaBody(11))
+            .font(FontPresets.Body.small)
         }
       }
     }
@@ -92,17 +92,17 @@ struct CityRow: View {
     HStack {
       VStack(alignment: .leading, spacing: 2) {
         Text(city.name)
-          .font(.nammaDisplay(14))
+          .font(FontPresets.Display.label)
         if let region = city.cityKey.region {
           Text(region)
-            .font(.nammaBody(11))
+            .font(FontPresets.Body.small)
             .foregroundStyle(.secondary)
         }
         HStack(spacing: 8) {
           Text("Base: ₹\(city.rates.baseFare, specifier: "%.0f")")
           Text("Per Km: ₹\(city.rates.perKmRate, specifier: "%.0f")")
         }
-        .font(.nammaBody(10))
+        .font(FontPresets.Body.xSmall)
         .foregroundStyle(.secondary)
       }
       Spacer()

@@ -10,8 +10,8 @@ struct SuperElectronicFullMeterPanel: View {
   let isNight: Bool
   let topInset: CGFloat
 
-  private let metalPanel = Color(red: 0.88, green: 0.87, blue: 0.85)
-  private let metalEdge = Color(red: 0.7, green: 0.7, blue: 0.68)
+  private let metalPanel = ThemeColors.SuperElectronic.metalPanel
+  private let metalEdge = ThemeColors.SuperElectronic.metalEdge
 
   var body: some View {
     MeterShell(style: .superElectronic, topInset: topInset) { bodyWidth, bodyHeight in
@@ -49,7 +49,7 @@ struct SuperElectronicBrandPlate: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let plateBackground = Color(red: 0.92, green: 0.91, blue: 0.89)
+  private let plateBackground = ThemeColors.SuperElectronic.plateBackground
   private let printInk = Color.black.opacity(0.85)
 
   var body: some View {
@@ -84,7 +84,7 @@ struct SuperMeterLogo: View {
     ZStack {
       // Diamond shape with pattern
       Diamond()
-        .fill(Color(red: 0.2, green: 0.3, blue: 0.6))
+        .fill(ThemeColors.SuperElectronic.accentBlue)
         .frame(width: size, height: size)
       Diamond()
         .stroke(Color.white.opacity(0.6), lineWidth: 1)
@@ -116,9 +116,9 @@ struct SuperElectronicLEDDisplay: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let displayBackground = Color(red: 0.03, green: 0.04, blue: 0.05)
-  private let bezelColor = Color(red: 0.12, green: 0.12, blue: 0.14)
-  private let labelColor = Color(red: 0.85, green: 0.85, blue: 0.82)
+  private let displayBackground = ThemeColors.SuperElectronic.displayBackground
+  private let bezelColor = ThemeColors.SuperElectronic.bezel
+  private let labelColor = ThemeColors.SuperElectronic.labelLight
 
   var body: some View {
     RoundedRectangle(cornerRadius: width * 0.03, style: .continuous)
@@ -168,7 +168,7 @@ struct SuperElectronicFareRow: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let labelColor = Color(red: 0.75, green: 0.75, blue: 0.72)
+  private let labelColor = ThemeColors.SuperElectronic.labelMedium
 
   var body: some View {
     HStack(spacing: 0) {
@@ -295,7 +295,7 @@ struct SuperElectronicInfoRow: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let labelColor = Color(red: 0.75, green: 0.75, blue: 0.72)
+  private let labelColor = ThemeColors.SuperElectronic.labelMedium
 
   var body: some View {
     HStack(spacing: 0) {
@@ -435,8 +435,8 @@ struct SuperElectronicStatusBar: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let labelColor = Color(red: 0.65, green: 0.65, blue: 0.62)
-  private let dimColor = Color(red: 0.2, green: 0.2, blue: 0.22)
+  private let labelColor = ThemeColors.SuperElectronic.labelDark
+  private let dimColor = ThemeColors.SuperElectronic.dim
 
   var body: some View {
     HStack(spacing: 0) {
@@ -549,7 +549,7 @@ struct SuperElectronicManufacturerPlate: View {
 
 #Preview {
   ZStack {
-    Color(red: 0.95, green: 0.94, blue: 0.92)
+    ThemeColors.Metal.highlight
       .ignoresSafeArea()
 
     SuperElectronicFullMeterPanel(

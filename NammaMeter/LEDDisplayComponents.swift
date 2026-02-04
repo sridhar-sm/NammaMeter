@@ -10,28 +10,28 @@ struct LEDColorScheme: Equatable, Sendable {
 
     // Common LED color presets
     static let red = LEDColorScheme(
-        active: Color(red: 1.0, green: 0.2, blue: 0.12),
-        dim: Color(red: 0.12, green: 0.06, blue: 0.06)
+        active: ThemeColors.LED.red,
+        dim: ThemeColors.LED.redDim
     )
 
     static let green = LEDColorScheme(
-        active: Color(red: 0.2, green: 1.0, blue: 0.25),
-        dim: Color(red: 0.06, green: 0.12, blue: 0.07)
+        active: ThemeColors.LED.green,
+        dim: ThemeColors.LED.greenDim
     )
 
     static let amber = LEDColorScheme(
-        active: Color(red: 1.0, green: 0.65, blue: 0.0),
-        dim: Color(red: 0.12, green: 0.08, blue: 0.04)
+        active: ThemeColors.LED.amber,
+        dim: ThemeColors.LED.amberDim
     )
 
     static let blue = LEDColorScheme(
-        active: Color(red: 0.2, green: 0.5, blue: 1.0),
-        dim: Color(red: 0.06, green: 0.08, blue: 0.12)
+        active: ThemeColors.LED.blue,
+        dim: ThemeColors.LED.blueDim
     )
 
     static let white = LEDColorScheme(
-        active: Color(red: 1.0, green: 1.0, blue: 0.95),
-        dim: Color(red: 0.12, green: 0.12, blue: 0.11)
+        active: ThemeColors.LED.white,
+        dim: ThemeColors.LED.whiteDim
     )
 }
 
@@ -377,7 +377,7 @@ struct LEDPanel<Content: View>: View {
     let height: CGFloat
     var leftLabel: String? = nil
     var rightLabel: String? = nil
-    var labelColor: Color = Color(red: 0.75, green: 0.75, blue: 0.72)
+    var labelColor: Color = ThemeColors.LED.labelLight
     let content: () -> Content
 
     var body: some View {
@@ -414,7 +414,7 @@ struct LEDStatusIndicator: View {
     let isActive: Bool
     let height: CGFloat
     var colorScheme: LEDColorScheme = .red
-    var labelColor: Color = Color(red: 0.6, green: 0.6, blue: 0.58)
+    var labelColor: Color = ThemeColors.LED.labelMuted
 
     var body: some View {
         VStack(spacing: height * 0.08) {
@@ -444,8 +444,8 @@ struct LEDStatusIndicator: View {
 struct LEDDisplayContainer<Content: View>: View {
     let width: CGFloat
     let height: CGFloat
-    var backgroundColor: Color = Color(red: 0.03, green: 0.04, blue: 0.05)
-    var bezelColor: Color = Color(red: 0.12, green: 0.12, blue: 0.14)
+    var backgroundColor: Color = ThemeColors.LED.background
+    var bezelColor: Color = ThemeColors.LED.bezel
     var cornerRadius: CGFloat? = nil
     var bezelWidth: CGFloat = 3
     let content: () -> Content

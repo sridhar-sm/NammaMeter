@@ -20,10 +20,10 @@ struct HistoryListContent: View {
   private var emptyState: some View {
     VStack(alignment: .center, spacing: 12) {
       Text("No trips yet")
-        .font(.nammaDisplay(16))
+        .font(FontPresets.Display.subhead)
         .foregroundStyle(Theme.ink)
       Text("ಯಾವುದೇ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
-        .font(.nammaBody(12))
+        .font(FontPresets.Body.base)
         .foregroundStyle(Theme.ink.opacity(0.7))
     }
     .frame(maxWidth: .infinity, minHeight: 120)
@@ -33,10 +33,10 @@ struct HistoryListContent: View {
   private var noResultsState: some View {
     VStack(alignment: .center, spacing: 12) {
       Text("No matching trips")
-        .font(.nammaDisplay(16))
+        .font(FontPresets.Display.subhead)
         .foregroundStyle(Theme.ink)
       Text("ಹೊಂದುವ ಪ್ರಯಾಣಗಳಿಲ್ಲ")
-        .font(.nammaBody(12))
+        .font(FontPresets.Body.base)
         .foregroundStyle(Theme.ink.opacity(0.7))
     }
     .frame(maxWidth: .infinity, minHeight: 120)

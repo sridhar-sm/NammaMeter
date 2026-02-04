@@ -32,9 +32,9 @@ struct CityDetailView: View {
               .foregroundStyle(Theme.ink)
             VStack(alignment: .leading, spacing: 2) {
               Text("Add Fare Card")
-                .font(.nammaDisplay(14))
+                .font(FontPresets.Display.label)
               Text("ಬಾಡಿಗೆ ಕಾರ್ಡ್ ಸೇರಿಸಿ")
-                .font(.nammaBody(11))
+                .font(FontPresets.Body.small)
                 .foregroundStyle(.secondary)
             }
           }
@@ -50,9 +50,9 @@ struct CityDetailView: View {
       ToolbarItem(placement: .principal) {
         VStack(spacing: 2) {
           Text(cityName)
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text("\(fareProfiles.count) fare card\(fareProfiles.count == 1 ? "" : "s")")
-            .font(.nammaBody(11))
+            .font(FontPresets.Body.small)
         }
       }
     }
@@ -72,7 +72,7 @@ struct FareCardRow: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
       Text("Effective: \(profile.effectiveFrom.formatted(date: .abbreviated, time: .omitted))")
-        .font(.nammaBody(11))
+        .font(FontPresets.Body.small)
         .foregroundStyle(.secondary)
 
       VStack(alignment: .leading, spacing: 4) {
@@ -91,7 +91,7 @@ struct FareCardRow: View {
         HStack(spacing: 12) {
           FareDetail(label: "Night ×", value: profile.multipliers.night, isCurrency: false)
           Text("(\(profile.nightWindow.startHour):00 - \(profile.nightWindow.endHour):00)")
-            .font(.nammaBody(10))
+            .font(FontPresets.Body.xSmall)
             .foregroundStyle(.secondary)
         }
       }
@@ -109,14 +109,14 @@ struct FareDetail: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 1) {
       Text(label)
-        .font(.nammaBody(9))
+        .font(FontPresets.Body.micro)
         .foregroundStyle(.tertiary)
       if isCurrency {
         Text("₹\(value, specifier: "%.0f")\(unit ?? "")")
-          .font(.nammaBody(12))
+          .font(FontPresets.Body.base)
       } else {
         Text("\(value, specifier: "%.1f")\(unit ?? "")")
-          .font(.nammaBody(12))
+          .font(FontPresets.Body.base)
       }
     }
   }

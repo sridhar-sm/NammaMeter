@@ -51,17 +51,17 @@ struct GoldenEagleDisplayWindow: View {
   let height: CGFloat
 
   // Perforated face colors
-  private let faceColor = Color(red: 0.72, green: 0.73, blue: 0.70)
-  private let dotColor = Color(red: 0.55, green: 0.56, blue: 0.54)
+  private let faceColor = ThemeColors.GoldenEagle.face
+  private let dotColor = ThemeColors.GoldenEagle.dot
 
   // Row background colors (from real meter)
-  private let fareRowColor = Color(red: 0.45, green: 0.18, blue: 0.18)  // Dark maroon/red
-  private let distRowColor = Color(red: 0.15, green: 0.35, blue: 0.20)  // Dark green
-  private let waitRowColor = Color(red: 0.15, green: 0.32, blue: 0.35)  // Dark teal
+  private let fareRowColor = ThemeColors.GoldenEagle.fareRow
+  private let distRowColor = ThemeColors.GoldenEagle.distRow
+  private let waitRowColor = ThemeColors.GoldenEagle.waitRow
 
   private var ledScheme: LEDColorScheme {
-    let active = Color(red: 0.2, green: isNight ? 0.9 : 1.0, blue: 0.28)
-    let dim = Color(red: 0.03, green: 0.12, blue: 0.07)
+    let active = ThemeColors.GoldenEagle.ledActive(isNight: isNight)
+    let dim = ThemeColors.GoldenEagle.ledDim
     return LEDColorScheme(active: active, dim: dim)
   }
 
@@ -69,7 +69,7 @@ struct GoldenEagleDisplayWindow: View {
     ZStack {
       // Layer 1: Dial bezel - dark gray border creating inset effect for the display dial
       RoundedRectangle(cornerRadius: width * 0.04, style: .continuous)
-        .fill(Color(red: 0.4, green: 0.4, blue: 0.38))
+        .fill(ThemeColors.GoldenEagle.caseEdge)
         .shadow(color: Color.black.opacity(0.4), radius: 3, x: 2, y: 2)
 
       // Layer 2: Perforated face - dotted texture background visible on real meter
@@ -342,9 +342,9 @@ struct GoldenEagleDigitField<Content: View>: View {
   let widthFactor: CGFloat
   let content: (CGFloat) -> Content
 
-  private let dialTop = Color(red: 0.08, green: 0.2, blue: 0.12)
-  private let dialBottom = Color(red: 0.05, green: 0.14, blue: 0.08)
-  private let dialEdge = Color(red: 0.03, green: 0.1, blue: 0.06)
+  private let dialTop = ThemeColors.GoldenEagle.dialTop
+  private let dialBottom = ThemeColors.GoldenEagle.dialBottom
+  private let dialEdge = ThemeColors.GoldenEagle.dialEdge
 
   init(width: CGFloat, height: CGFloat, widthFactor: CGFloat, @ViewBuilder content: @escaping (CGFloat) -> Content) {
     self.width = width
@@ -454,7 +454,7 @@ struct GoldenEagleBadge: View {
   var body: some View {
     ZStack {
       RoundedRectangle(cornerRadius: height * 0.2, style: .continuous)
-        .fill(Color(red: 0.1, green: 0.26, blue: 0.6))
+        .fill(ThemeColors.GoldenEagle.accentBlue)
         .overlay(
           RoundedRectangle(cornerRadius: height * 0.2, style: .continuous)
             .stroke(Color.white.opacity(0.4), lineWidth: 0.8)
@@ -467,10 +467,10 @@ struct GoldenEagleBadge: View {
           .minimumScaleFactor(0.7)
         ZStack {
           Circle()
-            .fill(Color(red: 0.95, green: 0.78, blue: 0.25))
+            .fill(ThemeColors.GoldenEagle.accentGold)
           Text("GE")
             .font(.system(size: height * 0.18, weight: .heavy, design: .rounded))
-            .foregroundStyle(Color(red: 0.1, green: 0.26, blue: 0.6))
+            .foregroundStyle(ThemeColors.GoldenEagle.accentBlue)
         }
         .frame(width: width * 0.45, height: width * 0.45)
         Text("EAGLE")
@@ -494,7 +494,7 @@ struct GoldenEagleManufacturerPlate: View {
     ZStack {
       // Inset bezel effect
       RoundedRectangle(cornerRadius: height * 0.25, style: .continuous)
-        .fill(Color(red: 0.4, green: 0.4, blue: 0.38))
+        .fill(ThemeColors.GoldenEagle.caseEdge)
         .shadow(color: Color.black.opacity(0.4), radius: 2, x: 1, y: 1)
 
       // Main plate background (inset)
@@ -542,7 +542,7 @@ struct PlateScrew: View {
 
   var body: some View {
     Circle()
-      .fill(Color(red: 0.7, green: 0.7, blue: 0.68))
+      .fill(ThemeColors.GoldenEagle.caseLight)
       .overlay(
         Circle()
           .stroke(Color.black.opacity(0.6), lineWidth: 1)
@@ -555,7 +555,7 @@ struct PlateScrew: View {
 
 #Preview {
   ZStack {
-    Color(red: 0.95, green: 0.94, blue: 0.92)
+    ThemeColors.Metal.highlight
       .ignoresSafeArea()
 
     GoldenEagleFullMeterPanel(

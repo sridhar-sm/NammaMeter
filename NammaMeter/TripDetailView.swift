@@ -22,7 +22,7 @@ struct TripDetailView: View {
         }
     } else {
       Text("Trip not found")
-        .font(.nammaDisplay(16))
+        .font(FontPresets.Display.subhead)
         .foregroundStyle(Theme.ink)
     }
   }
@@ -47,9 +47,9 @@ struct TripDetailView: View {
       ToolbarItem(placement: .principal) {
         VStack(spacing: 2) {
           Text("Trip")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text("ಪ್ರಯಾಣ")
-            .font(.nammaBody(11))
+            .font(FontPresets.Body.small)
         }
       }
     }
@@ -69,13 +69,13 @@ struct TripDetailView: View {
     VStack(alignment: .leading, spacing: 12) {
       VStack(alignment: .leading, spacing: 6) {
         Text("Trip Name")
-          .font(.nammaDisplay(12))
+          .font(FontPresets.Display.small)
         Text("ಪ್ರಯಾಣ ಹೆಸರು")
-          .font(.nammaBody(10))
+          .font(FontPresets.Body.xSmall)
           .foregroundStyle(Theme.ink.opacity(0.7))
 
         TextField("Add a name", text: nameBinding)
-          .font(.nammaDisplay(16))
+          .font(FontPresets.Display.subhead)
           .padding(10)
           .background(Color.white.opacity(0.9))
           .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -83,9 +83,9 @@ struct TripDetailView: View {
 
       VStack(alignment: .leading, spacing: 4) {
         Text(trip.startDate, format: .dateTime.day().month().year().hour().minute())
-          .font(.nammaDisplay(15))
+          .font(FontPresets.Display.detail)
         Text(trip.startLocationName ?? "Locating...")
-          .font(.nammaBody(11))
+          .font(FontPresets.Body.small)
           .foregroundStyle(Theme.ink.opacity(0.7))
       }
 
@@ -95,7 +95,7 @@ struct TripDetailView: View {
             .font(.system(size: 12))
             .foregroundStyle(Theme.ink.opacity(0.7))
           Text(cityName)
-            .font(.nammaBody(12))
+            .font(FontPresets.Body.base)
             .foregroundStyle(Theme.ink.opacity(0.7))
         }
       }
@@ -120,9 +120,9 @@ struct TripDetailView: View {
       HStack {
         VStack(alignment: .leading, spacing: 2) {
           Text("Route")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text("ಮಾರ್ಗ")
-            .font(.nammaBody(12))
+            .font(FontPresets.Body.base)
             .foregroundStyle(Theme.ink.opacity(0.7))
         }
         Spacer()
@@ -156,9 +156,9 @@ struct TripDetailView: View {
       HStack {
         VStack(alignment: .leading, spacing: 2) {
           Text("Replay")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           Text("ಮರುನಿರ್ವಹಣೆ")
-            .font(.nammaBody(12))
+            .font(FontPresets.Body.base)
             .foregroundStyle(Theme.ink.opacity(0.7))
         }
         Spacer()
@@ -166,7 +166,7 @@ struct TripDetailView: View {
           isPlaying ? stopReplay() : startReplay(count: coordinates.count)
         } label: {
           Text(isPlaying ? "Pause" : "Play")
-            .font(.nammaDisplay(14))
+            .font(FontPresets.Display.label)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(Theme.mango.opacity(0.6))
@@ -187,7 +187,7 @@ struct TripDetailView: View {
 
       if let point = trip.points[safe: replayIndex] {
         Text("\(point.timestamp.formatted(date: .omitted, time: .standard))")
-          .font(.nammaBody(12))
+          .font(FontPresets.Body.base)
           .foregroundStyle(Theme.ink.opacity(0.7))
       }
     }
@@ -199,20 +199,20 @@ struct TripDetailView: View {
       HStack {
         VStack(alignment: .leading, spacing: 2) {
           Text("Rates Used")
-            .font(.nammaDisplay(16))
+            .font(FontPresets.Display.subhead)
           if let cityName = trip.rateSnapshot.cityName {
             Text("\(cityName) rates")
-              .font(.nammaBody(12))
+              .font(FontPresets.Body.base)
               .foregroundStyle(Theme.ink.opacity(0.7))
           } else {
             Text("ಬಳಸಿದ ದರಗಳು")
-              .font(.nammaBody(12))
+              .font(FontPresets.Body.base)
               .foregroundStyle(Theme.ink.opacity(0.7))
           }
         }
         Spacer()
         Text("x\(trip.multiplier.formatted(.number.precision(.fractionLength(2))))")
-          .font(.nammaDisplay(14))
+          .font(FontPresets.Display.label)
           .padding(.horizontal, 10)
           .padding(.vertical, 6)
           .background(Theme.lime.opacity(0.4))
@@ -276,10 +276,10 @@ struct SummaryChip: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       Text(title)
-        .font(.nammaBody(10))
+        .font(FontPresets.Body.xSmall)
         .foregroundStyle(Theme.ink.opacity(0.7))
       Text(value)
-        .font(.nammaDisplay(14))
+        .font(FontPresets.Display.label)
         .foregroundStyle(Theme.ink)
     }
     .padding(.vertical, 8)
@@ -297,9 +297,9 @@ struct ConditionBadge: View {
   var body: some View {
     VStack(spacing: 4) {
       Text(title)
-        .font(.nammaDisplay(11))
+        .font(FontPresets.Display.tiny)
       Text(subtitle)
-        .font(.nammaBody(9))
+        .font(FontPresets.Body.micro)
     }
     .foregroundStyle(isOn ? Theme.ink : Theme.ink.opacity(0.4))
     .padding(.vertical, 6)
@@ -317,12 +317,12 @@ struct RateLine: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       Text(title)
-        .font(.nammaBody(11))
+        .font(FontPresets.Body.small)
       Text(subtitle)
-        .font(.nammaBody(9))
+        .font(FontPresets.Body.micro)
         .foregroundStyle(Theme.ink.opacity(0.6))
       Text(value, format: .number.precision(.fractionLength(2)))
-        .font(.nammaDisplay(14))
+        .font(FontPresets.Display.label)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }

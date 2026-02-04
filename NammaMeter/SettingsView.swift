@@ -17,9 +17,9 @@ struct SettingsView: View {
           Section {
             VStack(alignment: .leading, spacing: 6) {
               Text("Meter Settings")
-                .font(.nammaDisplay(20))
+                .font(FontPresets.Display.title)
               Text("ಮೀಟರ್ ಸೆಟ್ಟಿಂಗ್ಸ್")
-                .font(.nammaBody(13))
+                .font(FontPresets.Body.medium)
                 .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
@@ -43,9 +43,9 @@ struct SettingsView: View {
                   .foregroundStyle(Theme.ink)
                 VStack(alignment: .leading, spacing: 2) {
                   Text("Manage Cities")
-                    .font(.nammaDisplay(14))
+                    .font(FontPresets.Display.label)
                   Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
-                    .font(.nammaBody(11))
+                    .font(FontPresets.Body.small)
                     .foregroundStyle(.secondary)
                 }
               }
@@ -112,9 +112,9 @@ struct SettingsView: View {
         ToolbarItem(placement: .principal) {
           VStack(spacing: 2) {
             Text("Settings")
-              .font(.nammaDisplay(16))
+              .font(FontPresets.Display.subhead)
             Text("ಸೆಟ್ಟಿಂಗ್ಸ್")
-              .font(.nammaBody(11))
+              .font(FontPresets.Body.small)
           }
         }
       }
@@ -129,9 +129,9 @@ struct SectionHeader: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(title)
-        .font(.nammaDisplay(14))
+        .font(FontPresets.Display.label)
       Text(subtitle)
-        .font(.nammaBody(11))
+        .font(FontPresets.Body.small)
         .foregroundStyle(.secondary)
     }
     .textCase(nil)
@@ -152,7 +152,7 @@ struct LabeledNumberField: View {
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
         Text(subtitle)
-          .font(.nammaBody(11))
+          .font(FontPresets.Body.small)
           .foregroundStyle(.secondary)
       }
     }
@@ -172,7 +172,7 @@ struct LabeledValue: View {
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
         Text(subtitle)
-          .font(.nammaBody(11))
+          .font(FontPresets.Body.small)
           .foregroundStyle(.secondary)
       }
     }

@@ -50,13 +50,13 @@ struct SignFace: View {
 
       VStack(spacing: 6) {
         Text(title)
-          .font(.nammaDisplay(22))
+          .font(FontPresets.Display.hero)
           .foregroundStyle(Theme.ink)
         Text(subtitle)
-          .font(.nammaBody(14))
+          .font(FontPresets.Body.large)
           .foregroundStyle(Theme.ink.opacity(0.8))
         Text(helper)
-          .font(.nammaBody(12))
+          .font(FontPresets.Body.base)
           .foregroundStyle(Theme.ink.opacity(0.6))
       }
     }
@@ -110,11 +110,11 @@ struct MiniSignFace: View {
 
       VStack(spacing: 2) {
         Text(title)
-          .font(.nammaDisplay(10))
+          .font(FontPresets.Display.micro)
           .foregroundStyle(Theme.ink)
           .lineLimit(1)
         Text(subtitle)
-          .font(.nammaBody(7))
+          .font(FontPresets.Body.mini)
           .foregroundStyle(Theme.ink.opacity(0.8))
           .lineLimit(1)
       }

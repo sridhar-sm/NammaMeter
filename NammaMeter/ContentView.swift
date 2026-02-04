@@ -31,9 +31,9 @@ struct TabLabel: View {
     VStack(spacing: 4) {
       Image(systemName: systemImage)
       Text(title)
-        .font(.nammaBody(12))
+        .font(FontPresets.Body.base)
       Text(subtitle)
-        .font(.nammaBody(10))
+        .font(FontPresets.Body.xSmall)
     }
   }
 }
