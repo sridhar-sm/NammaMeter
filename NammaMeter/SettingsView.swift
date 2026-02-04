@@ -1,110 +1,20 @@
-import Observation
 import SwiftUI
 
 struct SettingsView: View {
-  @Environment(SettingsStore.self) private var settingsStore
-  @Environment(MeterStore.self) private var meterStore
-
-  private var canEditSettings: Bool {
-    meterStore.tripState == .forHire
-  }
-
   var body: some View {
     NavigationStack {
       ZStack {
         NammaBackground()
         Form {
           Section {
-            VStack(alignment: .leading, spacing: 6) {
-              Text("Meter Settings")
-                .font(FontPresets.Display.title)
-              Text("ಮೀಟರ್ ಸೆಟ್ಟಿಂಗ್ಸ್")
-                .font(FontPresets.Body.medium)
-                .foregroundStyle(.secondary)
-            }
-            .padding(.vertical, 4)
+            SettingsHeader()
           }
 
-          Section(header: SectionHeader(title: "City", subtitle: "ನಗರ")) {
-            Picker("City", selection: Binding(
-              get: { settingsStore.selectedCityId ?? "" },
-              set: { settingsStore.selectCity($0) }
-            )) {
-              ForEach(settingsStore.availableCities) { city in
-                Text(city.name).tag(city.cityId)
-              }
-            }
-            .pickerStyle(.menu)
-            .disabled(!canEditSettings)
-
-            NavigationLink(destination: CityManagementView()) {
-              HStack {
-                Image(systemName: "building.2")
-                  .foregroundStyle(Theme.ink)
-                VStack(alignment: .leading, spacing: 2) {
-                  Text("Manage Cities")
-                    .font(FontPresets.Display.label)
-                  Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
-                    .font(FontPresets.Body.small)
-                    .foregroundStyle(.secondary)
-                }
-              }
-            }
-            .disabled(!canEditSettings)
-            .opacity(canEditSettings ? 1 : 0.5)
-          }
-
-          Section(header: SectionHeader(title: "Rates", subtitle: "ದರಗಳು")) {
-            LabeledValue(
-              title: "Base Fare",
-              subtitle: "ಮೂಲ ಬಾಡಿಗೆ",
-              value: settingsStore.settings.baseFare
-            )
-            LabeledValue(
-              title: "Per Km",
-              subtitle: "ಪ್ರತಿ ಕಿಲೋ ಮೀಟರ್",
-              value: settingsStore.settings.perKmRate
-            )
-            LabeledValue(
-              title: "Minimum Fare",
-              subtitle: "ಕನಿಷ್ಠ ಬಾಡಿಗೆ",
-              value: settingsStore.settings.minFare
-            )
-          }
-
-          Section(header: SectionHeader(title: "Waiting Charges", subtitle: "ನಿಲ್ಲಿಕೆ ಶುಲ್ಕಗಳು")) {
-            LabeledValue(
-              title: "Free Wait (min)",
-              subtitle: "ಉಚಿತ ನಿಲ್ಲಿಕೆ (ನಿಮಿಷ)",
-              value: settingsStore.settings.freeWaitMinutes
-            )
-            LabeledValue(
-              title: "Interval (min)",
-              subtitle: "ಮಧ್ಯಂತರ (ನಿಮಿಷ)",
-              value: settingsStore.settings.waitIntervalMinutes
-            )
-            LabeledValue(
-              title: "Per Interval",
-              subtitle: "ಪ್ರತಿ ಮಧ್ಯಂತರ",
-              value: settingsStore.settings.waitIntervalCharge
-            )
-          }
-
-          Section(header: SectionHeader(title: "Modifiers", subtitle: "ಗುಣಕಗಳು")) {
-            LabeledValue(
-              title: "Night Multiplier",
-              subtitle: "ರಾತ್ರಿ ಗುಣಕ",
-              value: settingsStore.settings.nightMultiplier
-            )
-          }
-
-          Section {
-            Button {
-              settingsStore.resetToDefaults()
-            } label: {
-              Text("Reset to defaults")
-            }
-          }
+          SettingsCitySection()
+          SettingsRatesSection()
+          SettingsWaitingChargesSection()
+          SettingsModifiersSection()
+          SettingsResetSection()
         }
         .scrollContentBackground(.hidden)
       }
@@ -183,4 +93,5 @@ struct LabeledValue: View {
   SettingsView()
     .environment(SettingsStore())
     .environment(MeterStore())
+    .previewDevice("iPhone 17 Pro")
 }
