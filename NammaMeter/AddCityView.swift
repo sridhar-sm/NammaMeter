@@ -1,27 +1,38 @@
+import Observation
 import SwiftUI
 
 struct AddCityView: View {
   @Environment(\.dismiss) private var dismiss
 
-  @State private var name: String = ""
+  @State private var formState = FormState(
+    input: CityFormData(name: ""),
+    validator: CityFormValidator()
+  )
   @State private var navigateToAddFare = false
   @State private var generatedCityId: String = ""
 
   private var trimmedName: String {
-    name.trimmingCharacters(in: .whitespaces)
+    formState.input.name.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   private var canProceed: Bool {
-    !trimmedName.isEmpty
+    formState.isValid
   }
 
   var body: some View {
+    @Bindable var formState = formState
+
     ZStack {
       NammaBackground()
       Form {
         Section(header: SectionHeader(title: "City Name", subtitle: "ನಗರದ ಹೆಸರು")) {
-          TextField("Name", text: $name)
+          TextField("Name", text: $formState.input.name)
             .font(.nammaDisplay(14))
+
+          if let issue = formState.issue(for: CityFormField.name.rawValue),
+             !formState.input.name.isEmpty {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
         }
       }
       .scrollContentBackground(.hidden)
@@ -37,6 +48,7 @@ struct AddCityView: View {
       }
       ToolbarItem(placement: .confirmationAction) {
         Button("Next") {
+          guard canProceed else { return }
           generatedCityId = "custom-\(UUID().uuidString)"
           navigateToAddFare = true
         }
