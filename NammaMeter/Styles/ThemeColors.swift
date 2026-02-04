@@ -29,7 +29,9 @@ enum ThemeColors {
     static let primaryLight = Color(red: 0.15, green: 0.35, blue: 0.78)
     static let primaryDark = Color(red: 0.08, green: 0.22, blue: 0.6)
   }
+}
 
+enum MeterColorSchemes {
   enum Metal {
     static let edge = Color(red: 0.7, green: 0.7, blue: 0.68)
     static let panelLight = Color(red: 0.9, green: 0.9, blue: 0.88)
@@ -67,14 +69,14 @@ enum ThemeColors {
     static let faceTop = Color(red: 0.2, green: 0.21, blue: 0.22)
     static let faceBottom = Color(red: 0.1, green: 0.1, blue: 0.11)
     static let windowBackground = Color(red: 0.9, green: 0.9, blue: 0.88)
-    static let line = Lines.medium
+    static let line = ThemeColors.Lines.medium
     static let label = Color.black.opacity(0.8)
     static let panelTop = Color(red: 0.4, green: 0.06, blue: 0.06)
     static let panelBottom = Color(red: 0.2, green: 0.03, blue: 0.03)
     static let panelEdge = Color(red: 0.1, green: 0.02, blue: 0.02)
-    static let text = Brand.primary
-    static let badgeTop = Brand.primaryLight
-    static let badgeBottom = Brand.primaryDark
+    static let text = ThemeColors.Brand.primary
+    static let badgeTop = ThemeColors.Brand.primaryLight
+    static let badgeBottom = ThemeColors.Brand.primaryDark
   }
 
   enum GoldenEagle {

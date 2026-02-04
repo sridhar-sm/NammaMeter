@@ -25,6 +25,14 @@ final class ThemeAccessibilityTests: XCTestCase {
     )
   }
 
+  func testMeterColorSchemeRGBValues() {
+    assertRGBA(MeterColorSchemes.SuperMechanical.caseTop, red: 0.17, green: 0.18, blue: 0.19)
+    assertRGBA(MeterColorSchemes.BrightDigital.panelTop, red: 0.4, green: 0.06, blue: 0.06)
+    assertRGBA(MeterColorSchemes.GoldenEagle.accentGold, red: 0.95, green: 0.78, blue: 0.25)
+    assertRGBA(MeterColorSchemes.LED.blueDim, red: 0.06, green: 0.08, blue: 0.12)
+    assertRGBA(MeterColorSchemes.MeterShell.digital[0], red: 0.09, green: 0.1, blue: 0.12)
+  }
+
   private struct ContrastSample {
     let name: String
     let text: Color
@@ -60,6 +68,24 @@ final class ThemeAccessibilityTests: XCTestCase {
     let lighter = max(l1, l2)
     let darker = min(l1, l2)
     return (lighter + 0.05) / (darker + 0.05)
+  }
+
+  private func assertRGBA(
+    _ color: Color,
+    red: CGFloat,
+    green: CGFloat,
+    blue: CGFloat,
+    alpha: CGFloat = 1,
+    style: UIUserInterfaceStyle = .light,
+    tolerance: CGFloat = 0.005,
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) {
+    let actual = rgba(resolved(color, style: style))
+    XCTAssertEqual(actual.r, red, accuracy: tolerance, file: file, line: line)
+    XCTAssertEqual(actual.g, green, accuracy: tolerance, file: file, line: line)
+    XCTAssertEqual(actual.b, blue, accuracy: tolerance, file: file, line: line)
+    XCTAssertEqual(actual.a, alpha, accuracy: tolerance, file: file, line: line)
   }
 
   private func resolved(_ color: Color, style: UIUserInterfaceStyle) -> UIColor {

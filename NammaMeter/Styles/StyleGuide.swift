@@ -9,7 +9,7 @@ import SwiftUI
 /// Colors
 /// - Use ThemeColors.Brand.* for primary brand accents.
 /// - Use ThemeColors.Text.* for common text colors.
-/// - Use ThemeColors.<Meter>.* for meter-specific palettes.
+/// - Use MeterColorSchemes.<Meter>.* for meter-specific palettes.
 ///
 /// Examples
 /// Text("Meter")

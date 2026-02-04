@@ -10,8 +10,8 @@ struct SuperElectronicFullMeterPanel: View {
   let isNight: Bool
   let topInset: CGFloat
 
-  private let metalPanel = ThemeColors.SuperElectronic.metalPanel
-  private let metalEdge = ThemeColors.SuperElectronic.metalEdge
+  private let metalPanel = MeterColorSchemes.SuperElectronic.metalPanel
+  private let metalEdge = MeterColorSchemes.SuperElectronic.metalEdge
 
   var body: some View {
     MeterShell(style: .superElectronic, topInset: topInset) { bodyWidth, bodyHeight in
@@ -49,7 +49,7 @@ struct SuperElectronicBrandPlate: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let plateBackground = ThemeColors.SuperElectronic.plateBackground
+  private let plateBackground = MeterColorSchemes.SuperElectronic.plateBackground
   private let printInk = Color.black.opacity(0.85)
 
   var body: some View {
@@ -84,7 +84,7 @@ struct SuperMeterLogo: View {
     ZStack {
       // Diamond shape with pattern
       Diamond()
-        .fill(ThemeColors.SuperElectronic.accentBlue)
+        .fill(MeterColorSchemes.SuperElectronic.accentBlue)
         .frame(width: size, height: size)
       Diamond()
         .stroke(Color.white.opacity(0.6), lineWidth: 1)
@@ -116,9 +116,9 @@ struct SuperElectronicLEDDisplay: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let displayBackground = ThemeColors.SuperElectronic.displayBackground
-  private let bezelColor = ThemeColors.SuperElectronic.bezel
-  private let labelColor = ThemeColors.SuperElectronic.labelLight
+  private let displayBackground = MeterColorSchemes.SuperElectronic.displayBackground
+  private let bezelColor = MeterColorSchemes.SuperElectronic.bezel
+  private let labelColor = MeterColorSchemes.SuperElectronic.labelLight
 
   var body: some View {
     RoundedRectangle(cornerRadius: width * 0.03, style: .continuous)
@@ -168,7 +168,7 @@ struct SuperElectronicFareRow: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let labelColor = ThemeColors.SuperElectronic.labelMedium
+  private let labelColor = MeterColorSchemes.SuperElectronic.labelMedium
 
   var body: some View {
     HStack(spacing: 0) {
@@ -295,7 +295,7 @@ struct SuperElectronicInfoRow: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let labelColor = ThemeColors.SuperElectronic.labelMedium
+  private let labelColor = MeterColorSchemes.SuperElectronic.labelMedium
 
   var body: some View {
     HStack(spacing: 0) {
@@ -435,8 +435,8 @@ struct SuperElectronicStatusBar: View {
   let width: CGFloat
   let height: CGFloat
 
-  private let labelColor = ThemeColors.SuperElectronic.labelDark
-  private let dimColor = ThemeColors.SuperElectronic.dim
+  private let labelColor = MeterColorSchemes.SuperElectronic.labelDark
+  private let dimColor = MeterColorSchemes.SuperElectronic.dim
 
   var body: some View {
     HStack(spacing: 0) {
@@ -549,7 +549,7 @@ struct SuperElectronicManufacturerPlate: View {
 
 #Preview {
   ZStack {
-    ThemeColors.Metal.highlight
+    MeterColorSchemes.Metal.highlight
       .ignoresSafeArea()
 
     SuperElectronicFullMeterPanel(
