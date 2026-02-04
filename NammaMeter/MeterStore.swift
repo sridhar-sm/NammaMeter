@@ -28,6 +28,22 @@ protocol LocationProviding: AnyObject {
 
 extension CLLocationManager: LocationProviding {}
 
+final class NoopLocationProvider: LocationProviding {
+  var authorizationStatus: CLAuthorizationStatus = .notDetermined
+  var delegate: CLLocationManagerDelegate?
+  var activityType: CLActivityType = .other
+  var desiredAccuracy: CLLocationAccuracy = kCLLocationAccuracyBest
+  var distanceFilter: CLLocationDistance = kCLLocationAccuracyBest
+  var pausesLocationUpdatesAutomatically: Bool = true
+  var allowsBackgroundLocationUpdates: Bool = false
+  var showsBackgroundLocationIndicator: Bool = false
+
+  func requestWhenInUseAuthorization() {}
+  func requestAlwaysAuthorization() {}
+  func startUpdatingLocation() {}
+  func stopUpdatingLocation() {}
+}
+
 @MainActor
 @Observable
 final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
@@ -66,7 +82,11 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var fareCalculator: FareCalculator?
 
   override convenience init() {
-    self.init(locationProvider: CLLocationManager())
+    if TestEnvironment.isRunningTests {
+      self.init(locationProvider: NoopLocationProvider())
+    } else {
+      self.init(locationProvider: CLLocationManager())
+    }
   }
 
   init(locationProvider: LocationProviding) {
