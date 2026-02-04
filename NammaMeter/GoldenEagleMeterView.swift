@@ -10,64 +10,31 @@ struct GoldenEagleFullMeterPanel: View {
   let isNight: Bool
   let topInset: CGFloat
 
-  private let caseLight = Color(red: 0.78, green: 0.78, blue: 0.76)
-  private let caseMid = Color(red: 0.6, green: 0.6, blue: 0.58)
-  private let caseDark = Color(red: 0.36, green: 0.36, blue: 0.35)
-  private let faceTop = Color(red: 0.68, green: 0.69, blue: 0.66)
-  private let faceBottom = Color(red: 0.48, green: 0.49, blue: 0.47)
-
   var body: some View {
-    GeometryReader { geo in
-      let desiredWidth = geo.size.width * GoldenEagleDimensions.widthRatio
-      let bodyHeightForWidth = desiredWidth * GoldenEagleDimensions.bodyAspect
-      let scale = min(1, geo.size.height / bodyHeightForWidth)
-      let bodyWidth = desiredWidth * scale
-      let bodyHeight = bodyHeightForWidth * scale
+    MeterShell(style: .goldenEagle, topInset: topInset) { bodyWidth, bodyHeight in
+      VStack(spacing: 0) {
+        Spacer()
 
-      ZStack {
-        // Layer 1: Outer case - the gray plastic housing of the meter
-        RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [caseLight, caseMid, caseDark],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-              .stroke(Color.white.opacity(0.4), lineWidth: 1.2)
-          )
-          .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
+        // Display dial - shows fare, distance, wait time with LED segments
+        GoldenEagleDisplayWindow(
+          tripState: tripState,
+          fare: fare,
+          waitingDuration: waitingDuration,
+          distanceKm: distanceMeters / 1000,
+          isNight: isNight,
+          width: bodyWidth * 0.90,
+          height: bodyHeight * 0.70
+        )
 
-        // Layer 2: Content - display window and manufacturer plate
-        VStack(spacing: 0) {
-          Spacer()
+        // Spacer to push manufacturer plate to center of remaining space
+        Spacer()
 
-          // Display dial - shows fare, distance, wait time with LED segments
-          GoldenEagleDisplayWindow(
-            tripState: tripState,
-            fare: fare,
-            waitingDuration: waitingDuration,
-            distanceKm: distanceMeters / 1000,
-            isNight: isNight,
-            width: bodyWidth * 0.90,
-            height: bodyHeight * 0.70
-          )
+        // Manufacturer plate - shows company info at bottom
+        GoldenEagleManufacturerPlate(width: bodyWidth * 0.90, height: bodyHeight * 0.18)
 
-          // Spacer to push manufacturer plate to center of remaining space
-          Spacer()
-
-          // Manufacturer plate - shows company info at bottom
-          GoldenEagleManufacturerPlate(width: bodyWidth * 0.90, height: bodyHeight * 0.18)
-
-          // Equal spacer below to center the plate
-          Spacer()
-        }
+        // Equal spacer below to center the plate
+        Spacer()
       }
-      .frame(width: bodyWidth, height: bodyHeight)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .offset(y: topInset)
     }
   }
 }

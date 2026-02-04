@@ -9,18 +9,11 @@ struct BrightDigitalFullMeterPanel: View {
   let distanceMeters: Double
   let topInset: CGFloat
 
-  private let caseTop = Color(red: 0.14, green: 0.15, blue: 0.16)
-  private let caseBottom = Color(red: 0.05, green: 0.05, blue: 0.06)
   private let faceTop = Color(red: 0.2, green: 0.21, blue: 0.22)
   private let faceBottom = Color(red: 0.1, green: 0.1, blue: 0.11)
 
   var body: some View {
-    GeometryReader { geo in
-      let desiredWidth = geo.size.width * BrightDigitalDimensions.widthRatio
-      let bodyHeightForWidth = desiredWidth * BrightDigitalDimensions.bodyAspect
-      let scale = min(1, geo.size.height / bodyHeightForWidth)
-      let bodyWidth = desiredWidth * scale
-      let bodyHeight = bodyHeightForWidth * scale
+    MeterShell(style: .brightDigital, topInset: topInset) { bodyWidth, bodyHeight in
       let faceWidth = bodyWidth * 0.92
       let faceHeight = bodyHeight * 0.86
       let windowWidth = faceWidth * 0.92
@@ -29,20 +22,6 @@ struct BrightDigitalFullMeterPanel: View {
       let badgeHeight = faceHeight * 0.14
 
       ZStack {
-        RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [caseTop, caseBottom],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-              .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
-          )
-          .shadow(color: Color.black.opacity(0.4), radius: 16, x: 0, y: 10)
-
         RoundedRectangle(cornerRadius: bodyWidth * 0.06, style: .continuous)
           .fill(
             LinearGradient(
@@ -73,9 +52,6 @@ struct BrightDigitalFullMeterPanel: View {
         }
         .frame(width: faceWidth, height: faceHeight)
       }
-      .frame(width: bodyWidth, height: bodyHeight)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .offset(y: topInset)
     }
   }
 }

@@ -10,63 +10,35 @@ struct SuperElectronicFullMeterPanel: View {
   let isNight: Bool
   let topInset: CGFloat
 
-  private let caseTop = Color(red: 0.17, green: 0.18, blue: 0.19)
-  private let caseBottom = Color(red: 0.06, green: 0.06, blue: 0.07)
   private let metalPanel = Color(red: 0.88, green: 0.87, blue: 0.85)
   private let metalEdge = Color(red: 0.7, green: 0.7, blue: 0.68)
 
   var body: some View {
-    GeometryReader { geo in
-      let desiredBodyWidth = geo.size.width * SuperElectronicDimensions.widthRatio
-      let bodyHeightForWidth = desiredBodyWidth * SuperElectronicDimensions.bodyAspect
-      let scale = min(1, geo.size.height / bodyHeightForWidth)
-      let bodyWidth = desiredBodyWidth * scale
-      let bodyHeight = bodyHeightForWidth * scale
+    MeterShell(style: .superElectronic, topInset: topInset) { bodyWidth, bodyHeight in
+      VStack(spacing: bodyHeight * 0.02) {
+        // Top brand plate
+        SuperElectronicBrandPlate(width: bodyWidth * 0.85, height: bodyHeight * 0.08)
 
-      ZStack {
-        // Main body
-        RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [caseTop, caseBottom],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: bodyWidth * 0.08, style: .continuous)
-              .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
-          )
-          .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
+        // Main LED display area
+        SuperElectronicLEDDisplay(
+          tripState: tripState,
+          fare: fare,
+          waitingDuration: waitingDuration,
+          distanceKm: distanceMeters / 1000,
+          isNight: isNight,
+          width: bodyWidth * 0.88,
+          height: bodyHeight * 0.52
+        )
 
-        VStack(spacing: bodyHeight * 0.02) {
-          // Top brand plate
-          SuperElectronicBrandPlate(width: bodyWidth * 0.85, height: bodyHeight * 0.08)
-
-          // Main LED display area
-          SuperElectronicLEDDisplay(
-            tripState: tripState,
-            fare: fare,
-            waitingDuration: waitingDuration,
-            distanceKm: distanceMeters / 1000,
-            isNight: isNight,
-            width: bodyWidth * 0.88,
-            height: bodyHeight * 0.52
-          )
-
-          // Bottom manufacturer plate
-          SuperElectronicManufacturerPlate(
-            width: bodyWidth * 0.85,
-            height: bodyHeight * 0.14,
-            metalPanel: metalPanel,
-            metalEdge: metalEdge
-          )
-        }
-        .padding(.vertical, bodyHeight * 0.06)
+        // Bottom manufacturer plate
+        SuperElectronicManufacturerPlate(
+          width: bodyWidth * 0.85,
+          height: bodyHeight * 0.14,
+          metalPanel: metalPanel,
+          metalEdge: metalEdge
+        )
       }
-      .frame(width: bodyWidth, height: bodyHeight)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .offset(y: topInset)
+      .padding(.vertical, bodyHeight * 0.06)
     }
   }
 }
