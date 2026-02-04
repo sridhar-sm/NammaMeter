@@ -1,3 +1,4 @@
+import Observation
 import SwiftUI
 
 struct AddFareView: View {
@@ -8,26 +9,33 @@ struct AddFareView: View {
   let cityName: String
   var isNewCity: Bool = false
 
-  @State private var effectiveFrom: Date = Date()
-  @State private var baseFare: Double = 36
-  @State private var perKmRate: Double = 18
-  @State private var minFare: Double = 36
-  @State private var includedKm: Double = 2.0
-  @State private var nightMultiplier: Double = 1.5
-  @State private var nightStartHour: Int = 22
-  @State private var nightEndHour: Int = 5
-  @State private var freeWaitMinutes: Double = 5
-  @State private var waitIntervalMinutes: Double = 15
-  @State private var waitIntervalCharge: Double = 10
+  @State private var formState = FormState(
+    input: FareProfileFormData(
+      effectiveFrom: Date(),
+      baseFare: 36,
+      perKmRate: 18,
+      minFare: 36,
+      includedKm: 2.0,
+      nightMultiplier: 1.5,
+      nightStartHour: 22,
+      nightEndHour: 5,
+      freeWaitMinutes: 5,
+      waitIntervalMinutes: 15,
+      waitIntervalCharge: 10
+    ),
+    validator: FareProfileFormValidator()
+  )
 
   var body: some View {
+    @Bindable var formState = formState
+
     ZStack {
       NammaBackground()
       Form {
         Section(header: SectionHeader(title: "Effective Date", subtitle: "ಜಾರಿ ದಿನಾಂಕ")) {
           DatePicker(
             "Effective From",
-            selection: $effectiveFrom,
+            selection: $formState.input.effectiveFrom,
             displayedComponents: .date
           )
         }
@@ -36,51 +44,96 @@ struct AddFareView: View {
           LabeledNumberField(
             title: "Base Fare",
             subtitle: "ಮೂಲ ಬಾಡಿಗೆ",
-            value: $baseFare
+            value: $formState.input.baseFare
           )
+          if let issue = formState.issue(for: FareProfileFormField.baseFare.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
           LabeledNumberField(
             title: "Per Km",
             subtitle: "ಪ್ರತಿ ಕಿಲೋ ಮೀಟರ್",
-            value: $perKmRate
+            value: $formState.input.perKmRate
           )
+          if let issue = formState.issue(for: FareProfileFormField.perKmRate.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
           LabeledNumberField(
             title: "Minimum Fare",
             subtitle: "ಕನಿಷ್ಠ ಬಾಡಿಗೆ",
-            value: $minFare
+            value: $formState.input.minFare
           )
+          if let issue = formState.issue(for: FareProfileFormField.minFare.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
           LabeledNumberField(
             title: "Included Km",
             subtitle: "ಸೇರಿಸಿದ ಕಿಮೀ",
-            value: $includedKm
+            value: $formState.input.includedKm
           )
+          if let issue = formState.issue(for: FareProfileFormField.includedKm.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
         }
 
         Section(header: SectionHeader(title: "Waiting Charges", subtitle: "ನಿಲ್ಲಿಕೆ ಶುಲ್ಕಗಳು")) {
           LabeledNumberField(
             title: "Free Wait (min)",
             subtitle: "ಉಚಿತ ನಿಲ್ಲಿಕೆ (ನಿಮಿಷ)",
-            value: $freeWaitMinutes
+            value: $formState.input.freeWaitMinutes
           )
+          if let issue = formState.issue(for: FareProfileFormField.freeWaitMinutes.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
           LabeledNumberField(
             title: "Interval (min)",
             subtitle: "ಮಧ್ಯಂತರ (ನಿಮಿಷ)",
-            value: $waitIntervalMinutes
+            value: $formState.input.waitIntervalMinutes
           )
+          if let issue = formState.issue(for: FareProfileFormField.waitIntervalMinutes.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
           LabeledNumberField(
             title: "Per Interval",
             subtitle: "ಪ್ರತಿ ಮಧ್ಯಂತರ",
-            value: $waitIntervalCharge
+            value: $formState.input.waitIntervalCharge
           )
+          if let issue = formState.issue(for: FareProfileFormField.waitIntervalCharge.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
         }
 
         Section(header: SectionHeader(title: "Night Fare", subtitle: "ರಾತ್ರಿ ಬಾಡಿಗೆ")) {
           LabeledNumberField(
             title: "Night Multiplier",
             subtitle: "ರಾತ್ರಿ ಗುಣಕ",
-            value: $nightMultiplier
+            value: $formState.input.nightMultiplier
           )
-          Stepper("Start Hour: \(nightStartHour):00", value: $nightStartHour, in: 0...23)
-          Stepper("End Hour: \(nightEndHour):00", value: $nightEndHour, in: 0...23)
+          if let issue = formState.issue(for: FareProfileFormField.nightMultiplier.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
+          Stepper(
+            "Start Hour: \(formState.input.nightStartHour):00",
+            value: $formState.input.nightStartHour,
+            in: 0...23
+          )
+          if let issue = formState.issue(for: FareProfileFormField.nightStartHour.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
+          Stepper(
+            "End Hour: \(formState.input.nightEndHour):00",
+            value: $formState.input.nightEndHour,
+            in: 0...23
+          )
+          if let issue = formState.issue(for: FareProfileFormField.nightEndHour.rawValue) {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
         }
       }
       .scrollContentBackground(.hidden)
@@ -93,6 +146,7 @@ struct AddFareView: View {
       }
       ToolbarItem(placement: .confirmationAction) {
         Button("Save") { save() }
+          .disabled(!formState.isValid)
       }
       ToolbarItem(placement: .principal) {
         VStack(spacing: 2) {
@@ -106,26 +160,29 @@ struct AddFareView: View {
   }
 
   private func save() {
+    guard formState.isValid else { return }
+    let input = formState.input
+
     let profile = CityFareProfile(
       id: UUID().uuidString,
       cityId: cityId,
       name: cityName,
       cityKey: CityKey(city: cityName, region: nil, countryCode: "IN"),
       rates: FareRates(
-        baseFare: baseFare,
-        perKmRate: perKmRate,
+        baseFare: input.baseFare,
+        perKmRate: input.perKmRate,
         perMinuteRate: 0,
-        includedKm: includedKm,
-        minFare: minFare
+        includedKm: input.includedKm,
+        minFare: input.minFare
       ),
-      multipliers: FareMultipliers(night: nightMultiplier),
-      nightWindow: NightFareWindow(startHour: nightStartHour, endHour: nightEndHour),
+      multipliers: FareMultipliers(night: input.nightMultiplier),
+      nightWindow: NightFareWindow(startHour: input.nightStartHour, endHour: input.nightEndHour),
       waitCharges: WaitingChargePolicy(
-        freeWaitMinutes: freeWaitMinutes,
-        waitIntervalMinutes: waitIntervalMinutes,
-        waitIntervalCharge: waitIntervalCharge
+        freeWaitMinutes: input.freeWaitMinutes,
+        waitIntervalMinutes: input.waitIntervalMinutes,
+        waitIntervalCharge: input.waitIntervalCharge
       ),
-      effectiveFrom: effectiveFrom
+      effectiveFrom: input.effectiveFrom
     )
 
     if isNewCity {

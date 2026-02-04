@@ -37,7 +37,6 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   var points: [TripPoint] = []
   var currentSpeedKph: Double = 0
   var isWaiting = false
-  var authorizationStatus: CLAuthorizationStatus = .notDetermined
   var locationError: String?
   var conditions: TripConditions = .clear {
     didSet {
@@ -54,6 +53,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   var waitingDuration: TimeInterval { metrics.waitingSeconds }
 
   @ObservationIgnored private let locationManager: LocationProviding
+  @ObservationIgnored private let permissionCoordinator: LocationPermissionCoordinator
   @ObservationIgnored private var tickTask: Task<Void, Never>?
   @ObservationIgnored private var isUpdatingLocation = false
   @ObservationIgnored private let clock = ContinuousClock()
@@ -71,24 +71,22 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
 
   init(locationProvider: LocationProviding) {
     locationManager = locationProvider
+    permissionCoordinator = LocationPermissionCoordinator(locationProvider: locationProvider)
     super.init()
     locationManager.delegate = self
     locationManager.activityType = .automotiveNavigation
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = 8
     locationManager.pausesLocationUpdatesAutomatically = false
-    authorizationStatus = locationManager.authorizationStatus
   }
 
   func requestAuthorization() {
-    if authorizationStatus == .notDetermined {
-      locationManager.requestWhenInUseAuthorization()
-    }
+    permissionCoordinator.refreshAuthorizationStatus()
+    permissionCoordinator.requestWhenInUseIfNeeded()
   }
 
   func requestAlwaysAuthorization() {
-    guard authorizationStatus == .authorizedWhenInUse else { return }
-    locationManager.requestAlwaysAuthorization()
+    permissionCoordinator.requestAlwaysAuthorization()
   }
 
   func startTrip(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
@@ -108,13 +106,13 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
 
     let startTime = Date()
     stateMachine.startTrip(startTime: startTime)
+    permissionCoordinator.updateTripState(isOnTrip: true)
 
     refreshTimeBasedConditions(reference: startTime)
     multiplier = conditions.multiplier(using: settings)
     fare = settings.minFare
     recalcFare()
 
-    authorizationStatus = locationManager.authorizationStatus
     requestAuthorization()
     if isAuthorizedForLocationUpdates {
       startLocationUpdates()
@@ -147,6 +145,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     )
 
     stateMachine.completeTrip(trip: trip)
+    permissionCoordinator.updateTripState(isOnTrip: false)
     updateBackgroundLocationState()
 
     tripStore.add(trip)
@@ -158,6 +157,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   func resetToForHire() {
     guard tripState == .complete else { return }
     stateMachine.resetToForHire()
+    permissionCoordinator.updateTripState(isOnTrip: false)
     metrics = metrics.reset()
     points.removeAll()
     fare = 0
@@ -238,7 +238,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-    authorizationStatus = manager.authorizationStatus
+    permissionCoordinator.handleAuthorizationChange(manager.authorizationStatus)
     if isOnTrip {
       if isAuthorizedForLocationUpdates {
         startLocationUpdates()
@@ -344,5 +344,13 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     default:
       return false
     }
+  }
+
+  private var authorizationStatus: CLAuthorizationStatus {
+    permissionCoordinator.authorizationStatus
+  }
+
+  var locationPermissionCoordinator: LocationPermissionCoordinator {
+    permissionCoordinator
   }
 }
