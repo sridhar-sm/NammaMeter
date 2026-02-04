@@ -1,0 +1,264 @@
+import Foundation
+import XCTest
+@testable import NammaMeter
+
+@MainActor
+final class TripStoreTests: XCTestCase {
+
+  // MARK: - Add Tests
+
+  func testAddTripInsertsAtFront() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip1 = makeTrip(fare: 100)
+    let trip2 = makeTrip(fare: 200)
+
+    store.add(trip1)
+    store.add(trip2)
+
+    XCTAssertEqual(store.trips.count, 2)
+    XCTAssertEqual(store.trips[0].id, trip2.id, "Most recent trip should be first")
+    XCTAssertEqual(store.trips[1].id, trip1.id)
+  }
+
+  // MARK: - Delete Tests
+
+  func testDeleteAtOffsets() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip1 = makeTrip(fare: 100)
+    let trip2 = makeTrip(fare: 200)
+    let trip3 = makeTrip(fare: 300)
+
+    store.add(trip1)
+    store.add(trip2)
+    store.add(trip3)
+
+    // Delete middle item (index 1)
+    store.delete(at: IndexSet(integer: 1))
+
+    XCTAssertEqual(store.trips.count, 2)
+    XCTAssertEqual(store.trips[0].fare, 300) // trip3 (first)
+    XCTAssertEqual(store.trips[1].fare, 100) // trip1 (last)
+  }
+
+  func testDeleteAtMultipleOffsets() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trips = (0..<5).map { makeTrip(fare: Double($0 * 100)) }
+    trips.forEach { store.add($0) }
+
+    // Delete indices 1 and 3
+    store.delete(at: IndexSet([1, 3]))
+
+    XCTAssertEqual(store.trips.count, 3)
+  }
+
+  func testDeleteByIds() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip1 = makeTrip(fare: 100)
+    let trip2 = makeTrip(fare: 200)
+    let trip3 = makeTrip(fare: 300)
+
+    store.add(trip1)
+    store.add(trip2)
+    store.add(trip3)
+
+    store.delete(ids: Set([trip1.id, trip3.id]))
+
+    XCTAssertEqual(store.trips.count, 1)
+    XCTAssertEqual(store.trips[0].id, trip2.id)
+  }
+
+  func testDeleteByEmptyIdsDoesNothing() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip = makeTrip(fare: 100)
+    store.add(trip)
+
+    store.delete(ids: Set())
+
+    XCTAssertEqual(store.trips.count, 1)
+  }
+
+  func testDeleteAll() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trips = (0..<5).map { makeTrip(fare: Double($0 * 100)) }
+    trips.forEach { store.add($0) }
+
+    store.deleteAll()
+
+    XCTAssertTrue(store.trips.isEmpty)
+  }
+
+  // MARK: - Update Tests
+
+  func testUpdateTrip() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip = makeTrip(fare: 100)
+    store.add(trip)
+
+    store.update(trip.id) { $0.name = "Updated Name" }
+
+    XCTAssertEqual(store.trips[0].name, "Updated Name")
+  }
+
+  func testUpdateNonExistentTripDoesNothing() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip = makeTrip(fare: 100)
+    store.add(trip)
+
+    let nonExistentId = UUID()
+    store.update(nonExistentId) { $0.name = "Should Not Update" }
+
+    XCTAssertNil(store.trips[0].name)
+  }
+
+  // MARK: - Lookup Tests
+
+  func testTripForId() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip1 = makeTrip(fare: 100)
+    let trip2 = makeTrip(fare: 200)
+
+    store.add(trip1)
+    store.add(trip2)
+
+    let found = store.trip(for: trip1.id)
+    XCTAssertNotNil(found)
+    XCTAssertEqual(found?.fare, 100)
+  }
+
+  func testTripForIdReturnsNilForUnknown() async throws {
+    let url = try makeTempURL()
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    let trip = makeTrip(fare: 100)
+    store.add(trip)
+
+    let found = store.trip(for: UUID())
+    XCTAssertNil(found)
+  }
+
+  // MARK: - Persistence Tests
+
+  func testTripsPersistedAndLoaded() async throws {
+    let url = try makeTempURL()
+
+    // Create store and add trips
+    let store1 = TripStore(fileURL: url)
+    await waitForLoad(store1)
+
+    let trip1 = makeTrip(fare: 100, name: "Trip One")
+    let trip2 = makeTrip(fare: 200, name: "Trip Two")
+    store1.add(trip1)
+    store1.add(trip2)
+
+    // Wait for save to complete
+    try await Task.sleep(for: .milliseconds(200))
+
+    // Create new store from same file
+    let store2 = TripStore(fileURL: url)
+    await waitForLoad(store2)
+
+    XCTAssertEqual(store2.trips.count, 2)
+    XCTAssertEqual(store2.trips[0].name, "Trip Two")
+    XCTAssertEqual(store2.trips[1].name, "Trip One")
+  }
+
+  func testEmptyFileReturnsEmptyArray() async throws {
+    let url = try makeTempURL()
+    // File doesn't exist - should load as empty
+
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    XCTAssertTrue(store.trips.isEmpty)
+  }
+
+  func testCorruptedFileHandledGracefully() async throws {
+    let url = try makeTempURL()
+
+    // Write invalid JSON to file
+    let corruptedData = "not valid json".data(using: .utf8)!
+    try corruptedData.write(to: url)
+
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    // Should gracefully handle and return empty
+    XCTAssertTrue(store.trips.isEmpty)
+  }
+
+  func testPartiallyCorruptedJsonHandledGracefully() async throws {
+    let url = try makeTempURL()
+
+    // Write JSON that's valid but wrong schema
+    let wrongSchema = "[{\"wrong\": \"schema\"}]".data(using: .utf8)!
+    try wrongSchema.write(to: url)
+
+    let store = TripStore(fileURL: url)
+    await waitForLoad(store)
+
+    // Should gracefully handle and return empty
+    XCTAssertTrue(store.trips.isEmpty)
+  }
+
+  // MARK: - Helpers
+
+  private func makeTempURL() throws -> URL {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    return dir.appendingPathComponent("trips-test.json")
+  }
+
+  private func makeTrip(fare: Double, name: String? = nil) -> Trip {
+    Trip(
+      id: UUID(),
+      startDate: Date(timeIntervalSince1970: 1000000),
+      endDate: Date(timeIntervalSince1970: 1001800),
+      distanceMeters: 5000,
+      duration: 1800,
+      fare: fare,
+      points: [],
+      conditions: .clear,
+      rateSnapshot: RateSnapshot(settings: .bengaluruDefault),
+      multiplier: 1.0,
+      name: name
+    )
+  }
+
+  private func waitForLoad(_ store: TripStore) async {
+    // TripStore loads async in init, give it time to complete
+    for _ in 0..<60 {
+      try? await Task.sleep(for: .milliseconds(50))
+      // We can't directly check isLoaded, but after initial load trips is set
+      // Just wait a reasonable amount for async init
+    }
+    try? await Task.sleep(for: .milliseconds(100))
+  }
+}
