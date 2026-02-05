@@ -117,7 +117,6 @@ struct CityRow: View {
 #Preview {
   NavigationStack {
     CityManagementView()
-      .environment(SettingsStore())
-      .environment(MeterStore())
+      .environment(AppContainer.preview)
   }
 }

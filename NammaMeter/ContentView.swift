@@ -40,7 +40,5 @@ struct TabLabel: View {
 
 #Preview {
   ContentView()
-    .environment(SettingsStore())
-    .environment(TripStore())
-    .environment(MeterStore())
+    .environment(AppContainer.preview)
 }

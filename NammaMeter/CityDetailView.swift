@@ -125,7 +125,6 @@ struct FareDetail: View {
 #Preview {
   NavigationStack {
     CityDetailView(cityId: "bengaluru")
-      .environment(SettingsStore())
-      .environment(MeterStore())
+      .environment(AppContainer.preview)
   }
 }

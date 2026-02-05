@@ -59,7 +59,5 @@ struct MeterView: View {
 
 #Preview {
   MeterView()
-    .environment(SettingsStore())
-    .environment(TripStore())
-    .environment(MeterStore())
+    .environment(AppContainer.preview)
 }
