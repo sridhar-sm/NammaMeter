@@ -69,10 +69,16 @@ struct RickshawSceneView: View {
   }()
 
   var body: some View {
-    SceneView(
-      scene: scene,
-      options: [.autoenablesDefaultLighting]
-    )
+    GeometryReader { geo in
+      if TestEnvironment.isRunningTests || geo.size.width <= 0 || geo.size.height <= 0 {
+        Color.clear
+      } else {
+        SceneView(
+          scene: scene,
+          options: [.autoenablesDefaultLighting]
+        )
+      }
+    }
     .frame(height: 160)
     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)

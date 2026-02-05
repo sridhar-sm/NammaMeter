@@ -10,8 +10,8 @@ struct LiveRouteMap: View {
   @State private var cameraPosition: MapCameraPosition = .automatic
 
   var body: some View {
-    Group {
-      if TestEnvironment.isRunningTests {
+    GeometryReader { geo in
+      if TestEnvironment.isRunningTests || geo.size.width <= 0 || geo.size.height <= 0 {
         Color.clear
       } else {
         Map(position: $cameraPosition) {
