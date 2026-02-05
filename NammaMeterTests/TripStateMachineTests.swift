@@ -6,8 +6,7 @@ import XCTest
 final class TripStateMachineTests: XCTestCase {
   private var stateMachine: TripStateMachine!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
     stateMachine = TripStateMachine()
   }
 
