@@ -1,9 +1,10 @@
-import SnapshotTesting
 import SwiftUI
 import XCTest
 @testable import NammaMeter
 
+@MainActor
 final class MeterSnapshotTests: XCTestCase {
+  private let snapshotSize = CGSize(width: 390, height: 500)
 
   override func setUp() {
     super.setUp()
@@ -23,7 +24,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testSuperMechanicalInProgress() {
@@ -36,7 +37,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testSuperMechanicalComplete() {
@@ -49,7 +50,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testSuperMechanicalDrumStyle() {
@@ -62,7 +63,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   // MARK: - Super Electronic Meter
@@ -79,7 +80,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testSuperElectronicInProgress() {
@@ -94,7 +95,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testSuperElectronicNightMode() {
@@ -109,7 +110,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   // MARK: - Golden Eagle Meter
@@ -126,7 +127,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testGoldenEagleInProgress() {
@@ -141,7 +142,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   // MARK: - Digital Meter
@@ -154,7 +155,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testDigitalInProgress() {
@@ -165,7 +166,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   // MARK: - Bright Digital Meter
@@ -181,7 +182,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testBrightDigitalInProgress() {
@@ -195,7 +196,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   // MARK: - Edge Cases
@@ -210,7 +211,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 
   func testSuperElectronicLongTrip() {
@@ -225,6 +226,6 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    assertSnapshot(of: view, as: .image(precision: 0.98, perceptualPrecision: 0.98))
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
   }
 }
