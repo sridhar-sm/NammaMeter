@@ -91,6 +91,5 @@ struct LabeledValue: View {
 
 #Preview {
   SettingsView()
-    .environment(SettingsStore())
-    .environment(MeterStore())
+    .environment(AppContainer.preview)
 }
