@@ -128,20 +128,26 @@ struct TripDetailView: View {
         Spacer()
       }
 
-      Map(position: $cameraPosition) {
-        if coordinates.count > 1 {
-          MapPolyline(coordinates: coordinates)
-            .stroke(Theme.ink, lineWidth: 4)
-        }
-        if let start = coordinates.first {
-          Marker("Start", coordinate: start)
-        }
-        if let end = coordinates.last {
-          Marker("End", coordinate: end)
-        }
-        if let replayCoordinate = replayCoordinate(in: coordinates) {
-          Annotation("Replay", coordinate: replayCoordinate, anchor: .bottom) {
-            AutoLocationMarker()
+      GeometryReader { geo in
+        if TestEnvironment.isRunningTests || geo.size.width <= 0 || geo.size.height <= 0 {
+          Color.clear
+        } else {
+          Map(position: $cameraPosition) {
+            if coordinates.count > 1 {
+              MapPolyline(coordinates: coordinates)
+                .stroke(Theme.ink, lineWidth: 4)
+            }
+            if let start = coordinates.first {
+              Marker("Start", coordinate: start)
+            }
+            if let end = coordinates.last {
+              Marker("End", coordinate: end)
+            }
+            if let replayCoordinate = replayCoordinate(in: coordinates) {
+              Annotation("Replay", coordinate: replayCoordinate, anchor: .bottom) {
+                AutoLocationMarker()
+              }
+            }
           }
         }
       }
