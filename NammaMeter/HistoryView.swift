@@ -131,5 +131,5 @@ private struct HistoryContentView: View {
 
 #Preview {
   HistoryView()
-    .environment(TripStore())
+    .environment(AppContainer.preview)
 }

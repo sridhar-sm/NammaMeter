@@ -197,6 +197,6 @@ struct AddFareView: View {
 #Preview {
   NavigationStack {
     AddFareView(cityId: "test-city", cityName: "Test City")
-      .environment(SettingsStore())
+      .environment(AppContainer.preview)
   }
 }
