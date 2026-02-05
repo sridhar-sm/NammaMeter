@@ -79,6 +79,14 @@ final class MeterStoreTests: XCTestCase {
 
     meterStore.startTrip(settings: settings)
 
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026
+    dayComponents.month = 2
+    dayComponents.day = 3
+    dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
+
     XCTAssertTrue(meterStore.isOnTrip)
     XCTAssertEqual(meterStore.tripState, .inProgress)
     XCTAssertEqual(meterStore.fare, settings.minFare)
@@ -114,6 +122,13 @@ final class MeterStoreTests: XCTestCase {
     let settings = MeterSettings.bengaluruDefault
 
     meterStore.startTrip(settings: settings)
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026
+    dayComponents.month = 2
+    dayComponents.day = 3
+    dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
     XCTAssertTrue(tripStore.trips.isEmpty)
 
     meterStore.stopTrip(tripStore: tripStore)
@@ -241,6 +256,13 @@ final class MeterStoreTests: XCTestCase {
     settings.baseFare = 36
 
     meterStore.startTrip(settings: settings)
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026
+    dayComponents.month = 2
+    dayComponents.day = 3
+    dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
 
     // Even with baseFare < minFare, fare should be minFare
     XCTAssertEqual(meterStore.fare, settings.minFare)
