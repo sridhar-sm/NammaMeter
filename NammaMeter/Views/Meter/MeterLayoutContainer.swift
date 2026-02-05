@@ -16,14 +16,14 @@ struct MeterLayoutContainer: View {
       let controlBarHeight = min(max(geo.size.height * 0.085, 56), 72)
 
       // Available height after accounting for all fixed elements
-      let availableHeight = geo.size.height - bottomPadding - controlBarHeight - (spacing * 2)
+      let availableHeight = max(geo.size.height - bottomPadding - controlBarHeight - (spacing * 2), 0)
 
       // Use the largest meter height (Super Mechanical) to determine fixed map height
       // This ensures map size and position stay constant regardless of meter style
       let maxMeterNaturalHeight = SuperMeterDimensions.naturalHeight(for: geo.size.width)
-      let maxMeterHeight = availableHeight - minMapHeight
+      let maxMeterHeight = max(availableHeight - minMapHeight, 0)
       let referenceMeterHeight = min(maxMeterNaturalHeight, maxMeterHeight)
-      let fixedMapHeight = availableHeight - referenceMeterHeight
+      let fixedMapHeight = max(availableHeight - referenceMeterHeight, 0)
 
       VStack(spacing: spacing) {
         MeterPanelWithNotch(
