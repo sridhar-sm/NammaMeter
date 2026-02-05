@@ -1,6 +1,7 @@
 import CoreLocation
 import Foundation
 import Observation
+import OSLog
 
 @MainActor
 @Observable
@@ -66,6 +67,9 @@ final class TripStore {
   private func load() async {
     if let decoded = await persistence.load() {
       trips = decoded
+      Log.persistence.info("Loaded \(decoded.count) trips from storage")
+    } else {
+      Log.persistence.info("No existing trips found")
     }
     isLoaded = true
   }
@@ -73,6 +77,7 @@ final class TripStore {
   private func save() async {
     guard !Task.isCancelled, isLoaded else { return }
     await persistence.save(trips)
+    Log.persistence.debug("Saved \(self.trips.count) trips to storage")
   }
 
   nonisolated static var defaultURL: URL {

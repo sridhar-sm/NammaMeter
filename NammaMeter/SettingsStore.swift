@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 
 @MainActor
 @Observable
@@ -69,6 +70,7 @@ final class SettingsStore {
     state.selectedCityId = cityId
     syncSettingsFromActiveProfile()
     scheduleSave()
+    Log.fare.info("Selected city: \(cityId)")
   }
 
   func addCity(_ profile: CityFareProfile) {
@@ -134,6 +136,7 @@ final class SettingsStore {
     var didMutate = false
     if let decoded = await persistence.load() {
       state = decoded
+      Log.persistence.info("Loaded fare profiles: \(decoded.profiles.count) profiles, selected=\(decoded.selectedCityId ?? "none")")
     } else {
       state = FareProfileSettings(
         schemaVersion: FareProfileSettings.currentSchemaVersion,
@@ -141,6 +144,7 @@ final class SettingsStore {
         profiles: FareCatalog.entries.map(\.profile),
         catalogVersionApplied: FareCatalog.currentVersion
       )
+      Log.persistence.info("No existing fare profiles, using catalog defaults")
       didMutate = true
     }
 

@@ -1,6 +1,7 @@
 import CoreLocation
 import Foundation
 import Observation
+import OSLog
 
 enum TripMeterState {
   case forHire
@@ -139,6 +140,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     }
     updateBackgroundLocationState()
     startTicking()
+
+    Log.trip.info("Trip started: baseFare=\(settings.baseFare), perKm=\(settings.perKmRate), multiplier=\(self.multiplier)")
   }
 
   func stopTrip(tripStore: TripStore) {
@@ -172,6 +175,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     Task { await tripStore.resolveStartLocation(for: trip) }
     fareCalculator = nil
     currentSettings = nil
+
+    Log.trip.info("Trip completed: fare=₹\(trip.fare, format: .fixed(precision: 2)), distance=\(trip.distanceMeters / 1000, format: .fixed(precision: 2))km, duration=\(trip.duration, format: .fixed(precision: 0))s")
   }
 
   func resetToForHire() {
@@ -191,6 +196,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     rateSnapshot = nil
     multiplier = 1
     locationError = nil
+
+    Log.trip.info("Meter reset to for-hire")
   }
 
   private func startTicking() {
@@ -258,7 +265,9 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-    permissionCoordinator.handleAuthorizationChange(manager.authorizationStatus)
+    let status = manager.authorizationStatus
+    Log.location.info("Location authorization changed: \(String(describing: status))")
+    permissionCoordinator.handleAuthorizationChange(status)
     if isOnTrip {
       if isAuthorizedForLocationUpdates {
         startLocationUpdates()
@@ -270,6 +279,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   }
 
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    Log.location.error("Location error: \(error.localizedDescription)")
     locationError = error.localizedDescription
   }
 
