@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 // MARK: - Main Panel
@@ -576,6 +577,10 @@ struct PerforatedBackground: View {
   let baseColor: Color
   let dotColor: Color
 
+  private var useCanvas: Bool {
+    ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
+  }
+
   var body: some View {
     GeometryReader { geo in
       let dotSpacing: CGFloat = 6
@@ -584,18 +589,35 @@ struct PerforatedBackground: View {
       ZStack {
         baseColor
 
-        Canvas { context, _ in
-          let rows = Int(geo.size.height / dotSpacing) + 1
-          let cols = Int(geo.size.width / dotSpacing) + 1
+        if useCanvas {
+          Canvas { context, _ in
+            let rows = Int(geo.size.height / dotSpacing) + 1
+            let cols = Int(geo.size.width / dotSpacing) + 1
 
-          for row in 0..<rows {
-            for col in 0..<cols {
-              let x = CGFloat(col) * dotSpacing + dotSpacing * 0.5
-              let y = CGFloat(row) * dotSpacing + dotSpacing * 0.5
-              let rect = CGRect(x: x - dotSize * 0.5, y: y - dotSize * 0.5, width: dotSize, height: dotSize)
-              context.fill(Circle().path(in: rect), with: .color(dotColor.opacity(0.4)))
+            for row in 0..<rows {
+              for col in 0..<cols {
+                let x = CGFloat(col) * dotSpacing + dotSpacing * 0.5
+                let y = CGFloat(row) * dotSpacing + dotSpacing * 0.5
+                let rect = CGRect(x: x - dotSize * 0.5, y: y - dotSize * 0.5, width: dotSize, height: dotSize)
+                context.fill(Circle().path(in: rect), with: .color(dotColor.opacity(0.4)))
+              }
             }
           }
+        } else {
+          Path { path in
+            let rows = Int(geo.size.height / dotSpacing) + 1
+            let cols = Int(geo.size.width / dotSpacing) + 1
+
+            for row in 0..<rows {
+              for col in 0..<cols {
+                let x = CGFloat(col) * dotSpacing + dotSpacing * 0.5
+                let y = CGFloat(row) * dotSpacing + dotSpacing * 0.5
+                let rect = CGRect(x: x - dotSize * 0.5, y: y - dotSize * 0.5, width: dotSize, height: dotSize)
+                path.addEllipse(in: rect)
+              }
+            }
+          }
+          .fill(dotColor.opacity(0.4))
         }
       }
     }

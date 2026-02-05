@@ -13,11 +13,13 @@ enum SnapshotTestHelpers {
     testName: String = #function,
     line: UInt = #line
   ) {
+    let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
     let image = render(view, size: size)
     assertSnapshot(
       of: image,
       as: .image(precision: precision, perceptualPrecision: perceptualPrecision),
       named: snapshotNameSuffix,
+      record: record ? true : nil,
       file: file,
       testName: testName,
       line: line
@@ -26,15 +28,6 @@ enum SnapshotTestHelpers {
 
   @MainActor
   private static func render<Content: View>(_ view: Content, size: CGSize) -> UIImage {
-    if #available(iOS 16.0, *) {
-      let renderer = ImageRenderer(content: view)
-      renderer.scale = UIScreen.main.scale
-      renderer.proposedSize = ProposedViewSize(width: size.width, height: size.height)
-      if let image = renderer.uiImage {
-        return image
-      }
-    }
-
     let controller = UIHostingController(rootView: view)
     let window = UIWindow(frame: CGRect(origin: .zero, size: size))
     window.rootViewController = controller
@@ -46,8 +39,8 @@ enum SnapshotTestHelpers {
 
     let format = UIGraphicsImageRendererFormat(for: controller.traitCollection)
     let renderer = UIGraphicsImageRenderer(bounds: controller.view.bounds, format: format)
-    let image = renderer.image { context in
-      controller.view.layer.render(in: context.cgContext)
+    let image = renderer.image { _ in
+      controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
     }
 
     window.isHidden = true
