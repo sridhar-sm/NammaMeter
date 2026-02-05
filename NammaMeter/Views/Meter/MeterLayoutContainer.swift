@@ -10,20 +10,9 @@ struct MeterLayoutContainer: View {
   var body: some View {
     GeometryReader { geo in
       let topInset = safeAreaTop
-      let bottomPadding: CGFloat = 8
-      let spacing: CGFloat = 4
-      let minMapHeight: CGFloat = 100
-      let controlBarHeight = min(max(geo.size.height * 0.085, 56), 72)
-
-      // Available height after accounting for all fixed elements
-      let availableHeight = max(geo.size.height - bottomPadding - controlBarHeight - (spacing * 2), 0)
-
-      // Use the largest meter height (Super Mechanical) to determine fixed map height
-      // This ensures map size and position stay constant regardless of meter style
-      let maxMeterNaturalHeight = SuperMeterDimensions.naturalHeight(for: geo.size.width)
-      let maxMeterHeight = max(availableHeight - minMapHeight, 0)
-      let referenceMeterHeight = min(maxMeterNaturalHeight, maxMeterHeight)
-      let fixedMapHeight = max(availableHeight - referenceMeterHeight, 0)
+      let bottomPadding = MeterLayoutMetrics.bottomPadding
+      let spacing = MeterLayoutMetrics.spacing
+      let metrics = MeterLayoutMetrics(containerSize: geo.size)
 
       VStack(spacing: spacing) {
         MeterPanelWithNotch(
@@ -32,15 +21,15 @@ struct MeterLayoutContainer: View {
           digitWheelStyle: digitWheelStyle,
           topInset: topInset
         )
-        .frame(height: referenceMeterHeight)
+        .frame(height: metrics.referenceMeterHeight)
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .gesture(meterStyleSwipeGesture)
 
-        MeterControlBar(height: controlBarHeight, showMeterSettings: $showMeterSettings)
+        MeterControlBar(height: metrics.controlBarHeight, showMeterSettings: $showMeterSettings)
           .padding(.horizontal, 12)
 
-        MeterPagerView(pagerSelection: $pagerSelection, height: fixedMapHeight)
+        MeterPagerView(pagerSelection: $pagerSelection, height: metrics.fixedMapHeight)
           .padding(.horizontal, 12)
       }
       .padding(.bottom, bottomPadding)
@@ -66,5 +55,33 @@ struct MeterLayoutContainer: View {
     guard let currentIndex = styles.firstIndex(of: meterFaceStyle) else { return }
     let nextIndex = (currentIndex + offset + styles.count) % styles.count
     meterFaceStyle = styles[nextIndex]
+  }
+}
+
+struct MeterLayoutMetrics: Equatable {
+  static let bottomPadding: CGFloat = 8
+  static let spacing: CGFloat = 4
+  static let minMapHeight: CGFloat = 100
+
+  let controlBarHeight: CGFloat
+  let referenceMeterHeight: CGFloat
+  let fixedMapHeight: CGFloat
+  let availableHeight: CGFloat
+
+  init(containerSize: CGSize) {
+    let controlBarHeight = min(max(containerSize.height * 0.085, 56), 72)
+
+    let rawAvailableHeight = containerSize.height - Self.bottomPadding - controlBarHeight - (Self.spacing * 2)
+    let availableHeight = max(rawAvailableHeight, 0)
+
+    let maxMeterNaturalHeight = SuperMeterDimensions.naturalHeight(for: containerSize.width)
+    let maxMeterHeight = max(availableHeight - Self.minMapHeight, 0)
+    let referenceMeterHeight = max(min(maxMeterNaturalHeight, maxMeterHeight), 0)
+    let fixedMapHeight = max(availableHeight - referenceMeterHeight, 0)
+
+    self.controlBarHeight = controlBarHeight
+    self.referenceMeterHeight = referenceMeterHeight
+    self.fixedMapHeight = fixedMapHeight
+    self.availableHeight = availableHeight
   }
 }
