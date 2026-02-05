@@ -93,5 +93,4 @@ struct LabeledValue: View {
   SettingsView()
     .environment(SettingsStore())
     .environment(MeterStore())
-    .previewDevice("iPhone 17 Pro")
 }
