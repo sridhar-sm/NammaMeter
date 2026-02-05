@@ -123,7 +123,6 @@ final class ModelTests: XCTestCase {
     components.day = 3
 
     let expectedNightHours = Set([22, 23, 0, 1, 2, 3, 4])
-    let expectedDayHours = Set([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
 
     for hour in 0..<24 {
       components.hour = hour
