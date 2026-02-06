@@ -10,6 +10,7 @@ struct SettingsResetSection: View {
       } label: {
         Text("Reset to defaults")
       }
+      .accessibilityIdentifier("settings.resetButton")
     }
   }
 }

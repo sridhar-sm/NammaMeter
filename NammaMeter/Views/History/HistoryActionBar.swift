@@ -18,6 +18,7 @@ struct HistoryActionBar: View {
           mangoPillLabel(isAllSelected ? "Deselect All" : "Select All")
         }
         .accessibilityLabel(isAllSelected ? "Deselect All" : "Select All")
+        .accessibilityIdentifier("history.selectAllButton")
       }
       Spacer()
       if showDelete {
@@ -29,6 +30,7 @@ struct HistoryActionBar: View {
         .tint(.red)
         .buttonStyle(.bordered)
         .controlSize(.small)
+        .accessibilityIdentifier("history.deleteButton")
       }
       Button {
         onToggleEdit()
@@ -36,6 +38,7 @@ struct HistoryActionBar: View {
         mangoPillLabel(isEditing ? "Done" : "Edit")
       }
       .accessibilityLabel(isEditing ? "Done" : "Edit")
+      .accessibilityIdentifier("history.editButton")
     }
   }
 

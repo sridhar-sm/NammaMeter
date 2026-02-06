@@ -49,6 +49,7 @@ struct MeterControlBar: View {
     }
     .buttonStyle(.plain)
     .accessibilityLabel("Meter settings")
+    .accessibilityIdentifier("meter.settingsButton")
   }
 
   private func nightConditionButton(metrics: ControlBarMetrics) -> some View {
@@ -77,6 +78,7 @@ struct MeterControlBar: View {
     }
     .buttonStyle(.plain)
     .accessibilityLabel(tripToggleAccessibilityLabel)
+    .accessibilityIdentifier("meter.tripToggle")
   }
 
   private func waitToggleButton(metrics: ControlBarMetrics) -> some View {
@@ -94,6 +96,7 @@ struct MeterControlBar: View {
     .disabled(!meterStore.isOnTrip)
     .opacity(meterStore.isOnTrip ? 1 : 0.6)
     .accessibilityLabel(meterStore.isWaiting ? "Resume trip" : "Pause trip")
+    .accessibilityIdentifier("meter.waitToggle")
   }
 
   private var tripToggleAccessibilityLabel: String {
