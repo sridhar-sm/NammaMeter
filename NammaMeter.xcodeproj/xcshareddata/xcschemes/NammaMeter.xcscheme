@@ -38,6 +38,16 @@
                ReferencedContainer="container:NammaMeter.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped="NO">
+            <BuildableReference
+               BuildableIdentifier="primary"
+               BlueprintIdentifier="D1A0000800000000000000A8"
+               BuildableName="NammaMeterUITests.xctest"
+               BlueprintName="NammaMeterUITests"
+               ReferencedContainer="container:NammaMeter.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
