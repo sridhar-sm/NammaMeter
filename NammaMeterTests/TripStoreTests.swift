@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import XCTest
 @testable import NammaMeter
@@ -228,4 +229,95 @@ final class TripStoreTests: XCTestCase {
     XCTAssertTrue(store.trips.isEmpty)
   }
 
+  // MARK: - Geocoding Tests
+
+  func testResolveStartLocationUpdatesTripWhenGeocoderReturnsCity() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
+    let geocoder = MockGeocodingService(cityName: "Bengaluru")
+    let store = TripStore(fileURL: url, geocoder: geocoder)
+    await TestHelpers.waitForTripStoreLoad(store)
+
+    let trip = Self.makeTripWithPoint()
+    store.add(trip)
+
+    await store.resolveStartLocation(for: trip)
+    let callCount = await geocoder.recordedCallCount()
+
+    XCTAssertEqual(store.trip(for: trip.id)?.startLocationName, "Bengaluru")
+    XCTAssertEqual(callCount, 1)
+  }
+
+  func testResolveStartLocationSkipsLookupWhenNameAlreadyExists() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
+    let geocoder = MockGeocodingService(cityName: "Bengaluru")
+    let store = TripStore(fileURL: url, geocoder: geocoder)
+    await TestHelpers.waitForTripStoreLoad(store)
+
+    let trip = Self.makeTripWithPoint(startLocationName: "Mysuru")
+    store.add(trip)
+
+    await store.resolveStartLocation(for: trip)
+    let callCount = await geocoder.recordedCallCount()
+
+    XCTAssertEqual(store.trip(for: trip.id)?.startLocationName, "Mysuru")
+    XCTAssertEqual(callCount, 0)
+  }
+
+  func testResolveStartLocationSkipsLookupWhenTripHasNoPoints() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "trips-test.json")
+    let geocoder = MockGeocodingService(cityName: "Bengaluru")
+    let store = TripStore(fileURL: url, geocoder: geocoder)
+    await TestHelpers.waitForTripStoreLoad(store)
+
+    let trip = TestHelpers.makeTrip(fare: 100)
+    store.add(trip)
+
+    await store.resolveStartLocation(for: trip)
+    let callCount = await geocoder.recordedCallCount()
+
+    XCTAssertNil(store.trip(for: trip.id)?.startLocationName)
+    XCTAssertEqual(callCount, 0)
+  }
+
+  private static func makeTripWithPoint(startLocationName: String? = nil) -> Trip {
+    Trip(
+      id: UUID(),
+      startDate: Date(timeIntervalSince1970: 1_000_000),
+      endDate: Date(timeIntervalSince1970: 1_001_800),
+      distanceMeters: 5_000,
+      duration: 1_800,
+      fare: 100,
+      points: [
+        TripPoint(
+          latitude: 12.9716,
+          longitude: 77.5946,
+          timestamp: Date(timeIntervalSince1970: 1_000_000),
+          speedMetersPerSecond: 0,
+          horizontalAccuracy: 5
+        )
+      ],
+      conditions: .clear,
+      rateSnapshot: RateSnapshot(settings: .bengaluruDefault),
+      multiplier: 1.0,
+      startLocationName: startLocationName
+    )
+  }
+}
+
+private actor MockGeocodingService: GeocodingServiceProtocol {
+  private let cityName: String?
+  private var callCount = 0
+
+  init(cityName: String?) {
+    self.cityName = cityName
+  }
+
+  func cityName(for coordinate: CLLocationCoordinate2D) async -> String? {
+    callCount += 1
+    return cityName
+  }
+
+  func recordedCallCount() -> Int {
+    callCount
+  }
 }

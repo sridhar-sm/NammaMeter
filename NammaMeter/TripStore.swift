@@ -17,10 +17,14 @@ final class TripStore {
   @ObservationIgnored private let persistence: TripPersistence
   @ObservationIgnored private var isLoaded = false
   @ObservationIgnored private var saveTask: Task<Void, Never>?
-  @ObservationIgnored private let geocoder = GeocodingService()
+  @ObservationIgnored private let geocoder: any GeocodingServiceProtocol
 
-  init(fileURL: URL = TripStore.defaultURL) {
+  init(
+    fileURL: URL = TripStore.defaultURL,
+    geocoder: any GeocodingServiceProtocol = GeocodingService()
+  ) {
     self.persistence = TripPersistence(url: fileURL)
+    self.geocoder = geocoder
     Task { await load() }
   }
 
@@ -58,8 +62,7 @@ final class TripStore {
     guard trip.startLocationName == nil else { return }
     guard let start = trip.points.first else { return }
     if Task.isCancelled { return }
-    let location = CLLocation(latitude: start.latitude, longitude: start.longitude)
-    guard let city = await geocoder.cityName(for: location) else { return }
+    guard let city = await geocoder.cityName(for: start.coordinate) else { return }
     if Task.isCancelled { return }
     update(trip.id) { $0.startLocationName = city }
   }
@@ -105,53 +108,5 @@ private actor TripPersistence {
     encoder.dateEncodingStrategy = .iso8601
     guard let data = try? encoder.encode(trips) else { return }
     try? data.write(to: url, options: [.atomic])
-  }
-}
-
-private actor GeocodingService {
-  private var cache: [CacheKey: String] = [:]
-  private var cacheOrder: [CacheKey] = []
-  private let maxCacheEntries = 48
-
-  func cityName(for location: CLLocation) async -> String? {
-    if Task.isCancelled { return nil }
-    let key = CacheKey(location: location)
-    if let cached = cache[key] {
-      return cached
-    }
-    let geocoder = CLGeocoder()
-    do {
-      let placemarks = try await geocoder.reverseGeocodeLocation(location)
-      guard let placemark = placemarks.first else { return nil }
-      let city = placemark.locality
-        ?? placemark.subAdministrativeArea
-        ?? placemark.administrativeArea
-      guard let city, !city.isEmpty else { return nil }
-      insertCache(city, for: key)
-      return city
-    } catch {
-      return nil
-    }
-  }
-
-  private func insertCache(_ city: String, for key: CacheKey) {
-    cache[key] = city
-    cacheOrder.removeAll { $0 == key }
-    cacheOrder.append(key)
-    if cacheOrder.count > maxCacheEntries, let oldest = cacheOrder.first {
-      cacheOrder.removeFirst()
-      cache.removeValue(forKey: oldest)
-    }
-  }
-
-  private struct CacheKey: Hashable {
-    let lat: Int
-    let lon: Int
-
-    init(location: CLLocation) {
-      let scale = 100.0
-      lat = Int((location.coordinate.latitude * scale).rounded())
-      lon = Int((location.coordinate.longitude * scale).rounded())
-    }
   }
 }
