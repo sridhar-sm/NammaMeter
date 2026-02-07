@@ -74,6 +74,7 @@ struct MeterSettings: Equatable, Sendable {
   var freeWaitMinutes: Double
   var waitIntervalMinutes: Double
   var waitIntervalCharge: Double
+  var keepScreenAwakeDuringTrip: Bool
 
   static let bengaluruDefault = MeterSettings(
     baseFare: 36,
@@ -86,7 +87,8 @@ struct MeterSettings: Equatable, Sendable {
     nightEndHour: 5,
     freeWaitMinutes: 5,
     waitIntervalMinutes: 15,
-    waitIntervalCharge: 10
+    waitIntervalCharge: 10,
+    keepScreenAwakeDuringTrip: false
   )
 }
 
@@ -95,6 +97,7 @@ extension MeterSettings: Codable {
     case baseFare, perKmRate, perMinuteRate, includedKm, minFare, nightMultiplier
     case nightStartHour, nightEndHour
     case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
+    case keepScreenAwakeDuringTrip
     case rainMultiplier // legacy, ignored on decode
     case trafficMultiplier // legacy, ignored on decode
   }
@@ -119,6 +122,8 @@ extension MeterSettings: Codable {
       ?? MeterSettings.bengaluruDefault.waitIntervalMinutes
     waitIntervalCharge = try container.decodeIfPresent(Double.self, forKey: .waitIntervalCharge)
       ?? MeterSettings.bengaluruDefault.waitIntervalCharge
+    keepScreenAwakeDuringTrip = try container.decodeIfPresent(Bool.self, forKey: .keepScreenAwakeDuringTrip)
+      ?? MeterSettings.bengaluruDefault.keepScreenAwakeDuringTrip
   }
 
   func encode(to encoder: Encoder) throws {
@@ -134,6 +139,7 @@ extension MeterSettings: Codable {
     try container.encode(freeWaitMinutes, forKey: .freeWaitMinutes)
     try container.encode(waitIntervalMinutes, forKey: .waitIntervalMinutes)
     try container.encode(waitIntervalCharge, forKey: .waitIntervalCharge)
+    try container.encode(keepScreenAwakeDuringTrip, forKey: .keepScreenAwakeDuringTrip)
   }
 }
 

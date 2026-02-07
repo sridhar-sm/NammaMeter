@@ -262,6 +262,46 @@ final class ModelTests: XCTestCase {
     XCTAssertEqual(decoded.freeWaitMinutes, MeterSettings.bengaluruDefault.freeWaitMinutes)
     XCTAssertEqual(decoded.waitIntervalMinutes, MeterSettings.bengaluruDefault.waitIntervalMinutes)
     XCTAssertEqual(decoded.waitIntervalCharge, MeterSettings.bengaluruDefault.waitIntervalCharge)
+    XCTAssertFalse(decoded.keepScreenAwakeDuringTrip)
+  }
+
+  func testMeterSettingsBackwardCompatibilityWithoutKeepScreenAwake() throws {
+    // Old settings JSON that doesn't have keepScreenAwakeDuringTrip
+    let json = """
+    {
+      "baseFare": 36,
+      "perKmRate": 18,
+      "perMinuteRate": 0,
+      "includedKm": 2.0,
+      "minFare": 36,
+      "nightMultiplier": 1.5,
+      "nightStartHour": 22,
+      "nightEndHour": 5,
+      "freeWaitMinutes": 5,
+      "waitIntervalMinutes": 15,
+      "waitIntervalCharge": 10
+    }
+    """
+
+    let data = try XCTUnwrap(json.data(using: .utf8))
+    let decoded = try JSONDecoder().decode(MeterSettings.self, from: data)
+
+    // Should decode successfully with default value for new field
+    XCTAssertFalse(decoded.keepScreenAwakeDuringTrip)
+    XCTAssertEqual(decoded.baseFare, 36)
+  }
+
+  func testMeterSettingsKeepScreenAwakeSetting() throws {
+    var settings = MeterSettings.bengaluruDefault
+    settings.keepScreenAwakeDuringTrip = true
+
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(settings)
+
+    let decoder = JSONDecoder()
+    let decoded = try decoder.decode(MeterSettings.self, from: data)
+
+    XCTAssertTrue(decoded.keepScreenAwakeDuringTrip)
   }
 
   // MARK: - RateSnapshot Tests

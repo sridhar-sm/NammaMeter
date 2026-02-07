@@ -11,5 +11,19 @@ struct SettingsModifiersSection: View {
         value: settingsStore.settings.nightMultiplier
       )
     }
+
+    Section(header: SectionHeader(title: "Display", subtitle: "ಪ್ರದರ್ಶನ")) {
+      Toggle(isOn: Binding(
+        get: { settingsStore.settings.keepScreenAwakeDuringTrip },
+        set: { settingsStore.settings.keepScreenAwakeDuringTrip = $0 }
+      )) {
+        VStack(alignment: .leading, spacing: 2) {
+          Text("Keep Screen Awake")
+          Text("During Active Trip")
+            .font(FontPresets.Body.small)
+            .foregroundStyle(.secondary)
+        }
+      }
+    }
   }
 }

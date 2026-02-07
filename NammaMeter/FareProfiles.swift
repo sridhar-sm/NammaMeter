@@ -318,7 +318,8 @@ extension MeterSettings {
       nightEndHour: profile.nightWindow.endHour,
       freeWaitMinutes: profile.waitCharges.freeWaitMinutes,
       waitIntervalMinutes: profile.waitCharges.waitIntervalMinutes,
-      waitIntervalCharge: profile.waitCharges.waitIntervalCharge
+      waitIntervalCharge: profile.waitCharges.waitIntervalCharge,
+      keepScreenAwakeDuringTrip: false
     )
   }
 }
