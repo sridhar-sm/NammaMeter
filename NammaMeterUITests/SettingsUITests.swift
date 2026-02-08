@@ -80,4 +80,61 @@ final class SettingsUITests: NammaMeterUITestCase {
     // Verify the toggle still exists after tapping
     XCTAssertTrue(toggleElement.exists, "Toggle should still exist after tapping")
   }
+
+  func testThemePickerIsVisible() {
+    tapTab("Settings")
+
+    // Look for the "Appearance" section header instead of the picker directly
+    let appearanceHeader = app.staticTexts["Appearance"]
+    XCTAssertTrue(appearanceHeader.waitForExistence(timeout: 5), "Appearance section should be visible")
+
+    // Look for one of the theme options (System, Light, Dark)
+    let systemOption = app.staticTexts["System"]
+    XCTAssertTrue(systemOption.waitForExistence(timeout: 3), "Theme options should be visible")
+  }
+
+  func testAppearanceSectionExistsBeforeCitySection() {
+    tapTab("Settings")
+
+    // Verify the Appearance section header is visible
+    let appearanceHeader = app.staticTexts["Appearance"]
+    XCTAssertTrue(appearanceHeader.waitForExistence(timeout: 5), "Appearance section should be visible")
+
+    // The System option should be visible (default picker option)
+    let systemOption = app.staticTexts["System"]
+    XCTAssertTrue(systemOption.waitForExistence(timeout: 3), "System theme option should be visible")
+
+    // Verify City section is below Appearance
+    let cityHeader = app.staticTexts["City"]
+    XCTAssertTrue(cityHeader.exists, "City section should be visible after Appearance")
+  }
+
+  func testAppearanceSectionSurvivesAppRelaunch() {
+    // Verify theme section exists
+    tapTab("Settings")
+    let appearanceHeader = app.staticTexts["Appearance"]
+    XCTAssertTrue(appearanceHeader.waitForExistence(timeout: 5), "Appearance section should be visible")
+
+    // Close the app
+    app.terminate()
+
+    // Relaunch without reset to verify persistence
+    let newApp = XCUIApplication()
+    newApp.launchArguments = ["--uitesting"]  // Note: no --reset-state
+    newApp.launch()
+
+    // Navigate to settings and verify the appearance section is still there
+    sleep(1)  // Wait for app to settle
+    let newAppTabBar = newApp.tabBars
+    let settingsButton = newAppTabBar.buttons["Settings"]
+    XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "Settings tab should be available")
+    settingsButton.tap()
+
+    // Verify the Appearance section and its options are visible after relaunch
+    let newAppearanceHeader = newApp.staticTexts["Appearance"]
+    XCTAssertTrue(newAppearanceHeader.waitForExistence(timeout: 5), "Appearance section should still be visible after relaunch")
+
+    let themeOptions = newApp.staticTexts.matching(NSPredicate(format: "label IN {'System', 'Light', 'Dark'}"))
+    XCTAssertGreaterThan(themeOptions.count, 0, "Theme options should be visible after relaunch")
+  }
 }

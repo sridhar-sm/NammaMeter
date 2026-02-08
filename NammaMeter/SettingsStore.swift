@@ -5,6 +5,15 @@ import OSLog
 @MainActor
 @Observable
 final class SettingsStore {
+  // Theme preference loaded eagerly to prevent blocking during view rendering
+  // Defaults to "system" if no preference is stored
+  var themePreference: String {
+    didSet {
+      // Persist changes to UserDefaults
+      UserDefaults.standard.set(themePreference, forKey: "themePreference")
+    }
+  }
+
   var settings: MeterSettings {
     didSet {
       guard isLoaded, !isSyncingFromProfile else { return }
@@ -57,6 +66,11 @@ final class SettingsStore {
       profiles: [],
       catalogVersionApplied: 0
     )
+
+    // Load theme preference from UserDefaults during initialization
+    // Falls back to "system" if no preference is stored
+    self.themePreference = UserDefaults.standard.string(forKey: "themePreference") ?? "system"
+
     Task { await load() }
   }
 

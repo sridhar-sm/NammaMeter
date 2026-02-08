@@ -7,17 +7,22 @@ enum SnapshotTestHelpers {
   static func assertSwiftUIViewSnapshot<Content: View>(
     _ view: Content,
     size: CGSize,
+    colorScheme: ColorScheme = .light,
     precision: Float = 0.98,
     perceptualPrecision: Float = 0.98,
+    record: Bool = false,
     file: StaticString = #filePath,
     testName: String = #function,
     line: UInt = #line
   ) {
-    let image = render(view, size: size)
+    let styledView = view.preferredColorScheme(colorScheme)
+    let image = render(styledView, size: size)
+    let suffix = snapshotNameSuffix(colorScheme: colorScheme)
     assertSnapshot(
       of: image,
       as: .image(precision: precision, perceptualPrecision: perceptualPrecision),
-      named: snapshotNameSuffix,
+      named: suffix,
+      record: record,
       file: file,
       testName: testName,
       line: line
@@ -56,7 +61,7 @@ enum SnapshotTestHelpers {
     return image
   }
 
-  private static let snapshotNameSuffix: String? = {
+  private static func snapshotNameSuffix(colorScheme: ColorScheme) -> String? {
     let environment = ProcessInfo.processInfo.environment
     let rawName = environment["SNAPSHOT_DEVICE_NAME"] ?? environment["SIMULATOR_DEVICE_NAME"]
     guard let rawValue = rawName?
@@ -65,6 +70,8 @@ enum SnapshotTestHelpers {
     else {
       return nil
     }
-    return rawValue.replacingOccurrences(of: " ", with: "_")
-  }()
+    let deviceName = rawValue.replacingOccurrences(of: " ", with: "_")
+    let themeSuffix = colorScheme == .dark ? "_dark" : ""
+    return deviceName + themeSuffix
+  }
 }
