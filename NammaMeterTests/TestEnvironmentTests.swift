@@ -30,6 +30,24 @@ final class TestEnvironmentTests: XCTestCase {
     )
   }
 
+  func testIsRunningHostedUnitTestsTrueWhenXCTestConfigurationPresentWithoutUITestArg() {
+    XCTAssertTrue(
+      TestEnvironment.isRunningHostedUnitTests(
+        environment: ["XCTestConfigurationFilePath": "/tmp/test.xctestconfiguration"],
+        arguments: []
+      )
+    )
+  }
+
+  func testIsRunningHostedUnitTestsFalseWhenUITestingArgumentPresent() {
+    XCTAssertFalse(
+      TestEnvironment.isRunningHostedUnitTests(
+        environment: ["XCTestConfigurationFilePath": "/tmp/test.xctestconfiguration"],
+        arguments: ["--uitesting"]
+      )
+    )
+  }
+
   func testShouldResetStateTrueWhenResetArgumentPresent() {
     XCTAssertTrue(TestEnvironment.shouldResetState(arguments: ["--reset-state"]))
   }

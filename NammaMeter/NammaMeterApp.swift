@@ -14,14 +14,25 @@ struct NammaMeterApp: App {
 
   var body: some Scene {
     WindowGroup {
-      ContentView()
-        .environment(container)
-        .modifier(ScreenAwakeSyncModifier(
-          screenAwakeManager: container.screenAwakeManager,
-          settingsStore: container.settingsStore,
-          meterStore: container.meterStore
-        ))
+      if TestEnvironment.isRunningHostedUnitTests {
+        UnitTestHostView()
+      } else {
+        ContentView()
+          .environment(container)
+          .modifier(ScreenAwakeSyncModifier(
+            screenAwakeManager: container.screenAwakeManager,
+            settingsStore: container.settingsStore,
+            meterStore: container.meterStore
+          ))
+      }
     }
+  }
+}
+
+private struct UnitTestHostView: View {
+  var body: some View {
+    Color.clear
+      .ignoresSafeArea()
   }
 }
 
