@@ -69,14 +69,25 @@ struct MeterLayoutMetrics: Equatable {
   let availableHeight: CGFloat
 
   init(containerSize: CGSize) {
-    let controlBarHeight = min(max(containerSize.height * 0.085, 56), 72)
+    let controlBarHeight: CGFloat = 56  // Fixed height with 48pt buttons + 4pt padding
 
     let rawAvailableHeight = containerSize.height - Self.bottomPadding - controlBarHeight - (Self.spacing * 2)
     let availableHeight = max(rawAvailableHeight, 0)
 
     let maxMeterNaturalHeight = SuperMeterDimensions.naturalHeight(for: containerSize.width)
+    let maxAllowedMeterHeight = containerSize.height * 0.65
+
+    let cappedMeterHeight: CGFloat
+    if maxMeterNaturalHeight > maxAllowedMeterHeight {
+      // Meter exceeds 65%, clamp it
+      cappedMeterHeight = maxAllowedMeterHeight
+    } else {
+      // Meter fits within 65%
+      cappedMeterHeight = maxMeterNaturalHeight
+    }
+
     let maxMeterHeight = max(availableHeight - Self.minMapHeight, 0)
-    let referenceMeterHeight = max(min(maxMeterNaturalHeight, maxMeterHeight), 0)
+    let referenceMeterHeight = max(min(cappedMeterHeight, maxMeterHeight), 0)
     let fixedMapHeight = max(availableHeight - referenceMeterHeight, 0)
 
     self.controlBarHeight = controlBarHeight

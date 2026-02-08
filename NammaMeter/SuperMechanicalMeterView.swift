@@ -22,8 +22,10 @@ struct SuperFullMeterPanel: View {
       let desiredBodyWidth = max(geo.size.width * SuperMeterDimensions.widthRatio, 0)
       let bodyHeightForWidth = desiredBodyWidth * SuperMeterDimensions.bodyAspect
       let canopyHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.canopyRatio
-      let baseHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.baseRatio
-      let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap + baseHeightForWidth
+      // Base disabled - uncomment to re-enable
+      // let baseHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.baseRatio
+      let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap
+      // With base: let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap + baseHeightForWidth
 
       // Scale to fit available height
       let rawScale = totalHeightForWidth > 0 ? geo.size.height / totalHeightForWidth : 0
@@ -31,10 +33,11 @@ struct SuperFullMeterPanel: View {
       let bodyWidth = desiredBodyWidth * scale
       let bodyHeight = bodyHeightForWidth * scale
       let canopyHeight = canopyHeightForWidth * scale
-      let baseHeight = baseHeightForWidth * scale
+      // Base disabled - uncomment to re-enable
+      // let baseHeight = baseHeightForWidth * scale
 
-      // Offset to move meter up so canopy bottom aligns with bottom of notch
-      let meterTopOffset = topInset - canopyHeight
+      // Position meter so canopy bottom aligns with MeterShell top (at topInset)
+      let meterTopOffset = max(topInset - canopyHeight, 0.0)
 
       ZStack(alignment: .top) {
         VStack(spacing: -bodyHeight * 0.08) {
@@ -107,13 +110,18 @@ struct SuperFullMeterPanel: View {
           }
           .frame(width: bodyWidth, height: bodyHeight)
 
-          // Base mount
-          SuperMeterBaseView(width: bodyWidth * 0.62, height: baseHeight)
-            .offset(y: baseHeight * -0.05)
+          // Base mount - DISABLED (uncomment to re-enable)
+          // SuperMeterBaseView(width: bodyWidth * 0.62, height: baseHeight)
+          //   .offset(y: baseHeight * -0.05)
         }
         .offset(y: meterTopOffset)
       }
       .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+      // DEBUG: Temporary border to visualize Super Mechanical meter bounds (uncomment for debugging)
+      // .overlay(
+      //   Rectangle()
+      //     .stroke(Color.blue, lineWidth: 2)
+      // )
     }
     .hirePulse(tripState: tripState, pulse: $hirePulse)
   }

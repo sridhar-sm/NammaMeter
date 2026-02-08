@@ -141,8 +141,10 @@ enum SuperMeterDimensions {
     let bodyWidth = containerWidth * widthRatio
     let bodyHeight = bodyWidth * bodyAspect
     let canopyHeight = bodyHeight * canopyRatio
-    let baseHeight = bodyHeight * baseRatio
-    return bodyHeight + canopyHeight * canopyOverlap + baseHeight
+    // Base disabled - uncomment to re-enable
+    // let baseHeight = bodyHeight * baseRatio
+    return bodyHeight + canopyHeight * canopyOverlap
+    // With base: return bodyHeight + canopyHeight * canopyOverlap + baseHeight
   }
 }
 
@@ -332,6 +334,11 @@ struct MeterShell<Content: View>: View {
       }
       .frame(width: bodyWidth, height: bodyHeight)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.alignment)
+      // DEBUG: Temporary border to visualize MeterShell bounds (uncomment for debugging)
+      // .overlay(
+      //   RoundedRectangle(cornerRadius: 8, style: .continuous)
+      //     .stroke(Color.red, lineWidth: 2)
+      // )
       .offset(y: style.alignment == .top ? topInset : 0)
     }
   }
