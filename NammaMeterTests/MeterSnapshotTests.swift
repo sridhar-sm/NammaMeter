@@ -8,11 +8,10 @@ final class MeterSnapshotTests: XCTestCase {
 
   override func setUp() {
     super.setUp()
-    // Set to true to record new snapshots, false to verify against existing
-    // isRecording = true
+    // To record new snapshots, pass record: true to assertSwiftUIViewSnapshot calls
   }
 
-  // MARK: - Super Mechanical Meter
+  // MARK: - Super Mechanical Meter (Light Mode)
 
   func testSuperMechanicalForHire() {
     let view = SuperFullMeterPanel(
@@ -24,7 +23,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testSuperMechanicalInProgress() {
@@ -37,7 +36,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testSuperMechanicalComplete() {
@@ -50,7 +49,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testSuperMechanicalDrumStyle() {
@@ -63,10 +62,10 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
-  // MARK: - Super Electronic Meter
+  // MARK: - Super Electronic Meter (Light Mode)
 
   func testSuperElectronicForHire() {
     let view = SuperElectronicFullMeterPanel(
@@ -80,7 +79,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testSuperElectronicInProgress() {
@@ -95,7 +94,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testSuperElectronicNightMode() {
@@ -110,10 +109,10 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
-  // MARK: - Golden Eagle Meter
+  // MARK: - Golden Eagle Meter (Light Mode)
 
   func testGoldenEagleForHire() {
     let view = GoldenEagleFullMeterPanel(
@@ -127,7 +126,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testGoldenEagleInProgress() {
@@ -142,10 +141,10 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
-  // MARK: - Digital Meter
+  // MARK: - Digital Meter (Light Mode)
 
   func testDigitalForHire() {
     let view = DigitalFullMeterPanel(
@@ -155,7 +154,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testDigitalInProgress() {
@@ -166,10 +165,10 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
-  // MARK: - Bright Digital Meter
+  // MARK: - Bright Digital Meter (Light Mode)
 
   func testBrightDigitalForHire() {
     let view = BrightDigitalFullMeterPanel(
@@ -182,7 +181,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testBrightDigitalInProgress() {
@@ -196,10 +195,10 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
-  // MARK: - Edge Cases
+  // MARK: - Edge Cases (Light Mode)
 
   func testSuperMechanicalMaxFare() {
     let view = SuperFullMeterPanel(
@@ -211,7 +210,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
   }
 
   func testSuperElectronicLongTrip() {
@@ -226,6 +225,36 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+  }
+
+  // MARK: - Dark Mode Validation
+
+  func testSuperMechanicalDarkMode() {
+    let view = SuperFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      digitStyle: .disk,
+      topInset: 60
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark)
+  }
+
+  func testSuperElectronicDarkMode() {
+    let view = SuperElectronicFullMeterPanel(
+      tripState: .inProgress,
+      fare: 189.00,
+      waitingDuration: 600,
+      distanceMeters: 5000,
+      isNight: true,
+      topInset: 60
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark)
   }
 }

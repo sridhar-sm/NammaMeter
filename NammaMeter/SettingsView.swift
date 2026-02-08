@@ -10,6 +10,7 @@ struct SettingsView: View {
             SettingsHeader()
           }
 
+          SettingsAppearanceSection()
           SettingsCitySection()
           SettingsRatesSection()
           SettingsWaitingChargesSection()

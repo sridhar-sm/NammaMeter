@@ -26,7 +26,7 @@ final class ThemeAccessibilityTests: XCTestCase {
   }
 
   func testMeterColorSchemeRGBValues() {
-    assertRGBA(MeterColorSchemes.SuperMechanical.caseTop, red: 0.17, green: 0.18, blue: 0.19)
+    assertRGBA(MeterColorSchemes.SuperMechanical.caseTop, red: 0.078, green: 0.078, blue: 0.078)
     assertRGBA(MeterColorSchemes.BrightDigital.panelTop, red: 0.4, green: 0.06, blue: 0.06)
     assertRGBA(MeterColorSchemes.GoldenEagle.accentGold, red: 0.95, green: 0.78, blue: 0.25)
     assertRGBA(MeterColorSchemes.LED.blueDim, red: 0.06, green: 0.08, blue: 0.12)

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
+  @Environment(SettingsStore.self) private var settingsStore
+
   var body: some View {
     TabView {
       MeterView()
@@ -19,6 +21,18 @@ struct ContentView: View {
         }
     }
     .tint(Theme.ink)
+    .preferredColorScheme(colorScheme(for: settingsStore.themePreference))
+  }
+
+  private func colorScheme(for preference: String) -> ColorScheme? {
+    switch preference {
+    case "light":
+      return .light
+    case "dark":
+      return .dark
+    default:
+      return nil // System preference
+    }
   }
 }
 
