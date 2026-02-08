@@ -216,4 +216,134 @@ final class FareProfileTests: XCTestCase {
     XCTAssertEqual(updatedInfo.cityName, "Mysuru")
   }
 
+  // MARK: - Migration Edge Cases
+
+  func testMigrationHandlesEmptyProfilesList() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+    let seed = FareProfileSettings(
+      schemaVersion: FareProfileSettings.currentSchemaVersion,
+      selectedCityId: nil,
+      profiles: [],  // Empty profiles array
+      catalogVersionApplied: FareCatalog.currentVersion
+    )
+    try TestHelpers.write(settings: seed, to: url)
+
+    let store = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store)
+
+    // ensureMinimumProfile() should have added default profile
+    XCTAssertFalse(store.profiles.isEmpty, "ensureMinimumProfile should add default profile when profiles array is empty")
+    XCTAssertTrue(store.profiles.contains { $0.cityId == FareCatalog.defaultCityId }, "Default city should be added")
+    XCTAssertEqual(store.selectedCityId, FareCatalog.defaultCityId, "Default city should be selected")
+  }
+
+  func testMigrationNormalizesInvalidSelection() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+
+    // Create a profile for Mandya but select non-existent city
+    let mandyaProfile = try XCTUnwrap(FareCatalog.entries.first { $0.profile.cityId == "mandya" }?.profile)
+    let seed = FareProfileSettings(
+      schemaVersion: FareProfileSettings.currentSchemaVersion,
+      selectedCityId: "non-existent-city-id",
+      profiles: [mandyaProfile],  // Only Mandya, not Bengaluru
+      catalogVersionApplied: FareCatalog.currentVersion
+    )
+    try TestHelpers.write(settings: seed, to: url)
+
+    let store = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store)
+
+    // normalizeSelection() should fallback to default city and add default profile if missing
+    XCTAssertEqual(store.selectedCityId, FareCatalog.defaultCityId, "Invalid selection should normalize to default city")
+    XCTAssertTrue(store.profiles.contains { $0.cityId == FareCatalog.defaultCityId }, "Default profile should be added if missing")
+    XCTAssertTrue(store.profiles.contains { $0.cityId == "mandya" }, "Original Mandya profile should be preserved")
+  }
+
+  func testMigrationOrderMatters() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+
+    // Create scenario where migration order is critical:
+    // Empty profiles + invalid selection
+    let seed = FareProfileSettings(
+      schemaVersion: FareProfileSettings.currentSchemaVersion,
+      selectedCityId: "some-city",  // Invalid selection
+      profiles: [],  // Empty profiles
+      catalogVersionApplied: 0  // Needs catalog update
+    )
+    try TestHelpers.write(settings: seed, to: url)
+
+    let store = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store)
+
+    // All migrations should have run successfully in correct order:
+    // 1. applyCatalogUpdatesIfNeeded() populates profiles
+    // 2. ensureMinimumProfile() ensures at least one profile (redundant here but safe)
+    // 3. normalizeSelection() validates and corrects selection
+    XCTAssertFalse(store.profiles.isEmpty, "Catalog updates should populate profiles")
+    XCTAssertEqual(store.selectedCityId, FareCatalog.defaultCityId, "Selection should be normalized")
+    XCTAssertEqual(store.profiles.count, FareCatalog.entries.count, "All catalog profiles should be added")
+  }
+
+  func testCatalogVersionRollbackHandled() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+
+    // Simulate scenario where user's catalogVersionApplied is higher than current
+    // (e.g., downgrading app version or development scenario)
+    let seed = FareProfileSettings(
+      schemaVersion: FareProfileSettings.currentSchemaVersion,
+      selectedCityId: FareCatalog.defaultCityId,
+      profiles: FareCatalog.entries.map(\.profile),
+      catalogVersionApplied: FareCatalog.currentVersion + 10  // Future version
+    )
+    try TestHelpers.write(settings: seed, to: url)
+
+    let store = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store)
+
+    // applyCatalogUpdatesIfNeeded() should handle gracefully (guard returns false)
+    XCTAssertEqual(store.profiles.count, FareCatalog.entries.count, "Profiles should remain unchanged")
+    XCTAssertEqual(store.selectedCityId, FareCatalog.defaultCityId, "Selection should remain valid")
+    // Note: catalogVersionApplied remains at future version, which is safe
+    // Future app versions will have catalogVersionApplied >= FareCatalog.currentVersion
+  }
+
+  func testSchemaVersionBumpIsIdempotent() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+
+    // Create settings with current schema version
+    let seed = FareProfileSettings(
+      schemaVersion: FareProfileSettings.currentSchemaVersion,
+      selectedCityId: FareCatalog.defaultCityId,
+      profiles: [FareCatalog.defaultProfile],
+      catalogVersionApplied: FareCatalog.currentVersion
+    )
+    try TestHelpers.write(settings: seed, to: url)
+
+    let store = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store)
+
+    // Load again to verify idempotency
+    let store2 = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store2)
+
+    // Schema version bump should be safe to run multiple times
+    XCTAssertEqual(store2.profiles.count, 1, "Profiles should not duplicate on reload")
+    XCTAssertEqual(store2.selectedCityId, FareCatalog.defaultCityId, "Selection should remain stable")
+
+    // Verify old schema version also bumps correctly
+    let oldSeed = FareProfileSettings(
+      schemaVersion: 1,  // Old schema version
+      selectedCityId: FareCatalog.defaultCityId,
+      profiles: [FareCatalog.defaultProfile],
+      catalogVersionApplied: FareCatalog.currentVersion
+    )
+    try TestHelpers.write(settings: oldSeed, to: url)
+
+    let store3 = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store3)
+
+    XCTAssertEqual(store3.profiles.count, 1, "Schema version bump should not affect profiles")
+    XCTAssertEqual(store3.selectedCityId, FareCatalog.defaultCityId, "Schema version bump should not affect selection")
+  }
+
 }
