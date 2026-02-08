@@ -9,6 +9,7 @@ struct MeterView: View {
   @State private var meterFaceStyle: MeterFaceStyle = .superMeter
   @State private var meterRenderMode: MeterRenderMode = .full
   @State private var digitWheelStyle: DigitWheelStyle = .disk
+  @State private var hasLoadedPreferences = false
 
   var body: some View {
     NavigationStack {
@@ -24,6 +25,16 @@ struct MeterView: View {
           meterStore.requestAuthorization()
         }
         meterStore.refreshTimeBasedConditions()
+        loadMeterPreferences()
+      }
+      .onChange(of: meterFaceStyle) { _, newValue in
+        settingsStore.meterFaceStyle = newValue.rawValue
+      }
+      .onChange(of: meterRenderMode) { _, newValue in
+        settingsStore.meterRenderMode = newValue.rawValue
+      }
+      .onChange(of: digitWheelStyle) { _, newValue in
+        settingsStore.digitWheelStyle = newValue.rawValue
       }
       .withLocationPermissionHandling(coordinator: meterStore.locationPermissionCoordinator)
       .sheet(isPresented: $showMeterSettings) {
@@ -53,6 +64,24 @@ struct MeterView: View {
       digitWheelStyle: $digitWheelStyle,
       isPresented: $showMeterSettings
     )
+  }
+
+  // MARK: - Preferences
+
+  private func loadMeterPreferences() {
+    guard !hasLoadedPreferences else { return }
+    hasLoadedPreferences = true
+
+    // Load persisted preferences from SettingsStore
+    if let style = MeterFaceStyle(rawValue: settingsStore.meterFaceStyle) {
+      meterFaceStyle = style
+    }
+    if let mode = MeterRenderMode(rawValue: settingsStore.meterRenderMode) {
+      meterRenderMode = mode
+    }
+    if let style = DigitWheelStyle(rawValue: settingsStore.digitWheelStyle) {
+      digitWheelStyle = style
+    }
   }
 
 }

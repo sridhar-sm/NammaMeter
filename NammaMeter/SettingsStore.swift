@@ -14,6 +14,25 @@ final class SettingsStore {
     }
   }
 
+  // Meter display preferences - persisted to UserDefaults
+  var meterFaceStyle: String {
+    didSet {
+      UserDefaults.standard.set(meterFaceStyle, forKey: "meterFaceStyle")
+    }
+  }
+
+  var meterRenderMode: String {
+    didSet {
+      UserDefaults.standard.set(meterRenderMode, forKey: "meterRenderMode")
+    }
+  }
+
+  var digitWheelStyle: String {
+    didSet {
+      UserDefaults.standard.set(digitWheelStyle, forKey: "digitWheelStyle")
+    }
+  }
+
   var settings: MeterSettings {
     didSet {
       guard isLoaded, !isSyncingFromProfile else { return }
@@ -70,6 +89,12 @@ final class SettingsStore {
     // Load theme preference from UserDefaults during initialization
     // Falls back to "system" if no preference is stored
     self.themePreference = UserDefaults.standard.string(forKey: "themePreference") ?? "system"
+
+    // Load meter display preferences from UserDefaults
+    // Falls back to default values if not stored
+    self.meterFaceStyle = UserDefaults.standard.string(forKey: "meterFaceStyle") ?? MeterFaceStyle.superMeter.rawValue
+    self.meterRenderMode = UserDefaults.standard.string(forKey: "meterRenderMode") ?? MeterRenderMode.full.rawValue
+    self.digitWheelStyle = UserDefaults.standard.string(forKey: "digitWheelStyle") ?? DigitWheelStyle.disk.rawValue
 
     Task { await load() }
   }
