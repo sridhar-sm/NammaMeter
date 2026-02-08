@@ -10,7 +10,7 @@ struct MeterControlBar: View {
   var body: some View {
     GeometryReader { geo in
       let horizontalPadding: CGFloat = 10
-      let verticalPadding: CGFloat = 6
+      let verticalPadding: CGFloat = 4
       let spacing: CGFloat = 6
       let tileCount = CGFloat(4)
       let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
