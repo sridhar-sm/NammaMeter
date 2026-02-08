@@ -16,6 +16,31 @@ struct NammaMeterApp: App {
     WindowGroup {
       ContentView()
         .environment(container)
+        .modifier(ScreenAwakeSyncModifier(
+          screenAwakeManager: container.screenAwakeManager,
+          settingsStore: container.settingsStore,
+          meterStore: container.meterStore
+        ))
     }
+  }
+}
+
+struct ScreenAwakeSyncModifier: ViewModifier {
+  let screenAwakeManager: ScreenAwakeManager
+  let settingsStore: SettingsStore
+  let meterStore: MeterStore
+
+  func body(content: Content) -> some View {
+    content
+      .onChange(of: settingsStore.settings.keepScreenAwakeDuringTrip) { _, newValue in
+        screenAwakeManager.isEnabled = newValue
+      }
+      .onChange(of: meterStore.tripState) { _, newState in
+        screenAwakeManager.tripState = newState
+      }
+      .onAppear {
+        screenAwakeManager.isEnabled = settingsStore.settings.keepScreenAwakeDuringTrip
+        screenAwakeManager.tripState = meterStore.tripState
+      }
   }
 }

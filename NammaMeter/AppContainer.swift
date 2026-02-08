@@ -21,15 +21,18 @@ final class AppContainer {
   let settingsStore: SettingsStore
   let tripStore: TripStore
   let meterStore: MeterStore
+  let screenAwakeManager: ScreenAwakeManager
 
   init(
     settingsStore: SettingsStore = SettingsStore(),
     tripStore: TripStore = TripStore(),
-    meterStore: MeterStore = MeterStore()
+    meterStore: MeterStore = MeterStore(),
+    screenAwakeManager: ScreenAwakeManager = ScreenAwakeManager()
   ) {
     self.settingsStore = settingsStore
     self.tripStore = tripStore
     self.meterStore = meterStore
+    self.screenAwakeManager = screenAwakeManager
   }
 }
 
@@ -41,7 +44,8 @@ extension AppContainer {
     AppContainer(
       settingsStore: SettingsStore(fileURL: previewURL(for: "settings")),
       tripStore: TripStore(fileURL: previewURL(for: "trips")),
-      meterStore: MeterStore(locationProvider: NoopLocationProvider())
+      meterStore: MeterStore(locationProvider: NoopLocationProvider()),
+      screenAwakeManager: ScreenAwakeManager()
     )
   }
 
@@ -63,5 +67,6 @@ extension View {
       .environment(container.settingsStore)
       .environment(container.tripStore)
       .environment(container.meterStore)
+      .environment(container.screenAwakeManager)
   }
 }
