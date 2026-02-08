@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MeterControlBar: View {
+  @Environment(\.colorScheme) private var colorScheme
   @Environment(SettingsStore.self) private var settingsStore
   @Environment(TripStore.self) private var tripStore
   @Environment(MeterStore.self) private var meterStore
@@ -32,7 +33,7 @@ struct MeterControlBar: View {
       .padding(.vertical, verticalPadding)
     }
     .frame(height: height)
-    .background(Theme.card.opacity(0.92))
+    .background(colorScheme == .dark ? Theme.darkControlBackground : Theme.card.opacity(0.92))
     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
   }
@@ -41,7 +42,8 @@ struct MeterControlBar: View {
     Button {
       showMeterSettings = true
     } label: {
-      ControlTile(background: Theme.card.opacity(0.9), size: metrics.tileSize) {
+      let bgColor = colorScheme == .dark ? Theme.darkControlBackground.opacity(1.2) : Theme.card.opacity(0.9)
+      ControlTile(background: bgColor, size: metrics.tileSize) {
         Image(systemName: "gauge.with.dots.needle.67percent")
           .font(.system(size: metrics.iconSize, weight: .semibold))
           .foregroundStyle(Theme.ink)
@@ -86,7 +88,8 @@ struct MeterControlBar: View {
       meterStore.toggleWaiting()
     } label: {
       let isWaiting = meterStore.isWaiting
-      ControlTile(background: (isWaiting ? Theme.coral.opacity(0.85) : Theme.card.opacity(0.9)), size: metrics.tileSize) {
+      let bgColor = isWaiting ? Theme.coral.opacity(0.85) : (colorScheme == .dark ? Theme.darkControlBackground.opacity(1.2) : Theme.card.opacity(0.9))
+      ControlTile(background: bgColor, size: metrics.tileSize) {
         Image(systemName: isWaiting ? "play.fill" : "pause.fill")
           .font(.system(size: metrics.iconSize, weight: .semibold))
           .foregroundStyle(Theme.ink)

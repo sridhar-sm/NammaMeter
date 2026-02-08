@@ -69,6 +69,7 @@ struct MiniTripStateSign: View {
 // MARK: - Condition Tile Button
 
 struct ConditionTileButton: View {
+  @Environment(\.colorScheme) private var colorScheme
   let systemImage: String
   let label: String
   @Binding var isOn: Bool
@@ -89,7 +90,8 @@ struct ConditionTileButton: View {
   }
 
   private var tile: some View {
-    ControlTile(background: isOn ? Theme.coral.opacity(0.85) : Theme.card.opacity(0.9), size: metrics.tileSize) {
+    let bgColor = isOn ? Theme.coral.opacity(0.85) : (colorScheme == .dark ? Theme.darkControlBackground.opacity(1.2) : Theme.card.opacity(0.9))
+    return ControlTile(background: bgColor, size: metrics.tileSize) {
       Image(systemName: systemImage)
         .font(.system(size: metrics.iconSize, weight: .semibold))
         .foregroundStyle(Theme.ink)
