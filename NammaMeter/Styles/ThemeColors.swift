@@ -50,8 +50,8 @@ enum MeterColorSchemes {
 
   enum MeterShell {
     static let superDark = [
-      Color(red: 0.17, green: 0.18, blue: 0.19),
-      Color(red: 0.06, green: 0.06, blue: 0.07)
+      Color(red: 0.078, green: 0.078, blue: 0.078),
+      Color(red: 0.039, green: 0.039, blue: 0.039)
     ]
     static let golden = [
       Color(red: 0.78, green: 0.78, blue: 0.76),
@@ -100,8 +100,8 @@ enum MeterColorSchemes {
   }
 
   enum SuperMechanical {
-    static let caseTop = Color(red: 0.17, green: 0.18, blue: 0.19)
-    static let caseBottom = Color(red: 0.06, green: 0.06, blue: 0.07)
+    static let caseTop = Color(red: 0.078, green: 0.078, blue: 0.078)
+    static let caseBottom = Color(red: 0.039, green: 0.039, blue: 0.039)
     static let metalPanel = Metal.panelLight
     static let metalEdge = Metal.edge
     static let displayEdge = Color(red: 0.22, green: 0.22, blue: 0.24)
