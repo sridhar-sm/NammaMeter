@@ -1,0 +1,161 @@
+NAMMAMETER PRIVACY POLICY (SHORT VERSION)
+==========================================
+
+Effective Date: February 8, 2026
+
+PRIVACY SUMMARY
+===============
+
+NammaMeter is an offline auto rickshaw meter app that:
+• Stores ALL data locally on your device
+• Does NOT send data to servers
+• Does NOT share data with third parties
+• Does NOT collect personal information
+• Does NOT use analytics or tracking
+
+DATA COLLECTION
+===============
+
+We collect ONLY:
+
+1. LOCATION DATA (during trips)
+   - GPS coordinates
+   - Route points
+   - Used for: Distance calculation and map display
+   - Storage: Local device only
+   - Control: iOS permission settings
+
+2. TRIP DATA
+   - Fare amount
+   - Distance traveled
+   - Trip duration
+   - Waiting time
+   - Storage: Local device only
+   - Control: Delete anytime in app
+
+3. SETTINGS & PREFERENCES
+   - Theme choice (Light/Dark)
+   - Meter style selection
+   - City fare rates (your configuration)
+   - Storage: Local device only
+   - Control: Change anytime in app
+
+We do NOT collect:
+✗ Personal information (name, email, phone)
+✗ Payment data
+✗ User accounts or login info
+✗ Analytics or usage tracking
+✗ Device identifiers
+✗ Advertising data
+
+LOCATION PERMISSION
+===================
+
+Why: To measure distance for accurate fare calculation
+When: Only during active trips
+Control: iOS Settings > NammaMeter > Location
+You can: Allow Always, Allow While Using, or Never
+
+DATA SECURITY
+=============
+
+• All data stored locally on your device
+• Protected by iOS app sandbox
+• Protected by device encryption
+• NOT synced to cloud
+• NOT sent to any server
+
+DATA DELETION
+=============
+
+Delete Individual Trip:
+1. Open NammaMeter
+2. Go to Trips tab
+3. Swipe left and delete
+
+Delete All App Data:
+1. iOS Settings > NammaMeter > "Offload App" or "Delete App"
+2. Data is permanently deleted
+
+YOUR RIGHTS
+===========
+
+You have the right to:
+• Know what data is collected
+• Access all your data (visible in app)
+• Delete any trip or all data
+• Control permissions
+• Stop using the app anytime
+
+THIRD PARTIES
+=============
+
+We use:
+✓ Apple Maps (governed by Apple privacy policy)
+✓ iOS location services (your device only)
+
+We do NOT use:
+✗ Google Analytics
+✗ Firebase
+✗ Any ad networks
+✗ Any tracking services
+
+CHANGES TO POLICY
+=================
+
+We may update this policy. Continued use of the app
+means you accept the updated policy. We'll notify you
+through app updates or GitHub repository.
+
+CONTACT
+=======
+
+For privacy questions:
+GitHub: https://github.com/sridharsm/NammaMeter
+
+KEY POINTS
+==========
+
+1. OFFLINE APP
+   - Works without internet
+   - No data transmission
+   - No server access
+
+2. LOCAL STORAGE ONLY
+   - Everything on your device
+   - Complete user control
+   - Delete anytime
+
+3. NO TRACKING
+   - No analytics
+   - No ad tracking
+   - No behavior profiling
+
+4. TRANSPARENT
+   - See all your data in app
+   - Code available on GitHub
+   - Clear privacy practices
+
+COMPLIANCE
+==========
+
+This policy complies with:
+✓ GDPR (EU)
+✓ CCPA (California)
+✓ App Store Privacy Guidelines
+✓ Apple Privacy Standards
+
+LEGAL
+=====
+
+By using NammaMeter, you agree to this Privacy Policy.
+Your continued use means you accept these terms.
+You can delete the app and all data anytime.
+
+---
+
+For the full detailed privacy policy, see: PRIVACY_POLICY.md
+
+Version: 1.0
+Date: February 8, 2026
+Status: Ready for App Store
