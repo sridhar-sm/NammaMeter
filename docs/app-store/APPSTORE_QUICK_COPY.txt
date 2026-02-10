@@ -1,0 +1,197 @@
+================================================================================
+NAMMAMETER - APP STORE CONNECT QUICK COPY
+================================================================================
+
+APP NAME (30 char max):
+NammaMeter
+
+SUBTITLE (30 char max):
+Smart Auto Rickshaw Fare Calculator
+
+================================================================================
+DESCRIPTION (paste into App Store Connect):
+================================================================================
+
+NammaMeter is your trusted digital auto rickshaw meter for accurate fare calculation on every ride. Whether you're a auto rickshaw driver managing your fleet or a passenger verifying fares, NammaMeter provides real-time calculations with transparency and precision.
+
+KEY FEATURES:
+
+🚕 FOUR PROFESSIONAL METER STYLES
+Choose your preferred meter display:
+• Super Mechanical - Classic mechanical meter design
+• Super Electronic - Advanced meter with night mode
+• Golden Eagle - Premium aesthetic design
+• Bright Digital - Modern LCD-style display
+
+💰 ACCURATE FARE CALCULATION
+• Real-time fare calculation based on distance and time
+• Support for multiple cities with custom rates
+• Automatic night fare multipliers
+• Waiting time charges with customizable intervals
+• Minimum fare protection
+
+📍 INTELLIGENT LOCATION TRACKING
+• GPS-based distance measurement
+• Real-time map view of your route
+• Continuous tracking with background location updates
+• Location replay for trip verification
+
+⏱️ TRIP MANAGEMENT
+• One-tap trip start and stop
+• Pause trips with waiting mode
+• Complete trip history with analytics
+
+🎨 CUSTOMIZABLE EXPERIENCE
+• Multiple meter display modes
+• Digit wheel style options
+• Light and dark mode themes
+• City-specific fare configuration
+
+⚙️ MULTI-CITY SUPPORT
+• Base fare amounts
+• Per-kilometer rates
+• Per-minute waiting charges
+• Night time fare multipliers
+• Custom rate schedules
+
+📊 TRIP HISTORY & ANALYTICS
+• Complete trip records with timestamps
+• Fare, distance, and duration tracking
+• Search and filter capabilities
+
+Perfect for: Auto Rickshaw drivers, auto-rickshaw operators, ride-sharing professionals, fleet managers, and passengers.
+
+NammaMeter takes the guesswork out of auto rickshaw fares. Requires iOS 17.6+. No in-app purchases. No advertisements.
+
+================================================================================
+KEYWORDS (paste as comma-separated):
+================================================================================
+
+taxi, meter, fare, calculator, ride, auto, rickshaw, GPS, location, trip
+
+================================================================================
+SUPPORT URL:
+================================================================================
+
+https://github.com/sridharsm/NammaMeter
+
+================================================================================
+RELEASE NOTES (for v1.0):
+================================================================================
+
+🚀 Initial Release - NammaMeter is here!
+
+We're excited to introduce NammaMeter, the smart auto rickshaw fare calculator that brings precision and transparency to every ride.
+
+✓ Four professional meter display styles
+✓ Multi-city fare configuration
+✓ Real-time GPS-based distance tracking
+✓ Automatic night fare multipliers
+✓ Waiting time charge tracking
+✓ Complete trip history with analytics
+✓ Light and dark mode themes
+✓ Full offline functionality
+
+Thank you for choosing NammaMeter!
+
+================================================================================
+REVIEW NOTES (for App Review):
+================================================================================
+
+NammaMeter is a professional auto rickshaw meter application for iOS. It provides accurate fare calculations based on configurable rates for different cities.
+
+GETTING STARTED:
+1. Launch the app - meter view displays immediately
+2. Tap "Start trip" to begin fare calculation
+3. Tap "Stop trip" to end and save
+4. View history in "Trips" tab
+5. Configure city rates in "Settings" tab
+
+KEY FEATURES:
+- Offline functionality (no internet required for calculations)
+- GPS-based distance tracking
+- City-specific fare configuration
+- Night mode automatic surcharge
+- Trip history and analytics
+
+PERMISSIONS NEEDED:
+- Location: For GPS-based distance tracking
+
+NO RESTRICTIONS:
+- No in-app purchases
+- No advertisements
+- No account creation required
+- All features immediately accessible
+
+================================================================================
+MARKETING COPY (Social Media):
+================================================================================
+
+📱 NammaMeter is now on the App Store!
+
+Your smart auto rickshaw fare calculator is here. 🚕💰
+
+✓ 4 professional meter styles
+✓ Real-time GPS tracking
+✓ Multi-city fare support
+✓ Night mode pricing
+✓ Complete trip history
+
+#TaxiMeter #FareCalculator #iOS
+
+================================================================================
+APP PREVIEW VIDEO SCRIPT (30 seconds):
+================================================================================
+
+[0-3s] App opens to Super Mechanical meter
+"Introducing NammaMeter..."
+
+[3-7s] Tap trip start, meter begins calculating
+"Accurate fare calculation from the first kilometer."
+
+[7-12s] Map view with route and distance
+"GPS-based tracking shows your complete route."
+
+[12-17s] Transition through all four meter styles
+"Choose from four professional meter designs."
+
+[17-22s] Settings with city fare configuration
+"Configure rates for any city, worldwide."
+
+[22-27s] Dark mode with night indicator
+"Smart night mode automatically applies surcharges."
+
+[27-30s] Logo and tagline
+"NammaMeter - Know the fare before you go"
+
+================================================================================
+CONTENT RATING NOTES:
+================================================================================
+
+Rating: 4+ (All Ages)
+
+Content Details:
+- No restricted content
+- No advertisements
+- No in-app purchases
+- No personal data collection beyond location
+- No external links except GitHub repository
+
+================================================================================
+CATEGORY & PLACEMENT:
+================================================================================
+
+Primary Category: Utilities
+Secondary Category: Business (optional)
+Content Rights: Original app, no third-party content
+
+================================================================================
+MINIMUM REQUIREMENTS:
+================================================================================
+
+Minimum iOS Version: 17.6
+Compatible Devices: iPhone, iPad
+Requires: iOS 17.6 or later
+Languages: English, Kannada
+Size: ~[Check before submission]
+
