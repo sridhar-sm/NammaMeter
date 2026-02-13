@@ -159,6 +159,8 @@ extension MeterSettings {
 struct RateSnapshot: Equatable, Sendable {
   let cityId: String?
   let cityName: String?
+  let vehicleType: String?
+  let currencyCode: String?
   let baseFare: Double
   let perKmRate: Double
   let perMinuteRate: Double // Legacy, kept for backward compatibility
@@ -170,10 +172,20 @@ struct RateSnapshot: Equatable, Sendable {
   let freeWaitMinutes: Double
   let waitIntervalMinutes: Double
   let waitIntervalCharge: Double
+  let surcharges: [FareSurcharge]?
 
-  init(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
+  init(
+    settings: MeterSettings,
+    cityId: String? = nil,
+    cityName: String? = nil,
+    vehicleType: String? = nil,
+    currencyCode: String? = nil,
+    surcharges: [FareSurcharge]? = nil
+  ) {
     self.cityId = cityId
     self.cityName = cityName
+    self.vehicleType = vehicleType
+    self.currencyCode = currencyCode
     baseFare = settings.baseFare
     perKmRate = settings.perKmRate
     perMinuteRate = settings.perMinuteRate
@@ -185,15 +197,17 @@ struct RateSnapshot: Equatable, Sendable {
     freeWaitMinutes = settings.freeWaitMinutes
     waitIntervalMinutes = settings.waitIntervalMinutes
     waitIntervalCharge = settings.waitIntervalCharge
+    self.surcharges = surcharges
   }
 }
 
 extension RateSnapshot: Codable {
   enum CodingKeys: String, CodingKey {
-    case cityId, cityName
+    case cityId, cityName, vehicleType, currencyCode
     case baseFare, perKmRate, perMinuteRate, includedKm, minFare, nightMultiplier
     case nightStartHour, nightEndHour
     case freeWaitMinutes, waitIntervalMinutes, waitIntervalCharge
+    case surcharges
     case rainMultiplier // legacy, ignored on decode
     case trafficMultiplier // legacy, ignored on decode
   }
@@ -202,6 +216,8 @@ extension RateSnapshot: Codable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     cityId = try container.decodeIfPresent(String.self, forKey: .cityId)
     cityName = try container.decodeIfPresent(String.self, forKey: .cityName)
+    vehicleType = try container.decodeIfPresent(String.self, forKey: .vehicleType)
+    currencyCode = try container.decodeIfPresent(String.self, forKey: .currencyCode)
     baseFare = try container.decode(Double.self, forKey: .baseFare)
     perKmRate = try container.decode(Double.self, forKey: .perKmRate)
     perMinuteRate = try container.decode(Double.self, forKey: .perMinuteRate)
@@ -213,19 +229,21 @@ extension RateSnapshot: Codable {
       ?? MeterSettings.bengaluruDefault.nightStartHour
     nightEndHour = try container.decodeIfPresent(Int.self, forKey: .nightEndHour)
       ?? MeterSettings.bengaluruDefault.nightEndHour
-    // New fields with backward-compatible defaults for old persisted trips
     freeWaitMinutes = try container.decodeIfPresent(Double.self, forKey: .freeWaitMinutes)
       ?? MeterSettings.bengaluruDefault.freeWaitMinutes
     waitIntervalMinutes = try container.decodeIfPresent(Double.self, forKey: .waitIntervalMinutes)
       ?? MeterSettings.bengaluruDefault.waitIntervalMinutes
     waitIntervalCharge = try container.decodeIfPresent(Double.self, forKey: .waitIntervalCharge)
       ?? MeterSettings.bengaluruDefault.waitIntervalCharge
+    surcharges = try container.decodeIfPresent([FareSurcharge].self, forKey: .surcharges)
   }
 
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encodeIfPresent(cityId, forKey: .cityId)
     try container.encodeIfPresent(cityName, forKey: .cityName)
+    try container.encodeIfPresent(vehicleType, forKey: .vehicleType)
+    try container.encodeIfPresent(currencyCode, forKey: .currencyCode)
     try container.encode(baseFare, forKey: .baseFare)
     try container.encode(perKmRate, forKey: .perKmRate)
     try container.encode(perMinuteRate, forKey: .perMinuteRate)
@@ -237,6 +255,7 @@ extension RateSnapshot: Codable {
     try container.encode(freeWaitMinutes, forKey: .freeWaitMinutes)
     try container.encode(waitIntervalMinutes, forKey: .waitIntervalMinutes)
     try container.encode(waitIntervalCharge, forKey: .waitIntervalCharge)
+    try container.encodeIfPresent(surcharges, forKey: .surcharges)
   }
 }
 
