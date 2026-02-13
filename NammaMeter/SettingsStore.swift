@@ -428,6 +428,7 @@ final class SettingsStore {
       id: UUID().uuidString,
       cityId: cityId,
       name: activeProfile.name,
+      vehicleType: activeProfile.vehicleType,
       cityKey: activeProfile.cityKey,
       rates: FareRates(settings: settings),
       multipliers: FareMultipliers(settings: settings),

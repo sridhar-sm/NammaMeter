@@ -167,7 +167,8 @@ struct AddFareView: View {
       id: UUID().uuidString,
       cityId: cityId,
       name: cityName,
-      cityKey: CityKey(city: cityName, region: nil, countryCode: "IN"),
+      vehicleType: VehicleTypeCatalog.autoRickshaw,
+      cityKey: CityKey(city: cityName, region: nil, countryCode: "IN", currencyCode: "INR"),
       rates: FareRates(
         baseFare: input.baseFare,
         perKmRate: input.perKmRate,
