@@ -81,6 +81,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var waitingStartedAt: Date?
   @ObservationIgnored private var waitingAccumulated: TimeInterval = 0
   @ObservationIgnored private var fareCalculator: FareCalculator?
+  @ObservationIgnored private var currentSurcharges: [FareSurcharge]?
 
   override convenience init() {
     if TestEnvironment.isRunningTests {
@@ -110,11 +111,23 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     permissionCoordinator.requestAlwaysAuthorization()
   }
 
-  func startTrip(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
+  func startTrip(
+    settings: MeterSettings,
+    cityId: String? = nil,
+    cityName: String? = nil,
+    surcharges: [FareSurcharge]? = nil,
+    perMinuteWhenSlow: Double? = nil,
+    slowSpeedThresholdKph: Double? = nil
+  ) {
     guard tripState == .forHire else { return }
     currentSettings = settings
+    currentSurcharges = surcharges
     rateSnapshot = RateSnapshot(settings: settings, cityId: cityId, cityName: cityName)
-    fareCalculator = FareCalculator(settings: settings)
+    fareCalculator = FareCalculator(
+      settings: settings,
+      perMinuteWhenSlow: perMinuteWhenSlow,
+      slowSpeedThresholdKph: slowSpeedThresholdKph
+    )
 
     metrics = TripMetrics()
     points = []
@@ -175,6 +188,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     Task { await tripStore.resolveStartLocation(for: trip) }
     fareCalculator = nil
     currentSettings = nil
+    currentSurcharges = nil
 
     Log.trip.info("Trip completed: fare=₹\(trip.fare, format: .fixed(precision: 2)), distance=\(trip.distanceMeters / 1000, format: .fixed(precision: 2))km, duration=\(trip.duration, format: .fixed(precision: 0))s")
   }
@@ -193,6 +207,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     lastLocation = nil
     fareCalculator = nil
     currentSettings = nil
+    currentSurcharges = nil
     rateSnapshot = nil
     multiplier = 1
     locationError = nil
@@ -242,12 +257,16 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   private func recalcFare() {
     guard let settings = currentSettings else { return }
     let calculator = fareCalculator ?? FareCalculator(settings: settings)
-    fare = calculator.calculateFare(
+    let breakdown = calculator.calculateFare(
       distanceKm: metrics.distanceKm,
       elapsedTime: metrics.elapsedSeconds,
       waitingTime: metrics.waitingSeconds,
+      currentSpeedKph: currentSpeedKph,
+      surcharges: currentSurcharges,
+      tripDate: Date(),
       isNight: conditions.isNight
     )
+    fare = breakdown.total
   }
 
   func calculateWaitingCharge(

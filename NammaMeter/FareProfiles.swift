@@ -148,19 +148,22 @@ struct FareProfileSettings: Codable, Sendable {
   var selectedCityId: String?
   var profiles: [CityFareProfile]
   var catalogVersionApplied: Int
+  var whatIfFavorites: [WhatIfFavorite]
 
   enum CodingKeys: String, CodingKey {
     case schemaVersion
     case selectedCityId
     case profiles
     case catalogVersionApplied
+    case whatIfFavorites
   }
 
-  init(schemaVersion: Int, selectedCityId: String?, profiles: [CityFareProfile], catalogVersionApplied: Int) {
+  init(schemaVersion: Int, selectedCityId: String?, profiles: [CityFareProfile], catalogVersionApplied: Int, whatIfFavorites: [WhatIfFavorite] = []) {
     self.schemaVersion = schemaVersion
     self.selectedCityId = selectedCityId
     self.profiles = profiles
     self.catalogVersionApplied = catalogVersionApplied
+    self.whatIfFavorites = whatIfFavorites
   }
 
   init(from decoder: Decoder) throws {
@@ -169,6 +172,7 @@ struct FareProfileSettings: Codable, Sendable {
     selectedCityId = try container.decodeIfPresent(String.self, forKey: .selectedCityId)
     profiles = try container.decodeIfPresent([CityFareProfile].self, forKey: .profiles) ?? []
     catalogVersionApplied = try container.decodeIfPresent(Int.self, forKey: .catalogVersionApplied) ?? 0
+    whatIfFavorites = try container.decodeIfPresent([WhatIfFavorite].self, forKey: .whatIfFavorites) ?? []
   }
 
   func encode(to encoder: Encoder) throws {
@@ -177,7 +181,15 @@ struct FareProfileSettings: Codable, Sendable {
     try container.encode(selectedCityId, forKey: .selectedCityId)
     try container.encode(profiles, forKey: .profiles)
     try container.encode(catalogVersionApplied, forKey: .catalogVersionApplied)
+    try container.encode(whatIfFavorites, forKey: .whatIfFavorites)
   }
+}
+
+struct WhatIfFavorite: Codable, Identifiable, Equatable, Sendable {
+  var cityId: String
+  var vehicleType: String
+
+  var id: String { "\(cityId):\(vehicleType)" }
 }
 
 struct FareCatalogEntry {

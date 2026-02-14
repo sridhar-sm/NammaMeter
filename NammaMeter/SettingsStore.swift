@@ -172,6 +172,36 @@ final class SettingsStore {
     FareCatalog.entries.contains { $0.profile.cityId == cityId }
   }
 
+  // MARK: - WhatIf Favorites
+
+  var whatIfFavorites: [WhatIfFavorite] {
+    state.whatIfFavorites
+  }
+
+  func addWhatIfFavorite(_ favorite: WhatIfFavorite) {
+    guard state.whatIfFavorites.count < 3 else { return }
+    guard !state.whatIfFavorites.contains(where: { $0.id == favorite.id }) else { return }
+    state.whatIfFavorites.append(favorite)
+    scheduleSave()
+  }
+
+  func removeWhatIfFavorite(_ favorite: WhatIfFavorite) {
+    state.whatIfFavorites.removeAll { $0.id == favorite.id }
+    scheduleSave()
+  }
+
+  func whatIfProfile(for favorite: WhatIfFavorite) -> CityFareProfile? {
+    let candidates = state.profiles.filter {
+      $0.cityId == favorite.cityId && $0.vehicleType == favorite.vehicleType
+    }
+    let now = Date()
+    let effective = candidates.filter { $0.effectiveFrom <= now }
+    if let active = effective.max(by: { $0.effectiveFrom < $1.effectiveFrom }) {
+      return active
+    }
+    return candidates.min(by: { $0.effectiveFrom < $1.effectiveFrom })
+  }
+
   var activeCityInfo: (cityId: String, cityName: String) {
     let cityId = effectiveCityId
     let profile = activeProfile(for: cityId, on: Date()) ?? FareCatalog.defaultProfile
