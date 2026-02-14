@@ -570,6 +570,14 @@ final class SettingsStore {
     return candidates.min(by: { $0.effectiveFrom < $1.effectiveFrom })
   }
 
+  var activeProfileForCurrentSelection: CityFareProfile? {
+    let cityId = effectiveCityId
+    if let vt = state.selectedVehicleType {
+      return activeProfileForVehicleType(cityId: cityId, vehicleType: vt, on: Date())
+    }
+    return activeProfile(for: cityId, on: Date())
+  }
+
   private var effectiveCityId: String {
     state.selectedCityId ?? FareCatalog.defaultCityId
   }

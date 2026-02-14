@@ -11,11 +11,27 @@ struct MeterPagerView: View {
         .tag(0)
       tripDetailsPage
         .tag(1)
+      ForEach(Array(meterStore.whatIfResults.enumerated()), id: \.element.favorite.id) { index, result in
+        meterPageContainer {
+          WhatIfComparisonPage(
+            result: result,
+            primaryFare: meterStore.fare,
+            primaryCurrencyCode: meterStore.activeCurrencyCode
+          )
+        }
+        .tag(2 + index)
+      }
     }
     .tabViewStyle(.page(indexDisplayMode: .always))
     .indexViewStyle(.page(backgroundDisplayMode: .always))
     .frame(height: max(height, 0))
     .background(PageSwipeDisabler().allowsHitTesting(false))
+    .onChange(of: meterStore.whatIfResults.count) { _, newCount in
+      let maxPage = 1 + newCount
+      if pagerSelection > maxPage {
+        pagerSelection = 1
+      }
+    }
   }
 
   private var mapPage: some View {
@@ -42,7 +58,7 @@ struct MeterPagerView: View {
 
         VStack(spacing: 12) {
           FareInfoTile(
-            valueText: meterStore.fare.formatted(.currency(code: "INR").precision(.fractionLength(0))),
+            valueText: meterStore.fare.formatted(.currency(code: meterStore.activeCurrencyCode).precision(.fractionLength(meterStore.activeCurrencyCode == "INR" ? 0 : 2))),
             labelText: "Fare · ಭಾಡೆ",
             size: CGSize(width: availableWidth, height: 56),
             showsChevron: false,
