@@ -269,20 +269,21 @@ final class Phase0ModelTests: XCTestCase {
 
   func testCatalogEntriesHaveCurrencyCode() {
     for entry in FareCatalog.entries {
-      XCTAssertEqual(entry.profile.cityKey.currencyCode, "INR",
-                     "\(entry.profile.name) should have INR currency")
+      XCTAssertFalse(entry.profile.cityKey.currencyCode.isEmpty,
+                     "\(entry.profile.name) should have a currency code")
     }
   }
 
   func testCatalogEntriesHaveVehicleType() {
     for entry in FareCatalog.entries {
-      XCTAssertEqual(entry.profile.vehicleType, VehicleTypeCatalog.autoRickshaw,
-                     "\(entry.profile.name) should have auto-rickshaw vehicle type")
+      XCTAssertFalse(entry.profile.vehicleType.isEmpty,
+                     "\(entry.profile.name) should have a vehicle type")
     }
   }
 
-  func testCatalogEntriesHaveSurcharges() {
-    for entry in FareCatalog.entries {
+  func testOriginalKarnatakaEntriesHaveSurcharges() {
+    let karnataka = FareCatalog.entries.filter { $0.introducedInVersion == 2 }
+    for entry in karnataka {
       XCTAssertNotNil(entry.profile.surcharges,
                       "\(entry.profile.name) should have surcharges array")
       let nightSurcharges = entry.profile.surcharges?.filter { $0.name == "Night" } ?? []

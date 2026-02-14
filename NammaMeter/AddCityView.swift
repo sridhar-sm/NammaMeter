@@ -34,13 +34,39 @@ struct AddCityView: View {
             FieldErrorText(message: issue.message, severity: issue.severity)
           }
         }
+
+        Section(header: SectionHeader(title: "Location", subtitle: "ಸ್ಥಳ")) {
+          TextField("Country Code (e.g. IN, US)", text: $formState.input.countryCode)
+            .font(FontPresets.Display.label)
+            .textInputAutocapitalization(.characters)
+
+          if let issue = formState.issue(for: CityFormField.countryCode.rawValue),
+             !formState.input.countryCode.isEmpty {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+
+          TextField("Currency Code (e.g. INR, USD)", text: $formState.input.currencyCode)
+            .font(FontPresets.Display.label)
+            .textInputAutocapitalization(.characters)
+
+          if let issue = formState.issue(for: CityFormField.currencyCode.rawValue),
+             !formState.input.currencyCode.isEmpty {
+            FieldErrorText(message: issue.message, severity: issue.severity)
+          }
+        }
       }
       .scrollContentBackground(.hidden)
     }
     .navigationTitle("Add City")
     .navigationBarTitleDisplayMode(.inline)
     .navigationDestination(isPresented: $navigateToAddFare) {
-      AddFareView(cityId: generatedCityId, cityName: trimmedName, isNewCity: true)
+      AddFareView(
+        cityId: generatedCityId,
+        cityName: trimmedName,
+        countryCode: formState.input.countryCode.uppercased(),
+        currencyCode: formState.input.currencyCode.uppercased(),
+        isNewCity: true
+      )
     }
     .toolbar {
       ToolbarItem(placement: .cancellationAction) {

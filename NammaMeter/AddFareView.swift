@@ -7,8 +7,11 @@ struct AddFareView: View {
 
   let cityId: String
   let cityName: String
+  let countryCode: String
+  let currencyCode: String
   var isNewCity: Bool = false
 
+  @State private var selectedVehicleType: String
   @State private var formState = FormState(
     input: FareProfileFormData(
       effectiveFrom: Date(),
@@ -26,12 +29,31 @@ struct AddFareView: View {
     validator: FareProfileFormValidator()
   )
 
+  init(cityId: String, cityName: String, countryCode: String = "IN", currencyCode: String = "INR",
+       vehicleType: String = VehicleTypeCatalog.autoRickshaw, isNewCity: Bool = false) {
+    self.cityId = cityId
+    self.cityName = cityName
+    self.countryCode = countryCode
+    self.currencyCode = currencyCode
+    self.isNewCity = isNewCity
+    _selectedVehicleType = State(initialValue: vehicleType)
+  }
+
   var body: some View {
     @Bindable var formState = formState
 
     ZStack {
       NammaBackground()
       Form {
+        Section(header: SectionHeader(title: "Vehicle Type", subtitle: "ವಾಹನ ಪ್ರಕಾರ")) {
+          Picker("Vehicle Type", selection: $selectedVehicleType) {
+            ForEach(VehicleTypeCatalog.allTypes, id: \.self) { vt in
+              Text(VehicleTypeCatalog.displayName(for: vt)).tag(vt)
+            }
+          }
+          .pickerStyle(.navigationLink)
+        }
+
         Section(header: SectionHeader(title: "Effective Date", subtitle: "ಜಾರಿ ದಿನಾಂಕ")) {
           DatePicker(
             "Effective From",
@@ -167,8 +189,8 @@ struct AddFareView: View {
       id: UUID().uuidString,
       cityId: cityId,
       name: cityName,
-      vehicleType: VehicleTypeCatalog.autoRickshaw,
-      cityKey: CityKey(city: cityName, region: nil, countryCode: "IN", currencyCode: "INR"),
+      vehicleType: selectedVehicleType,
+      cityKey: CityKey(city: cityName, region: nil, countryCode: countryCode, currencyCode: currencyCode),
       rates: FareRates(
         baseFare: input.baseFare,
         perKmRate: input.perKmRate,

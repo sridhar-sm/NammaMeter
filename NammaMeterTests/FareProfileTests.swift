@@ -84,10 +84,14 @@ final class FareProfileTests: XCTestCase {
 
   func testSettingsStoreAppendsCatalogUpdates() async throws {
     let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+    // Seed with all entries at previous catalog version to simulate upgrade
+    let v2Profiles = FareCatalog.entries
+      .filter { $0.introducedInVersion <= max(FareCatalog.currentVersion - 1, 0) }
+      .map(\.profile)
     let seed = FareProfileSettings(
       schemaVersion: FareProfileSettings.currentSchemaVersion,
       selectedCityId: FareCatalog.defaultCityId,
-      profiles: [FareCatalog.defaultProfile],
+      profiles: v2Profiles,
       catalogVersionApplied: max(FareCatalog.currentVersion - 1, 0)
     )
     try TestHelpers.write(settings: seed, to: url)
@@ -135,7 +139,9 @@ final class FareProfileTests: XCTestCase {
     await TestHelpers.waitForProfiles(store)
 
     let cities = store.availableCities
-    XCTAssertEqual(cities.count, FareCatalog.entries.count)
+    // availableCities returns one profile per unique cityId (15 cities, not 22 entries)
+    let uniqueCityIds = Set(FareCatalog.entries.map(\.profile.cityId))
+    XCTAssertEqual(cities.count, uniqueCityIds.count)
     XCTAssertTrue(cities.allSatisfy { city in
       cities.filter { $0.cityId == city.cityId }.count == 1
     })
