@@ -87,12 +87,4 @@ struct WhatIfComparisonPage: View {
     exchangeRateProvider.convert(amount, from: result.currencyCode, to: primaryCurrencyCode) ?? amount
   }
 
-  private func formatCurrency(_ amount: Double, code: String) -> String {
-    switch code {
-    case "INR":
-      return amount.formatted(.currency(code: code).precision(.fractionLength(0)))
-    default:
-      return amount.formatted(.currency(code: code).precision(.fractionLength(2)))
-    }
-  }
 }
