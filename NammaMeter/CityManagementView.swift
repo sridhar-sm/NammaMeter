@@ -16,7 +16,11 @@ struct CityManagementView: View {
       List {
         ForEach(settingsStore.availableCityGroups) { group in
           NavigationLink(destination: CityDetailView(cityId: group.cityId)) {
-            CityRow(group: group, isSelected: settingsStore.selectedCityId == group.cityId)
+            CityRow(
+              group: group,
+              isSelected: settingsStore.selectedCityId == group.cityId,
+              hasFavorite: settingsStore.whatIfFavorites.contains { $0.cityId == group.cityId }
+            )
           }
         }
         .onDelete(perform: deleteCities)
@@ -46,8 +50,13 @@ struct CityManagementView: View {
         VStack(spacing: 2) {
           Text("Manage Cities")
             .font(FontPresets.Display.subhead)
-          Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
-            .font(FontPresets.Body.small)
+          if settingsStore.whatIfFavorites.isEmpty {
+            Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
+              .font(FontPresets.Body.small)
+          } else {
+            Text("\(settingsStore.whatIfFavorites.count)/3 WhatIf favorites")
+              .font(FontPresets.Body.small)
+          }
         }
       }
     }
@@ -87,12 +96,20 @@ struct CityManagementView: View {
 struct CityRow: View {
   let group: CityGroup
   let isSelected: Bool
+  var hasFavorite: Bool = false
 
   var body: some View {
     HStack {
       VStack(alignment: .leading, spacing: 2) {
-        Text(group.name)
-          .font(FontPresets.Display.label)
+        HStack(spacing: 4) {
+          Text(group.name)
+            .font(FontPresets.Display.label)
+          if hasFavorite {
+            Image(systemName: "star.fill")
+              .font(.system(size: 10))
+              .foregroundStyle(Theme.mango)
+          }
+        }
         if let region = group.cityKey.region {
           Text(region)
             .font(FontPresets.Body.small)

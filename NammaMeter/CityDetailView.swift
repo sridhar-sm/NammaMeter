@@ -31,8 +31,14 @@ struct CityDetailView: View {
       NammaBackground()
       List {
         ForEach(vehicleTypeSections, id: \.vehicleType) { section in
-          Section(header: Text(VehicleTypeCatalog.displayName(for: section.vehicleType))
-            .font(FontPresets.Body.small)) {
+          Section(header:
+            HStack {
+              Text(VehicleTypeCatalog.displayName(for: section.vehicleType))
+                .font(FontPresets.Body.small)
+              Spacer()
+              favoriteButton(vehicleType: section.vehicleType)
+            }
+          ) {
             ForEach(section.profiles) { profile in
               FareCardRow(profile: profile)
             }
@@ -72,6 +78,28 @@ struct CityDetailView: View {
         }
       }
     }
+  }
+
+  private func favoriteButton(vehicleType: String) -> some View {
+    let favorite = WhatIfFavorite(cityId: cityId, vehicleType: vehicleType)
+    let isFavorited = settingsStore.whatIfFavorites.contains { $0.id == favorite.id }
+    let atCapacity = settingsStore.whatIfFavorites.count >= 3
+
+    return Button {
+      if isFavorited {
+        settingsStore.removeWhatIfFavorite(favorite)
+      } else {
+        settingsStore.addWhatIfFavorite(favorite)
+      }
+    } label: {
+      Image(systemName: isFavorited ? "star.fill" : "star")
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundStyle(isFavorited ? Theme.mango : Theme.ink.opacity(0.3))
+    }
+    .buttonStyle(.plain)
+    .disabled(!isFavorited && atCapacity)
+    .opacity(!isFavorited && atCapacity ? 0.3 : 1)
+    .accessibilityLabel(isFavorited ? "Remove from WhatIf favorites" : "Add to WhatIf favorites")
   }
 
   private func deleteFareCards(offsets: IndexSet, in profiles: [CityFareProfile]) {
