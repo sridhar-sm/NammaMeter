@@ -22,17 +22,20 @@ final class AppContainer {
   let tripStore: TripStore
   let meterStore: MeterStore
   let screenAwakeManager: ScreenAwakeManager
+  let exchangeRateProvider: ExchangeRateProvider
 
   init(
     settingsStore: SettingsStore = SettingsStore(),
     tripStore: TripStore = TripStore(),
     meterStore: MeterStore = MeterStore(),
-    screenAwakeManager: ScreenAwakeManager = ScreenAwakeManager()
+    screenAwakeManager: ScreenAwakeManager = ScreenAwakeManager(),
+    exchangeRateProvider: ExchangeRateProvider = ExchangeRateProvider()
   ) {
     self.settingsStore = settingsStore
     self.tripStore = tripStore
     self.meterStore = meterStore
     self.screenAwakeManager = screenAwakeManager
+    self.exchangeRateProvider = exchangeRateProvider
   }
 }
 
@@ -45,7 +48,8 @@ extension AppContainer {
       settingsStore: SettingsStore(fileURL: previewURL(for: "settings")),
       tripStore: TripStore(fileURL: previewURL(for: "trips")),
       meterStore: MeterStore(locationProvider: NoopLocationProvider()),
-      screenAwakeManager: ScreenAwakeManager()
+      screenAwakeManager: ScreenAwakeManager(),
+      exchangeRateProvider: ExchangeRateProvider(fileURL: previewURL(for: "exchange-rates"))
     )
   }
 
@@ -68,5 +72,6 @@ extension View {
       .environment(container.tripStore)
       .environment(container.meterStore)
       .environment(container.screenAwakeManager)
+      .environment(container.exchangeRateProvider)
   }
 }
