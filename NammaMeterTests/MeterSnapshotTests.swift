@@ -5,6 +5,9 @@ import XCTest
 @MainActor
 final class MeterSnapshotTests: XCTestCase {
   private let snapshotSize = CGSize(width: 390, height: 500)
+  private var isRecordingSnapshots: Bool {
+    ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] == "1"
+  }
 
   override func setUp() {
     super.setUp()
@@ -149,23 +152,64 @@ final class MeterSnapshotTests: XCTestCase {
   func testDigitalForHire() {
     let view = DigitalFullMeterPanel(
       tripState: .forHire,
-      fare: 0
+      fare: 0,
+      fixedNow: Date(timeIntervalSince1970: 1_738_800_000)
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(
+      view,
+      size: snapshotSize,
+      colorScheme: .light,
+      record: isRecordingSnapshots
+    )
   }
 
   func testDigitalInProgress() {
     let view = DigitalFullMeterPanel(
       tripState: .inProgress,
-      fare: 78.50
+      fare: 78.50,
+      waitingDuration: 210,
+      distanceMeters: 3100,
+      elapsed: 840,
+      currentSpeedKph: 24.5,
+      isNight: true,
+      fixedNow: Date(timeIntervalSince1970: 1_738_800_000)
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(
+      view,
+      size: snapshotSize,
+      colorScheme: .light,
+      record: isRecordingSnapshots
+    )
+  }
+
+  func testDigitalWaitingShowsRulesInBottomBar() {
+    let view = DigitalFullMeterPanel(
+      tripState: .inProgress,
+      fare: 78.50,
+      waitingDuration: 210,
+      distanceMeters: 3100,
+      elapsed: 840,
+      currentSpeedKph: 0,
+      isNight: false,
+      isWaiting: true,
+      currentRoadName: "M.G. Road",
+      fixedNow: Date(timeIntervalSince1970: 1_738_800_000)
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(
+      view,
+      size: snapshotSize,
+      colorScheme: .light,
+      record: isRecordingSnapshots
+    )
   }
 
   // MARK: - Bright Digital Meter (Light Mode)

@@ -191,11 +191,12 @@ enum BrightDigitalDimensions {
 
 /// Dimension ratios for the Neo Digital meter
 enum DigitalDimensions {
-  static let widthRatio: CGFloat = 0.78
-  static let bodyAspect: CGFloat = 0.7
+  static var widthRatio: CGFloat { MeterDimensions.widthRatio }
+  static let bodyAspect: CGFloat = GoldenEagleDimensions.bodyAspect
 
   static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    containerWidth * widthRatio * bodyAspect
+    let bodyWidth = containerWidth * widthRatio
+    return bodyWidth * bodyAspect
   }
 }
 

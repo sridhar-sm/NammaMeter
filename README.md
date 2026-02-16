@@ -55,6 +55,7 @@ A professional-grade auto rickshaw meter application for iOS that provides accur
 
 - **[Architecture Review](docs/architectural-review.md)** - System design and architecture
 - **[Migrations](docs/migrations.md)** - Database and schema migrations
+- **[Snapshot Testing](docs/snapshot-testing.md)** - Run and record snapshot baselines
 
 ## 🔐 Privacy & Legal
 
@@ -93,7 +94,8 @@ NammaMeter/
 ├── docs/
 │   ├── app-store/          # App Store submission materials
 │   ├── architectural-review.md
-│   └── migrations.md
+│   ├── migrations.md
+│   └── snapshot-testing.md
 ├── NammaMeter.xcodeproj/   # Xcode project
 └── README.md               # This file
 ```
