@@ -493,7 +493,7 @@ Consider including:
 Make sure these are set up before launch:
 
 - **Support Email:** [support@nammameter.com]
-- **GitHub:** https://github.com/sridharsm/NammaMeter
+- **GitHub:** https://github.com/sridhar-sm/NammaMeter
 - **Website:** [If applicable]
 - **Social Media:** [Twitter, LinkedIn, etc.]
 

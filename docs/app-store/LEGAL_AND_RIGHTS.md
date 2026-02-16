@@ -370,7 +370,7 @@ This app:
 ### 11.1 GitHub Repository
 
 NammaMeter source code is available at:
-**https://github.com/sridharsm/NammaMeter**
+**https://github.com/sridhar-sm/NammaMeter**
 
 ### 11.2 Code Review
 
@@ -392,7 +392,7 @@ The source code is provided for inspection purposes. The application itself rema
 ### 12.1 Informal Resolution
 
 Before formal action, contact via GitHub:
-- Visit: https://github.com/sridharsm/NammaMeter
+- Visit: https://github.com/sridhar-sm/NammaMeter
 - Open an issue or use discussions
 - Provide detailed description of dispute
 - Allow 30 days for response
@@ -422,7 +422,7 @@ If any conflict exists between this document and the Privacy Policy, the Privacy
 
 ### For Legal Matters
 **Developer:** Sridhar SM
-**Repository:** https://github.com/sridharsm/NammaMeter
+**Repository:** https://github.com/sridhar-sm/NammaMeter
 **Issues:** Use GitHub Issues for disputes, bug reports, and inquiries
 
 ### For Privacy Questions
@@ -465,9 +465,9 @@ By using NammaMeter, you acknowledge that:
 
 ### For App Store Metadata:
 
-**Support URL:** https://github.com/sridharsm/NammaMeter
-**Privacy Policy URL:** https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md
-**Terms of Service:** This document (https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/LEGAL_AND_RIGHTS.md)
+**Support URL:** https://github.com/sridhar-sm/NammaMeter
+**Privacy Policy URL:** https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md
+**Terms of Service:** This document (https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/LEGAL_AND_RIGHTS.md)
 **Developer Name:** Sridhar SM
 
 ### Regulatory Compliance:
@@ -479,10 +479,10 @@ By using NammaMeter, you acknowledge that:
 ---
 
 **Document Version:** 1.0
-**Last Updated:** February 8, 2026
+**Last Updated:** February 16, 2026
 **Status:** ✅ Ready for App Store Submission
 
-For the most current version, visit: https://github.com/sridharsm/NammaMeter
+For the most current version, visit: https://github.com/sridhar-sm/NammaMeter
 
 ---
 

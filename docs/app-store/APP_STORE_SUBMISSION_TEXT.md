@@ -104,21 +104,21 @@ auto rickshaw meter, fare calculator, ride tracking, GPS tracking, auto meter, r
 
 ## Support URL (Required)
 ```
-https://github.com/sridharsm/NammaMeter
+https://github.com/sridhar-sm/NammaMeter
 ```
 
 ---
 
 ## Marketing URL (Optional)
 ```
-https://github.com/sridharsm/NammaMeter
+https://github.com/sridhar-sm/NammaMeter
 ```
 
 ---
 
 ## Privacy Policy URL (Recommended)
 ```
-https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md
+https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md
 ```
 
 ---
@@ -281,12 +281,12 @@ fare calculation discrepancies or disputes.
 ## Contact & Support
 
 **Developer:** Sridhar SM
-**GitHub:** https://github.com/sridharsm/NammaMeter
+**GitHub:** https://github.com/sridhar-sm/NammaMeter
 **Support:** [Support email/contact - to be added]
 
 ---
 
-**Last Updated:** February 8, 2026
+**Last Updated:** February 16, 2026
 **App Version:** 1.0
 **Minimum iOS:** 17.6+
 **Languages:** English, Kannada

@@ -255,7 +255,7 @@ Contains:
 
 ## 📞 Contact & Support
 
-**GitHub Repository:** https://github.com/sridharsm/NammaMeter
+**GitHub Repository:** https://github.com/sridhar-sm/NammaMeter
 
 For questions about these materials:
 1. Check INDEX.md for file descriptions
@@ -295,6 +295,6 @@ After submission, monitor:
 
 ---
 
-**Last Updated:** February 10, 2026
+**Last Updated:** February 16, 2026
 **Status:** ✅ Ready for App Store Submission
 **Next Step:** Host Privacy Policy & Terms of Service at HTTPS URLs

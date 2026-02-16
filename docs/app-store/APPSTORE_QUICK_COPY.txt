@@ -73,7 +73,7 @@ taxi, meter, fare, calculator, ride, auto, rickshaw, GPS, location, trip
 SUPPORT URL:
 ================================================================================
 
-https://github.com/sridharsm/NammaMeter
+https://github.com/sridhar-sm/NammaMeter
 
 ================================================================================
 RELEASE NOTES (for v1.0):
