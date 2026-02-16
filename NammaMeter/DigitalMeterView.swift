@@ -21,6 +21,8 @@ private struct NeoLCDTheme {
   let labelText: Color
   let valueText: Color
   let separator: Color
+  let activeRuleHighlight: Color
+  let inactiveRuleText: Color
 
   static func palette(for colorScheme: ColorScheme) -> NeoLCDTheme {
     if colorScheme == .dark {
@@ -36,7 +38,9 @@ private struct NeoLCDTheme {
         nightIconActive: Color(red: 1.0, green: 0.87, blue: 0.45),
         labelText: Color.white.opacity(0.72),
         valueText: Color(red: 0.8, green: 0.95, blue: 1),
-        separator: Color.white.opacity(0.16)
+        separator: Color.white.opacity(0.16),
+        activeRuleHighlight: Color(red: 0.15, green: 0.22, blue: 0.3),
+        inactiveRuleText: Color.white.opacity(0.35)
       )
     }
 
@@ -52,7 +56,9 @@ private struct NeoLCDTheme {
       nightIconActive: Color(red: 0.98, green: 0.76, blue: 0.1),
       labelText: Color.black.opacity(0.72),
       valueText: Color(red: 0.12, green: 0.28, blue: 0.4),
-      separator: Color.black.opacity(0.12)
+      separator: Color.black.opacity(0.12),
+      activeRuleHighlight: Color(red: 0.82, green: 0.88, blue: 0.95),
+      inactiveRuleText: Color.black.opacity(0.35)
     )
   }
 }
@@ -75,6 +81,8 @@ struct DigitalFullMeterPanel: View {
   let currentRoadName: String
   let topInset: CGFloat
   let fixedNow: Date?
+  let surcharges: [FareSurcharge]?
+  let currencyCode: String
 
   @State private var currentPage: NeoLCDPage = .fare
   @State private var liveNow: Date = Date()
@@ -94,7 +102,9 @@ struct DigitalFullMeterPanel: View {
     points: [TripPoint] = [],
     currentRoadName: String = "",
     topInset: CGFloat = 0,
-    fixedNow: Date? = nil
+    fixedNow: Date? = nil,
+    surcharges: [FareSurcharge]? = nil,
+    currencyCode: String = "INR"
   ) {
     self.tripState = tripState
     self.fare = fare
@@ -111,6 +121,8 @@ struct DigitalFullMeterPanel: View {
     self.currentRoadName = currentRoadName
     self.topInset = topInset
     self.fixedNow = fixedNow
+    self.surcharges = surcharges
+    self.currencyCode = currencyCode
   }
 
   private var lockedPage: NeoLCDPage? {
@@ -160,7 +172,9 @@ struct DigitalFullMeterPanel: View {
         compassText: compassText,
         currentRoadName: currentRoadName,
         width: faceWidth,
-        height: faceHeight
+        height: faceHeight,
+        surcharges: surcharges,
+        currencyCode: currencyCode
       )
     }
     .onAppear {
@@ -236,6 +250,8 @@ private struct NeoLCDDisplayWindow: View {
   let currentRoadName: String
   let width: CGFloat
   let height: CGFloat
+  var surcharges: [FareSurcharge]? = nil
+  var currencyCode: String = "INR"
 
   private var theme: NeoLCDTheme {
     .palette(for: colorScheme)
@@ -266,12 +282,34 @@ private struct NeoLCDDisplayWindow: View {
     }
   }
 
-  private var fareCardRules: [String] {
-    NeoLCDFareRuleBuilder.allRules(settings: settings)
+  private var evaluatedRules: [EvaluatedFareRule] {
+    let profile = CityFareProfile(
+      id: "display",
+      cityId: "",
+      name: cityName,
+      vehicleType: "",
+      cityKey: CityKey(city: cityName, region: nil, countryCode: currencyCode == "INR" ? "IN" : "US", currencyCode: currencyCode),
+      rates: FareRates(settings: settings),
+      multipliers: FareMultipliers(settings: settings),
+      nightWindow: NightFareWindow(settings: settings),
+      waitCharges: WaitingChargePolicy(settings: settings),
+      surcharges: surcharges,
+      effectiveFrom: Date()
+    )
+    let context = FareRuleContext(
+      tripState: tripState,
+      distanceKm: distanceKm,
+      elapsedTime: elapsed,
+      waitingTime: waitingDuration,
+      currentSpeedKph: currentSpeedKph,
+      tripDate: Date(),
+      currentFare: fare
+    )
+    return FareRuleEvaluator.evaluate(profile: profile, context: context)
   }
 
   private var fareCardTitle: String {
-    "FARE RULES - ALL"
+    "FARE RULES"
   }
 
   private var topBarStatusText: String {
@@ -349,7 +387,7 @@ private struct NeoLCDDisplayWindow: View {
         theme: theme
       )
     case .fareCard:
-      NeoLCDFareCardPage(title: fareCardTitle, headerText: fareCardHeaderText, rules: fareCardRules, theme: theme)
+      NeoLCDFareCardPage(title: fareCardTitle, headerText: fareCardHeaderText, rules: evaluatedRules, theme: theme)
     }
   }
 }
@@ -454,11 +492,11 @@ private struct NeoLCDTripOverviewPage: View {
 private struct NeoLCDFareCardPage: View {
   let title: String
   let headerText: String
-  let rules: [String]
+  let rules: [EvaluatedFareRule]
   let theme: NeoLCDTheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 6) {
       Text(headerText)
         .font(.system(size: 16, weight: .bold, design: .default))
         .foregroundStyle(theme.valueText)
@@ -472,18 +510,38 @@ private struct NeoLCDFareCardPage: View {
         .lineLimit(1)
         .minimumScaleFactor(0.85)
 
-      ForEach(rules, id: \.self) { rule in
-        Text("• " + rule)
-          .font(.system(size: 14, weight: .medium, design: .default))
-          .foregroundStyle(theme.valueText)
-          .multilineTextAlignment(.leading)
-          .minimumScaleFactor(0.9)
+      ForEach(rules) { evaluated in
+        HStack(spacing: 6) {
+          Circle()
+            .fill(evaluated.isActive ? Color.green.opacity(0.8) : theme.inactiveRuleText.opacity(0.4))
+            .frame(width: 6, height: 6)
+
+          Text(evaluated.rule.description)
+            .font(.system(size: 13, weight: evaluated.isActive ? .semibold : .regular, design: .default))
+            .foregroundStyle(evaluated.isActive ? theme.valueText : theme.inactiveRuleText)
+            .lineLimit(2)
+            .minimumScaleFactor(0.85)
+
+          Spacer(minLength: 0)
+
+          if evaluated.isActive && evaluated.amount > 0 {
+            Text(evaluated.amount.formatted(.number.precision(.fractionLength(evaluated.amount >= 100 ? 0 : 2))))
+              .font(.system(size: 12, weight: .bold, design: .monospaced))
+              .foregroundStyle(theme.valueText)
+          }
+        }
+        .padding(.vertical, 3)
+        .padding(.horizontal, 6)
+        .background(
+          RoundedRectangle(cornerRadius: 4, style: .continuous)
+            .fill(evaluated.isActive ? theme.activeRuleHighlight : Color.clear)
+        )
       }
 
       Spacer(minLength: 0)
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 10)
+    .padding(.horizontal, 10)
+    .padding(.vertical, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     .background(theme.rowBackground)
   }
@@ -668,68 +726,7 @@ private struct NeoLCDBottomRoadBar: View {
 
 // MARK: - Helpers
 
-enum NeoLCDFareRuleBuilder {
-  static func allRules(settings: MeterSettings) -> [String] {
-    let baseFare = settings.baseFare.formatted(.number.precision(.fractionLength(0)))
-    let included = settings.includedKm.formatted(.number.precision(.fractionLength(1)))
-    let perKm = settings.perKmRate.formatted(.number.precision(.fractionLength(0)))
-    let minFare = settings.minFare.formatted(.number.precision(.fractionLength(0)))
-    let freeWait = settings.freeWaitMinutes.formatted(.number.precision(.fractionLength(0)))
-    let interval = settings.waitIntervalMinutes.formatted(.number.precision(.fractionLength(0)))
-    let waitCharge = settings.waitIntervalCharge.formatted(.number.precision(.fractionLength(0)))
-    let nightPercent = max(Int((settings.nightMultiplier - 1) * 100), 0)
-    let start = String(format: "%02d:00", settings.nightStartHour)
-    let end = String(format: "%02d:00", settings.nightEndHour)
-
-    return [
-      "Base fare Rs \(baseFare) for first \(included) km",
-      "Distance charge Rs \(perKm) per km after \(included) km",
-      "Minimum fare Rs \(minFare)",
-      "Waiting: first \(freeWait) min free, then Rs \(waitCharge) every \(interval) min",
-      "Night surcharge +\(nightPercent)% (\(start)-\(end))"
-    ]
-  }
-
-  static func activeRules(
-    settings: MeterSettings,
-    tripState: TripMeterState,
-    fare: Double,
-    distanceKm: Double,
-    isNight: Bool
-  ) -> [String] {
-    var rules: [String] = []
-
-    if tripState == .forHire || distanceKm <= settings.includedKm {
-      let baseFare = settings.baseFare.formatted(.number.precision(.fractionLength(0)))
-      let included = settings.includedKm.formatted(.number.precision(.fractionLength(1)))
-      rules.append("Base fare Rs \(baseFare) up to \(included) km")
-    }
-
-    if distanceKm > settings.includedKm {
-      let perKm = settings.perKmRate.formatted(.number.precision(.fractionLength(0)))
-      let threshold = settings.includedKm.formatted(.number.precision(.fractionLength(1)))
-      rules.append("Distance charge Rs \(perKm) per km after \(threshold) km")
-    }
-
-    if fare <= settings.minFare {
-      let minFare = settings.minFare.formatted(.number.precision(.fractionLength(0)))
-      rules.append("Minimum fare applies: Rs \(minFare)")
-    }
-
-    if isNight {
-      let nightPercent = max(Int((settings.nightMultiplier - 1) * 100), 0)
-      let start = String(format: "%02d:00", settings.nightStartHour)
-      let end = String(format: "%02d:00", settings.nightEndHour)
-      rules.append("Night surcharge +\(nightPercent)% (\(start)-\(end))")
-    }
-
-    if rules.isEmpty {
-      rules.append("Base fare rules active")
-    }
-
-    return rules
-  }
-}
+// NeoLCDFareRuleBuilder — replaced by FareRuleEvaluator
 
 enum NeoLCDHeaderFormatter {
   static func topBarStatus(statusText: String, cityVehicleLabel: String) -> String {

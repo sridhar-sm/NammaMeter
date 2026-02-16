@@ -28,7 +28,7 @@ NammaMeter is a SwiftUI fare meter app built around `@Observable` stores, pure f
 │                  Domain Model + Calculation Layer                    │
 │ Trip, RateSnapshot, CityFareProfile, FareSurcharge, WhatIfFavorite  │
 │ TripStateMachine, TripMetrics, FareCalculator, WhatIfCalculator     │
-│ FareCalculationStrategy, SurchargeCalculator                         │
+│ FareCalculationStrategy, SurchargeCalculator, FareRuleEvaluator       │
 └───────────────────────────────┬──────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼──────────────────────────────────────┐
@@ -59,6 +59,8 @@ NammaMeter/
 ├── Calculation/
 │   ├── FareCalculator.swift
 │   ├── FareCalculationStrategy.swift
+│   ├── FareRule.swift
+│   ├── FareRuleEvaluator.swift
 │   ├── SurchargeCalculator.swift
 │   └── WhatIfCalculator.swift
 ├── Views/
@@ -115,13 +117,14 @@ NammaMeter/
 |---|---|
 | WhatIf | `Phase4WhatIfTests`, `Phase5ComparisonTests`, `Phase6FavoritesUITests`, `WhatIfCalculatorTests`, `WhatIfFavoriteTests` |
 | Exchange Rates | `ExchangeRateTests`, `ExchangeRateProviderTests`, `ECBXMLParserTests` |
-| Fare Engine | `FareCalculatorTests`, `FareCalculationStrategyTests`, `SurchargeTests`, `WaitingChargeTests` |
+| Fare Engine | `FareCalculatorTests`, `FareCalculationStrategyTests`, `FareRuleEvaluatorTests`, `SurchargeTests`, `WaitingChargeTests` |
 | Store/State | `MeterStoreTests`, `SettingsStoreTests`, `TripStoreTests`, `TripStateMachineTests`, `TripMetricsTests` |
 | UI/Visual | `MeterSnapshotTests` + UITest suites (`Meter`, `History`, `Settings`, `Navigation`) |
 
 ### Overall Assessment
 
 - WhatIf and currency additions are covered by dedicated unit tests.
+- Fare rules engine (`FareRuleEvaluatorTests`) covers rule generation, evaluation, and amount accuracy.
 - Snapshot testing coverage remains strong across multiple devices/styles.
 - UI test scaffolding now exists (previously listed as a gap).
 
