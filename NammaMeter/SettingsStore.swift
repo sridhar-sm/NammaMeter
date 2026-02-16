@@ -45,7 +45,9 @@ final class SettingsStore {
   }
 
   var selectedCityId: String? {
-    state.selectedCityId
+    didSet {
+      state.selectedCityId = selectedCityId
+    }
   }
 
   var selectedVehicleType: String? {
@@ -111,6 +113,7 @@ final class SettingsStore {
       profiles: [],
       catalogVersionApplied: 0
     )
+    self.selectedCityId = self.state.selectedCityId
 
     // Load theme preference from UserDefaults during initialization
     // Falls back to "system" if no preference is stored
@@ -126,7 +129,7 @@ final class SettingsStore {
   }
 
   func resetToDefaults() {
-    state.selectedCityId = FareCatalog.defaultCityId
+    selectedCityId = FareCatalog.defaultCityId
     if state.profiles.isEmpty {
       state.profiles = FareCatalog.entries.map(\.profile)
       state.catalogVersionApplied = FareCatalog.currentVersion
@@ -139,7 +142,7 @@ final class SettingsStore {
 
   func selectCity(_ cityId: String) {
     guard state.profiles.contains(where: { $0.cityId == cityId }) else { return }
-    state.selectedCityId = cityId
+    selectedCityId = cityId
     state.selectedVehicleType = nil
     syncSettingsFromActiveProfile()
     scheduleSave()
@@ -154,7 +157,7 @@ final class SettingsStore {
 
   func addCity(_ profile: CityFareProfile) {
     state.profiles.append(profile)
-    state.selectedCityId = profile.cityId
+    selectedCityId = profile.cityId
     syncSettingsFromActiveProfile()
     scheduleSave()
   }
@@ -167,7 +170,7 @@ final class SettingsStore {
   func deleteFareProfile(_ profileId: String) {
     state.profiles.removeAll { $0.id == profileId }
 
-    if let selectedId = state.selectedCityId,
+    if let selectedId = selectedCityId,
        !state.profiles.contains(where: { $0.cityId == selectedId }) {
       fallbackToDefaultCity()
     }
@@ -177,7 +180,7 @@ final class SettingsStore {
   func deleteCity(_ cityId: String) {
     state.profiles.removeAll { $0.cityId == cityId }
 
-    if state.selectedCityId == cityId {
+    if selectedCityId == cityId {
       fallbackToDefaultCity()
     }
     scheduleSave()
@@ -185,12 +188,12 @@ final class SettingsStore {
 
   private func fallbackToDefaultCity() {
     if state.profiles.contains(where: { $0.cityId == FareCatalog.defaultCityId }) {
-      state.selectedCityId = FareCatalog.defaultCityId
+      selectedCityId = FareCatalog.defaultCityId
     } else if let first = state.profiles.first {
-      state.selectedCityId = first.cityId
+      selectedCityId = first.cityId
     } else {
       state.profiles = [FareCatalog.defaultProfile]
-      state.selectedCityId = FareCatalog.defaultCityId
+      selectedCityId = FareCatalog.defaultCityId
     }
     syncSettingsFromActiveProfile()
   }
@@ -290,6 +293,8 @@ final class SettingsStore {
       Log.persistence.info("No existing fare profiles, using catalog defaults")
       didMutate = true
     }
+
+    selectedCityId = state.selectedCityId
 
     // Step 2: Bump schema version if needed
     // Future: Add version-specific migrations here (e.g., if schemaVersion == 1 { migrateV1toV2() })
@@ -419,21 +424,21 @@ final class SettingsStore {
   /// - Returns: `true` if selection was normalized, `false` if selection is already valid
   private func normalizeSelection() -> Bool {
     var didMutate = false
-    let selectedId = state.selectedCityId
+    let selectedId = selectedCityId
     let hasSelected = selectedId != nil && state.profiles.contains { $0.cityId == selectedId }
     if !hasSelected {
       // Ensure default city profile exists before selecting it
       if !state.profiles.contains(where: { $0.cityId == FareCatalog.defaultCityId }) {
         state.profiles.append(FareCatalog.defaultProfile)
       }
-      state.selectedCityId = FareCatalog.defaultCityId
+      selectedCityId = FareCatalog.defaultCityId
       state.selectedVehicleType = nil
       didMutate = true
     }
 
     // Validate selectedVehicleType exists for selected city
     if let vt = state.selectedVehicleType,
-       let cityId = state.selectedCityId,
+       let cityId = selectedCityId,
        !state.profiles.contains(where: { $0.cityId == cityId && $0.vehicleType == vt }) {
       state.selectedVehicleType = nil
       didMutate = true
@@ -514,7 +519,7 @@ final class SettingsStore {
     )
 
     state.profiles.append(newProfile)
-    state.selectedCityId = cityId
+    selectedCityId = cityId
     scheduleSave()
   }
 
@@ -583,7 +588,7 @@ final class SettingsStore {
   }
 
   private var effectiveCityId: String {
-    state.selectedCityId ?? FareCatalog.defaultCityId
+    selectedCityId ?? FareCatalog.defaultCityId
   }
 
   private func activeProfile(for cityId: String, on date: Date) -> CityFareProfile? {
