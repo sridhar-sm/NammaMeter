@@ -129,7 +129,10 @@ struct DigitalFullMeterPanel: View {
     if tripState == .forHire {
       return .fareCard
     }
-    if tripState == .complete || isWaiting {
+    if tripState == .complete {
+      return .fareCard
+    }
+    if isWaiting {
       return .fare
     }
     return nil
@@ -309,7 +312,7 @@ private struct NeoLCDDisplayWindow: View {
   }
 
   private var fareCardTitle: String {
-    "FARE RULES"
+    tripState == .complete ? "FARE BREAKDOWN" : "FARE RULES"
   }
 
   private var topBarStatusText: String {
@@ -387,7 +390,7 @@ private struct NeoLCDDisplayWindow: View {
         theme: theme
       )
     case .fareCard:
-      NeoLCDFareCardPage(title: fareCardTitle, headerText: fareCardHeaderText, rules: evaluatedRules, theme: theme)
+      NeoLCDFareCardPage(title: fareCardTitle, headerText: fareCardHeaderText, rules: evaluatedRules, theme: theme, tripState: tripState, totalFare: fare)
     }
   }
 }
@@ -494,6 +497,10 @@ private struct NeoLCDFareCardPage: View {
   let headerText: String
   let rules: [EvaluatedFareRule]
   let theme: NeoLCDTheme
+  var tripState: TripMeterState = .forHire
+  var totalFare: Double = 0
+
+  private var isBreakdown: Bool { tripState == .complete }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
@@ -516,7 +523,7 @@ private struct NeoLCDFareCardPage: View {
             .fill(evaluated.isActive ? Color.green.opacity(0.8) : theme.inactiveRuleText.opacity(0.4))
             .frame(width: 6, height: 6)
 
-          Text(evaluated.rule.description)
+          Text(isBreakdown ? evaluated.rule.label : evaluated.rule.description)
             .font(.system(size: 13, weight: evaluated.isActive ? .semibold : .regular, design: .default))
             .foregroundStyle(evaluated.isActive ? theme.valueText : theme.inactiveRuleText)
             .lineLimit(2)
@@ -535,6 +542,29 @@ private struct NeoLCDFareCardPage: View {
         .background(
           RoundedRectangle(cornerRadius: 4, style: .continuous)
             .fill(evaluated.isActive ? theme.activeRuleHighlight : Color.clear)
+        )
+      }
+
+      if isBreakdown {
+        Rectangle()
+          .fill(theme.separator)
+          .frame(height: 1)
+          .padding(.horizontal, 6)
+
+        HStack(spacing: 6) {
+          Text("Total")
+            .font(.system(size: 14, weight: .bold, design: .default))
+            .foregroundStyle(theme.valueText)
+          Spacer(minLength: 0)
+          Text(totalFare.formatted(.number.precision(.fractionLength(totalFare >= 100 ? 0 : 2))))
+            .font(.system(size: 14, weight: .bold, design: .monospaced))
+            .foregroundStyle(theme.valueText)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .background(
+          RoundedRectangle(cornerRadius: 4, style: .continuous)
+            .fill(theme.activeRuleHighlight)
         )
       }
 

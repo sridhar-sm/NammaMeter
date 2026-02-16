@@ -83,6 +83,100 @@ final class NeoLCDLayoutLogicTests: XCTestCase {
     XCTAssertEqual(text, "WAITING")
   }
 
+  func testFareRuleEvaluatorTimeChargeActiveWhenComplete() {
+    let snapshot = RateSnapshot(
+      settings: MeterSettings(
+        baseFare: 30, perKmRate: 10, perMinuteRate: 2,
+        includedKm: 2.0, minFare: 30,
+        nightMultiplier: 1.0, nightStartHour: 22, nightEndHour: 5,
+        freeWaitMinutes: 5, waitIntervalMinutes: 15, waitIntervalCharge: 5,
+        keepScreenAwakeDuringTrip: false
+      )
+    )
+
+    var components = DateComponents()
+    components.year = 2026; components.month = 2; components.day = 16; components.hour = 14
+    let dayDate = Calendar.current.date(from: components)!
+
+    let context = FareRuleContext(
+      tripState: .complete,
+      distanceKm: 5.0,
+      elapsedTime: 900,
+      waitingTime: 120,
+      currentSpeedKph: 0,
+      tripDate: dayDate,
+      currentFare: 78
+    )
+    let results = FareRuleEvaluator.evaluate(snapshot: snapshot, context: context)
+    let timeRule = results.first(where: { $0.rule.kind == .timeCharge })
+    XCTAssertNotNil(timeRule, "Profile with perMinuteRate > 0 should produce a time charge rule")
+    if let timeRule {
+      XCTAssertTrue(timeRule.isActive, "Time charge should be active when trip is complete")
+      XCTAssertGreaterThan(timeRule.amount, 0)
+    }
+  }
+
+  func testFareRuleEvaluatorTimeChargeInactiveWhenForHire() {
+    let snapshot = RateSnapshot(
+      settings: MeterSettings(
+        baseFare: 30, perKmRate: 10, perMinuteRate: 2,
+        includedKm: 2.0, minFare: 30,
+        nightMultiplier: 1.0, nightStartHour: 22, nightEndHour: 5,
+        freeWaitMinutes: 5, waitIntervalMinutes: 15, waitIntervalCharge: 5,
+        keepScreenAwakeDuringTrip: false
+      )
+    )
+
+    var components = DateComponents()
+    components.year = 2026; components.month = 2; components.day = 16; components.hour = 14
+    let dayDate = Calendar.current.date(from: components)!
+
+    let context = FareRuleContext(
+      tripState: .forHire,
+      distanceKm: 0,
+      elapsedTime: 0,
+      waitingTime: 0,
+      currentSpeedKph: nil,
+      tripDate: dayDate,
+      currentFare: 0
+    )
+    let results = FareRuleEvaluator.evaluate(snapshot: snapshot, context: context)
+    let timeRule = results.first(where: { $0.rule.kind == .timeCharge })
+    XCTAssertNotNil(timeRule)
+    if let timeRule {
+      XCTAssertFalse(timeRule.isActive, "Time charge should be inactive when for hire")
+    }
+  }
+
+  func testFareBreakdownShowsActiveRulesWhenComplete() {
+    let profile = FareCatalog.entries.first(where: { $0.profile.cityId == "bengaluru" && $0.profile.vehicleType == VehicleTypeCatalog.autoRickshaw })!.profile
+
+    var components = DateComponents()
+    components.year = 2026; components.month = 2; components.day = 16; components.hour = 14
+    let dayDate = Calendar.current.date(from: components)!
+
+    let context = FareRuleContext(
+      tripState: .complete,
+      distanceKm: 5.0,
+      elapsedTime: 900,
+      waitingTime: 600,
+      currentSpeedKph: 0,
+      tripDate: dayDate,
+      currentFare: 90
+    )
+    let results = FareRuleEvaluator.evaluate(profile: profile, context: context)
+
+    let baseFare = results.first(where: { $0.rule.kind == .baseFare })
+    XCTAssertNotNil(baseFare)
+    XCTAssertTrue(baseFare!.isActive, "Base fare should always be active")
+    XCTAssertEqual(baseFare!.amount, 36, accuracy: 0.01)
+
+    let distanceCharge = results.first(where: { $0.rule.kind == .distanceCharge })
+    XCTAssertNotNil(distanceCharge)
+    XCTAssertTrue(distanceCharge!.isActive, "Distance charge should be active for 5km trip (included=2km)")
+    XCTAssertEqual(distanceCharge!.amount, 54, accuracy: 0.01) // (5-2)*18
+  }
+
   func testFareCardHeaderPrefersCityVehicleLabel() {
     let header = NeoLCDHeaderFormatter.fareCardHeader(
       cityName: "Bengaluru",

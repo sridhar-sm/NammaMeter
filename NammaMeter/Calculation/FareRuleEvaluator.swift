@@ -243,7 +243,7 @@ enum FareRuleEvaluator {
     case .timeCharge:
       let minutes = context.elapsedTime / 60
       let amount = minutes * rates.perMinuteRate
-      let isActive = context.tripState == .inProgress && amount > 0
+      let isActive = context.tripState != .forHire && amount > 0
       return (isActive, isActive ? amount : 0)
 
     case .waitingCharge:
