@@ -5,6 +5,7 @@ import SwiftUI
 struct DigitalFullMeterPanel: View {
   let tripState: TripMeterState
   let fare: Double
+  var cityVehicleLabel: String = ""
   @State private var glowPulse = false
 
   private let bezel = MeterColorSchemes.Digital.bezel
@@ -21,6 +22,10 @@ struct DigitalFullMeterPanel: View {
           .frame(height: bodyHeight * 0.32)
 
         DigitalButtonRow(width: bodyWidth)
+
+        if !cityVehicleLabel.isEmpty {
+          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+        }
       }
       .padding(.horizontal, bodyWidth * 0.12)
       .padding(.vertical, bodyHeight * 0.12)

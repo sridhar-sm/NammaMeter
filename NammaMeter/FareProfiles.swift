@@ -146,38 +146,64 @@ struct FareProfileSettings: Codable, Sendable {
 
   var schemaVersion: Int
   var selectedCityId: String?
+  var selectedVehicleType: String?
   var profiles: [CityFareProfile]
   var catalogVersionApplied: Int
+  var whatIfFavorites: [WhatIfFavorite]
 
   enum CodingKeys: String, CodingKey {
     case schemaVersion
     case selectedCityId
+    case selectedVehicleType
     case profiles
     case catalogVersionApplied
+    case whatIfFavorites
   }
 
-  init(schemaVersion: Int, selectedCityId: String?, profiles: [CityFareProfile], catalogVersionApplied: Int) {
+  init(schemaVersion: Int, selectedCityId: String?, profiles: [CityFareProfile], catalogVersionApplied: Int, selectedVehicleType: String? = nil, whatIfFavorites: [WhatIfFavorite] = []) {
     self.schemaVersion = schemaVersion
     self.selectedCityId = selectedCityId
+    self.selectedVehicleType = selectedVehicleType
     self.profiles = profiles
     self.catalogVersionApplied = catalogVersionApplied
+    self.whatIfFavorites = whatIfFavorites
   }
 
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? FareProfileSettings.currentSchemaVersion
     selectedCityId = try container.decodeIfPresent(String.self, forKey: .selectedCityId)
+    selectedVehicleType = try container.decodeIfPresent(String.self, forKey: .selectedVehicleType)
     profiles = try container.decodeIfPresent([CityFareProfile].self, forKey: .profiles) ?? []
     catalogVersionApplied = try container.decodeIfPresent(Int.self, forKey: .catalogVersionApplied) ?? 0
+    whatIfFavorites = try container.decodeIfPresent([WhatIfFavorite].self, forKey: .whatIfFavorites) ?? []
   }
 
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(schemaVersion, forKey: .schemaVersion)
     try container.encode(selectedCityId, forKey: .selectedCityId)
+    try container.encodeIfPresent(selectedVehicleType, forKey: .selectedVehicleType)
     try container.encode(profiles, forKey: .profiles)
     try container.encode(catalogVersionApplied, forKey: .catalogVersionApplied)
+    try container.encode(whatIfFavorites, forKey: .whatIfFavorites)
   }
+}
+
+struct WhatIfFavorite: Codable, Identifiable, Equatable, Sendable {
+  var cityId: String
+  var vehicleType: String
+
+  var id: String { "\(cityId):\(vehicleType)" }
+}
+
+struct CityGroup: Identifiable, Sendable {
+  var cityId: String
+  var name: String
+  var cityKey: CityKey
+  var vehicleTypes: [String]
+
+  var id: String { cityId }
 }
 
 struct FareCatalogEntry {
@@ -186,7 +212,7 @@ struct FareCatalogEntry {
 }
 
 enum FareCatalog {
-  static let currentVersion = 2
+  static let currentVersion = 3
   static let defaultCityId = "bengaluru"
 
   static let entries: [FareCatalogEntry] = [
@@ -354,7 +380,321 @@ enum FareCatalog {
         ],
         effectiveFrom: startOfDay(year: 2022, month: 10, day: 1)
       )
-    )
+    ),
+
+    // MARK: - Version 3: Indian cities (new vehicle types)
+
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "bengaluru-taxi-economy-20240601",
+        cityId: "bengaluru",
+        name: "Bengaluru",
+        vehicleType: VehicleTypeCatalog.taxiEconomy,
+        cityKey: CityKey(city: "Bengaluru", region: "Karnataka", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 100, perKmRate: 24, perMinuteRate: 0, includedKm: 4.0, minFare: 100),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2024, month: 6, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "bengaluru-taxi-midrange-20240601",
+        cityId: "bengaluru",
+        name: "Bengaluru",
+        vehicleType: VehicleTypeCatalog.taxiMidrange,
+        cityKey: CityKey(city: "Bengaluru", region: "Karnataka", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 115, perKmRate: 28, perMinuteRate: 0, includedKm: 4.0, minFare: 115),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2024, month: 6, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "bengaluru-taxi-premium-20240601",
+        cityId: "bengaluru",
+        name: "Bengaluru",
+        vehicleType: VehicleTypeCatalog.taxiPremium,
+        cityKey: CityKey(city: "Bengaluru", region: "Karnataka", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 130, perKmRate: 32, perMinuteRate: 0, includedKm: 4.0, minFare: 130),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2024, month: 6, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "delhi-auto-20230901",
+        cityId: "delhi",
+        name: "Delhi",
+        vehicleType: VehicleTypeCatalog.autoRickshaw,
+        cityKey: CityKey(city: "Delhi", region: "Delhi", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 25, perKmRate: 8, perMinuteRate: 0, includedKm: 2.0, minFare: 25),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 23, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 15, waitIntervalCharge: 7.5),
+        surcharges: [
+          FareSurcharge(id: "delhi-auto-night", name: "Night", type: .percentageOfFare(0.25),
+                        conditions: [.timeOfDay(start: 23, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2023, month: 9, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "delhi-taxi-nonac-20230901",
+        cityId: "delhi",
+        name: "Delhi",
+        vehicleType: VehicleTypeCatalog.taxiNonAC,
+        cityKey: CityKey(city: "Delhi", region: "Delhi", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 25, perKmRate: 14, perMinuteRate: 0, includedKm: 1.0, minFare: 25),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 23, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 15, waitIntervalCharge: 7.5),
+        surcharges: [
+          FareSurcharge(id: "delhi-taxi-nonac-night", name: "Night", type: .percentageOfFare(0.25),
+                        conditions: [.timeOfDay(start: 23, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2023, month: 9, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "delhi-taxi-ac-20230901",
+        cityId: "delhi",
+        name: "Delhi",
+        vehicleType: VehicleTypeCatalog.taxiAC,
+        cityKey: CityKey(city: "Delhi", region: "Delhi", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 25, perKmRate: 16, perMinuteRate: 0, includedKm: 1.0, minFare: 25),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 23, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 15, waitIntervalCharge: 7.5),
+        surcharges: [
+          FareSurcharge(id: "delhi-taxi-ac-night", name: "Night", type: .percentageOfFare(0.25),
+                        conditions: [.timeOfDay(start: 23, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2023, month: 9, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "hyderabad-auto-20221001",
+        cityId: "hyderabad",
+        name: "Hyderabad",
+        vehicleType: VehicleTypeCatalog.autoRickshaw,
+        cityKey: CityKey(city: "Hyderabad", region: "Telangana", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 30, perKmRate: 15, perMinuteRate: 0, includedKm: 1.5, minFare: 30),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 0, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        surcharges: [
+          FareSurcharge(id: "hyderabad-auto-night", name: "Night", type: .percentageOfFare(0.50),
+                        conditions: [.timeOfDay(start: 0, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2022, month: 10, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "hyderabad-citytaxi-20221001",
+        cityId: "hyderabad",
+        name: "Hyderabad",
+        vehicleType: VehicleTypeCatalog.cityTaxi,
+        cityKey: CityKey(city: "Hyderabad", region: "Telangana", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 100, perKmRate: 21, perMinuteRate: 0, includedKm: 4.0, minFare: 100),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 0, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        surcharges: [
+          FareSurcharge(id: "hyderabad-citytaxi-night", name: "Night", type: .percentageOfFare(0.50),
+                        conditions: [.timeOfDay(start: 0, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2022, month: 10, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "chennai-auto-20230601",
+        cityId: "chennai",
+        name: "Chennai",
+        vehicleType: VehicleTypeCatalog.autoRickshaw,
+        cityKey: CityKey(city: "Chennai", region: "Tamil Nadu", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 25, perKmRate: 12, perMinuteRate: 0, includedKm: 1.8, minFare: 25),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 22, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        surcharges: [
+          FareSurcharge(id: "chennai-auto-night", name: "Night", type: .percentageOfFare(0.50),
+                        conditions: [.timeOfDay(start: 22, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2023, month: 6, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "chennai-taxi-20230601",
+        cityId: "chennai",
+        name: "Chennai",
+        vehicleType: VehicleTypeCatalog.taxi,
+        cityKey: CityKey(city: "Chennai", region: "Tamil Nadu", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 100, perKmRate: 24, perMinuteRate: 0, includedKm: 4.0, minFare: 100),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2023, month: 6, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "kolkata-yellowtaxi-20230101",
+        cityId: "kolkata",
+        name: "Kolkata",
+        vehicleType: VehicleTypeCatalog.yellowTaxi,
+        cityKey: CityKey(city: "Kolkata", region: "West Bengal", countryCode: "IN", currencyCode: "INR"),
+        rates: FareRates(baseFare: 30, perKmRate: 15, perMinuteRate: 0, includedKm: 2.0, minFare: 30),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow(startHour: 23, endHour: 5),
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        surcharges: [
+          FareSurcharge(id: "kolkata-yellowtaxi-night", name: "Night", type: .percentageOfFare(0.25),
+                        conditions: [.timeOfDay(start: 23, end: 5)]),
+        ],
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
+
+    // MARK: - Version 3: US cities
+
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "nyc-yellowtaxi-20230101",
+        cityId: "nyc",
+        name: "New York City",
+        vehicleType: VehicleTypeCatalog.yellowTaxi,
+        cityKey: CityKey(city: "New York City", region: "New York", countryCode: "US", currencyCode: "USD"),
+        rates: FareRates(
+          baseFare: 3.00, perKmRate: 2.18, perMinuteRate: 0, includedKm: 0, minFare: 3.00,
+          perMinuteWhenSlow: 0.70, slowSpeedThresholdKph: 19
+        ),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        surcharges: [
+          FareSurcharge(id: "nyc-night", name: "Night", type: .fixedAmount(1.00),
+                        conditions: [.timeOfDay(start: 20, end: 6)]),
+          FareSurcharge(id: "nyc-rush", name: "Rush Hour", type: .fixedAmount(2.50),
+                        conditions: [.weekdays(start: 16, end: 20)]),
+          FareSurcharge(id: "nyc-mta", name: "MTA Tax", type: .fixedAmount(0.50),
+                        conditions: [.always]),
+          FareSurcharge(id: "nyc-improvement", name: "Improvement", type: .fixedAmount(1.00),
+                        conditions: [.always]),
+        ],
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "seattle-taxi-20230101",
+        cityId: "seattle",
+        name: "Seattle",
+        vehicleType: VehicleTypeCatalog.taxi,
+        cityKey: CityKey(city: "Seattle", region: "Washington", countryCode: "US", currencyCode: "USD"),
+        rates: FareRates(baseFare: 2.60, perKmRate: 1.68, perMinuteRate: 0, includedKm: 0.18, minFare: 2.60),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 15, waitIntervalCharge: 7.50),
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "chicago-taxi-20230101",
+        cityId: "chicago",
+        name: "Chicago",
+        vehicleType: VehicleTypeCatalog.taxi,
+        cityKey: CityKey(city: "Chicago", region: "Illinois", countryCode: "US", currencyCode: "USD"),
+        rates: FareRates(
+          baseFare: 3.25, perKmRate: 1.40, perMinuteRate: 0, includedKm: 0, minFare: 3.25,
+          perMinuteWhenSlow: 0.42, slowSpeedThresholdKph: 18
+        ),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "dallas-taxi-20230101",
+        cityId: "dallas",
+        name: "Dallas",
+        vehicleType: VehicleTypeCatalog.taxi,
+        cityKey: CityKey(city: "Dallas", region: "Texas", countryCode: "US", currencyCode: "USD"),
+        rates: FareRates(
+          baseFare: 3.00, perKmRate: 1.74, perMinuteRate: 0, includedKm: 0, minFare: 3.00,
+          perMinuteWhenSlow: 0.40, slowSpeedThresholdKph: 14
+        ),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "philadelphia-taxi-20230101",
+        cityId: "philadelphia",
+        name: "Philadelphia",
+        vehicleType: VehicleTypeCatalog.taxi,
+        cityKey: CityKey(city: "Philadelphia", region: "Pennsylvania", countryCode: "US", currencyCode: "USD"),
+        rates: FareRates(
+          baseFare: 2.70, perKmRate: 1.86, perMinuteRate: 0, includedKm: 0, minFare: 2.70,
+          perMinuteWhenSlow: 0.48, slowSpeedThresholdKph: 15
+        ),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
+    FareCatalogEntry(
+      introducedInVersion: 3,
+      profile: CityFareProfile(
+        id: "la-taxi-20230101",
+        cityId: "la",
+        name: "Los Angeles",
+        vehicleType: VehicleTypeCatalog.taxi,
+        cityKey: CityKey(city: "Los Angeles", region: "California", countryCode: "US", currencyCode: "USD"),
+        rates: FareRates(
+          baseFare: 3.10, perKmRate: 1.85, perMinuteRate: 0, includedKm: 0, minFare: 3.10,
+          perMinuteWhenSlow: 0.54, slowSpeedThresholdKph: 17
+        ),
+        multipliers: FareMultipliers(night: 1.0),
+        nightWindow: NightFareWindow.defaultWindow,
+        waitCharges: WaitingChargePolicy(freeWaitMinutes: 0, waitIntervalMinutes: 0, waitIntervalCharge: 0),
+        effectiveFrom: startOfDay(year: 2023, month: 1, day: 1)
+      )
+    ),
   ]
 
   static var defaultProfile: CityFareProfile {

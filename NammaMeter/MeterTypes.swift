@@ -390,3 +390,18 @@ extension View {
     modifier(HirePulseModifier(tripState: tripState, duration: duration, pulse: pulse))
   }
 }
+
+// MARK: - City / Vehicle Label
+
+struct MeterCityVehicleLabel: View {
+  let text: String
+  let fontSize: CGFloat
+
+  var body: some View {
+    Text(text)
+      .font(.system(size: max(fontSize, 8), weight: .medium, design: .rounded))
+      .foregroundStyle(.white.opacity(0.85))
+      .lineLimit(1)
+      .minimumScaleFactor(0.6)
+  }
+}

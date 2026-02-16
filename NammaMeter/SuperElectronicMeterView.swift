@@ -9,6 +9,7 @@ struct SuperElectronicFullMeterPanel: View {
   let distanceMeters: Double
   let isNight: Bool
   let topInset: CGFloat
+  var cityVehicleLabel: String = ""
 
   private let metalPanel = MeterColorSchemes.SuperElectronic.metalPanel
   private let metalEdge = MeterColorSchemes.SuperElectronic.metalEdge
@@ -37,6 +38,10 @@ struct SuperElectronicFullMeterPanel: View {
           metalPanel: metalPanel,
           metalEdge: metalEdge
         )
+
+        if !cityVehicleLabel.isEmpty {
+          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+        }
       }
       .padding(.vertical, bodyHeight * 0.06)
     }

@@ -11,3 +11,12 @@ func formattedElapsed(_ interval: TimeInterval) -> String {
   }
   return String(format: "%dm %ds", minutes, seconds)
 }
+
+func formatCurrency(_ amount: Double, code: String) -> String {
+  switch code {
+  case "INR":
+    return amount.formatted(.currency(code: code).precision(.fractionLength(0)))
+  default:
+    return amount.formatted(.currency(code: code).precision(.fractionLength(2)))
+  }
+}

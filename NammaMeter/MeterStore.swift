@@ -68,6 +68,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   var distanceMeters: Double { metrics.distanceMeters }
   var elapsed: TimeInterval { metrics.elapsedSeconds }
   var waitingDuration: TimeInterval { metrics.waitingSeconds }
+  var whatIfResults: [WhatIfResult] = []
+  var activeCurrencyCode: String = "INR"
 
   @ObservationIgnored private let locationManager: LocationProviding
   @ObservationIgnored private let permissionCoordinator: LocationPermissionCoordinator
@@ -81,6 +83,8 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var waitingStartedAt: Date?
   @ObservationIgnored private var waitingAccumulated: TimeInterval = 0
   @ObservationIgnored private var fareCalculator: FareCalculator?
+  @ObservationIgnored private var currentSurcharges: [FareSurcharge]?
+  @ObservationIgnored private var whatIfProfiles: [(WhatIfFavorite, CityFareProfile)] = []
 
   override convenience init() {
     if TestEnvironment.isRunningTests {
@@ -110,11 +114,45 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     permissionCoordinator.requestAlwaysAuthorization()
   }
 
-  func startTrip(settings: MeterSettings, cityId: String? = nil, cityName: String? = nil) {
+  func startTrip(
+    settings: MeterSettings,
+    cityId: String? = nil,
+    cityName: String? = nil,
+    surcharges: [FareSurcharge]? = nil,
+    perMinuteWhenSlow: Double? = nil,
+    slowSpeedThresholdKph: Double? = nil,
+    vehicleType: String? = nil,
+    currencyCode: String? = nil,
+    whatIfFavorites: [WhatIfFavorite] = [],
+    whatIfProfileLookup: ((WhatIfFavorite) -> CityFareProfile?)? = nil
+  ) {
     guard tripState == .forHire else { return }
     currentSettings = settings
-    rateSnapshot = RateSnapshot(settings: settings, cityId: cityId, cityName: cityName)
-    fareCalculator = FareCalculator(settings: settings)
+    currentSurcharges = surcharges
+    activeCurrencyCode = currencyCode ?? "INR"
+    rateSnapshot = RateSnapshot(
+      settings: settings,
+      cityId: cityId,
+      cityName: cityName,
+      vehicleType: vehicleType,
+      currencyCode: currencyCode,
+      surcharges: surcharges
+    )
+
+    if let lookup = whatIfProfileLookup {
+      whatIfProfiles = whatIfFavorites.compactMap { fav in
+        guard let profile = lookup(fav) else { return nil }
+        return (fav, profile)
+      }
+    } else {
+      whatIfProfiles = []
+    }
+    whatIfResults = []
+    fareCalculator = FareCalculator(
+      settings: settings,
+      perMinuteWhenSlow: perMinuteWhenSlow,
+      slowSpeedThresholdKph: slowSpeedThresholdKph
+    )
 
     metrics = TripMetrics()
     points = []
@@ -175,6 +213,9 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     Task { await tripStore.resolveStartLocation(for: trip) }
     fareCalculator = nil
     currentSettings = nil
+    currentSurcharges = nil
+    whatIfProfiles = []
+    whatIfResults = []
 
     Log.trip.info("Trip completed: fare=₹\(trip.fare, format: .fixed(precision: 2)), distance=\(trip.distanceMeters / 1000, format: .fixed(precision: 2))km, duration=\(trip.duration, format: .fixed(precision: 0))s")
   }
@@ -193,11 +234,45 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     lastLocation = nil
     fareCalculator = nil
     currentSettings = nil
+    currentSurcharges = nil
     rateSnapshot = nil
     multiplier = 1
     locationError = nil
+    whatIfProfiles = []
+    whatIfResults = []
+    activeCurrencyCode = "INR"
 
     Log.trip.info("Meter reset to for-hire")
+  }
+
+  func switchVehicleType(settingsStore: SettingsStore) {
+    guard isOnTrip else { return }
+    let newSettings = settingsStore.settings
+    let profile = settingsStore.activeProfileForCurrentSelection
+
+    currentSettings = newSettings
+    currentSurcharges = profile?.surcharges
+    fareCalculator = FareCalculator(
+      settings: newSettings,
+      perMinuteWhenSlow: profile?.rates.perMinuteWhenSlow,
+      slowSpeedThresholdKph: profile?.rates.slowSpeedThresholdKph
+    )
+
+    let cityInfo = settingsStore.activeCityInfo
+    activeCurrencyCode = profile?.cityKey.currencyCode ?? "INR"
+    rateSnapshot = RateSnapshot(
+      settings: newSettings,
+      cityId: cityInfo.cityId,
+      cityName: cityInfo.cityName,
+      vehicleType: profile?.vehicleType,
+      currencyCode: profile?.cityKey.currencyCode,
+      surcharges: profile?.surcharges
+    )
+
+    multiplier = conditions.multiplier(using: newSettings)
+    recalcFare()
+
+    Log.trip.info("Vehicle type switched mid-trip: \(settingsStore.selectedVehicleType ?? "default")")
   }
 
   private func startTicking() {
@@ -242,12 +317,36 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   private func recalcFare() {
     guard let settings = currentSettings else { return }
     let calculator = fareCalculator ?? FareCalculator(settings: settings)
-    fare = calculator.calculateFare(
+    let breakdown = calculator.calculateFare(
       distanceKm: metrics.distanceKm,
       elapsedTime: metrics.elapsedSeconds,
       waitingTime: metrics.waitingSeconds,
+      currentSpeedKph: currentSpeedKph,
+      surcharges: currentSurcharges,
+      tripDate: Date(),
       isNight: conditions.isNight
     )
+    fare = breakdown.total
+    recalcWhatIf()
+  }
+
+  private func recalcWhatIf() {
+    guard !whatIfProfiles.isEmpty else {
+      if !whatIfResults.isEmpty { whatIfResults = [] }
+      return
+    }
+    let now = Date()
+    whatIfResults = whatIfProfiles.map { (fav, profile) in
+      WhatIfCalculator.calculate(
+        favorite: fav,
+        profile: profile,
+        distanceKm: metrics.distanceKm,
+        elapsedTime: metrics.elapsedSeconds,
+        waitingTime: metrics.waitingSeconds,
+        tripDate: now,
+        isNight: conditions.isNight
+      )
+    }
   }
 
   func calculateWaitingCharge(

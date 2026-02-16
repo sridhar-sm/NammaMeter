@@ -4,10 +4,11 @@ A professional-grade auto rickshaw meter application for iOS that provides accur
 
 ## 🚕 Features
 
-- **Four Professional Meter Styles**
+- **Five Professional Meter Styles**
   - Super Mechanical (classic mechanical design)
   - Super Electronic (advanced with night mode)
   - Golden Eagle (premium aesthetic)
+  - Neo Digital (minimalist glowing display)
   - Bright Digital (modern LCD display)
 
 - **Real-Time Fare Calculation**
@@ -15,6 +16,19 @@ A professional-grade auto rickshaw meter application for iOS that provides accur
   - Configurable city-specific rates
   - Automatic night mode surcharges
   - Waiting time charge tracking
+  - Multiple vehicle types per city (auto, taxi, cab)
+
+- **WhatIf City Comparison**
+  - Compare fares across cities and vehicle types in real time
+  - Set up to 3 favorite city+vehicle combinations
+  - Live WhatIf pages during active trips
+  - Historical trip comparisons from trip history
+  - Automatic currency conversion via ECB exchange rates
+
+- **Multi-City Fare Catalog**
+  - 22 pre-configured fare profiles across 15 cities
+  - Karnataka, Indian, and US cities included
+  - Easy to add custom city profiles
 
 - **Trip Management**
   - Complete trip history with timestamps

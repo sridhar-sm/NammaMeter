@@ -50,6 +50,31 @@ final class SettingsStore {
     }
   }
 
+  var selectedVehicleType: String? {
+    state.selectedVehicleType
+  }
+
+  var availableCityGroups: [CityGroup] {
+    var groupMap: [String: (name: String, cityKey: CityKey, types: Set<String>)] = [:]
+    for profile in state.profiles {
+      if var existing = groupMap[profile.cityId] {
+        existing.types.insert(profile.vehicleType)
+        groupMap[profile.cityId] = existing
+      } else {
+        groupMap[profile.cityId] = (name: profile.name, cityKey: profile.cityKey, types: [profile.vehicleType])
+      }
+    }
+    return groupMap.map { cityId, value in
+      CityGroup(
+        cityId: cityId,
+        name: value.name,
+        cityKey: value.cityKey,
+        vehicleTypes: value.types.sorted()
+      )
+    }
+    .sorted { $0.name < $1.name }
+  }
+
   var availableCities: [CityFareProfile] {
     var latestByCityId: [String: CityFareProfile] = [:]
     for profile in state.profiles {
@@ -76,6 +101,7 @@ final class SettingsStore {
   // which would create a new profile and trigger another sync, creating an infinite loop.
   @ObservationIgnored private var isSyncingFromProfile = false
 
+  private var _favoritesVersion = 0
   @ObservationIgnored private var state: FareProfileSettings
 
   init(fileURL: URL = SettingsStore.defaultURL) {
@@ -117,9 +143,16 @@ final class SettingsStore {
   func selectCity(_ cityId: String) {
     guard state.profiles.contains(where: { $0.cityId == cityId }) else { return }
     selectedCityId = cityId
+    state.selectedVehicleType = nil
     syncSettingsFromActiveProfile()
     scheduleSave()
     Log.fare.info("Selected city: \(cityId)")
+  }
+
+  func selectVehicleType(_ vehicleType: String) {
+    state.selectedVehicleType = vehicleType
+    syncSettingsFromActiveProfile()
+    scheduleSave()
   }
 
   func addCity(_ profile: CityFareProfile) {
@@ -173,6 +206,39 @@ final class SettingsStore {
 
   func isCatalogCity(_ cityId: String) -> Bool {
     FareCatalog.entries.contains { $0.profile.cityId == cityId }
+  }
+
+  // MARK: - WhatIf Favorites
+
+  var whatIfFavorites: [WhatIfFavorite] {
+    _ = _favoritesVersion
+    return state.whatIfFavorites
+  }
+
+  func addWhatIfFavorite(_ favorite: WhatIfFavorite) {
+    guard state.whatIfFavorites.count < 3 else { return }
+    guard !state.whatIfFavorites.contains(where: { $0.id == favorite.id }) else { return }
+    state.whatIfFavorites.append(favorite)
+    _favoritesVersion += 1
+    scheduleSave()
+  }
+
+  func removeWhatIfFavorite(_ favorite: WhatIfFavorite) {
+    state.whatIfFavorites.removeAll { $0.id == favorite.id }
+    _favoritesVersion += 1
+    scheduleSave()
+  }
+
+  func whatIfProfile(for favorite: WhatIfFavorite) -> CityFareProfile? {
+    let candidates = state.profiles.filter {
+      $0.cityId == favorite.cityId && $0.vehicleType == favorite.vehicleType
+    }
+    let now = Date()
+    let effective = candidates.filter { $0.effectiveFrom <= now }
+    if let active = effective.max(by: { $0.effectiveFrom < $1.effectiveFrom }) {
+      return active
+    }
+    return candidates.min(by: { $0.effectiveFrom < $1.effectiveFrom })
   }
 
   var activeCityInfo: (cityId: String, cityName: String) {
@@ -357,18 +423,28 @@ final class SettingsStore {
   ///
   /// - Returns: `true` if selection was normalized, `false` if selection is already valid
   private func normalizeSelection() -> Bool {
+    var didMutate = false
     let selectedId = selectedCityId
     let hasSelected = selectedId != nil && state.profiles.contains { $0.cityId == selectedId }
-    if hasSelected {
-      return false
+    if !hasSelected {
+      // Ensure default city profile exists before selecting it
+      if !state.profiles.contains(where: { $0.cityId == FareCatalog.defaultCityId }) {
+        state.profiles.append(FareCatalog.defaultProfile)
+      }
+      selectedCityId = FareCatalog.defaultCityId
+      state.selectedVehicleType = nil
+      didMutate = true
     }
 
-    // Ensure default city profile exists before selecting it
-    if !state.profiles.contains(where: { $0.cityId == FareCatalog.defaultCityId }) {
-      state.profiles.append(FareCatalog.defaultProfile)
+    // Validate selectedVehicleType exists for selected city
+    if let vt = state.selectedVehicleType,
+       let cityId = selectedCityId,
+       !state.profiles.contains(where: { $0.cityId == cityId && $0.vehicleType == vt }) {
+      state.selectedVehicleType = nil
+      didMutate = true
     }
-    selectedCityId = FareCatalog.defaultCityId
-    return true
+
+    return didMutate
   }
 
   /// Schedules a debounced commit of user settings changes to a new profile version.
@@ -480,13 +556,35 @@ final class SettingsStore {
   private func syncSettingsFromActiveProfile() {
     commitTask?.cancel()
     let cityId = effectiveCityId
-    let activeProfile = activeProfile(for: cityId, on: Date()) ?? FareCatalog.defaultProfile
-    let newSettings = MeterSettings(profile: activeProfile)
+    let profile: CityFareProfile
+    if let vt = state.selectedVehicleType,
+       let vtProfile = activeProfileForVehicleType(cityId: cityId, vehicleType: vt, on: Date()) {
+      profile = vtProfile
+    } else {
+      profile = activeProfile(for: cityId, on: Date()) ?? FareCatalog.defaultProfile
+    }
+    let newSettings = MeterSettings(profile: profile)
 
     // Set flag to prevent settings.didSet from triggering commitSettingsChange()
     isSyncingFromProfile = true
     settings = newSettings
     isSyncingFromProfile = false
+  }
+
+  private func activeProfileForVehicleType(cityId: String, vehicleType: String, on date: Date) -> CityFareProfile? {
+    let candidates = state.profiles.filter { $0.cityId == cityId && $0.vehicleType == vehicleType }
+    guard !candidates.isEmpty else { return nil }
+    let effective = candidates.filter { $0.effectiveFrom <= date }
+    if let active = effective.max(by: { $0.effectiveFrom < $1.effectiveFrom }) { return active }
+    return candidates.min(by: { $0.effectiveFrom < $1.effectiveFrom })
+  }
+
+  var activeProfileForCurrentSelection: CityFareProfile? {
+    let cityId = effectiveCityId
+    if let vt = state.selectedVehicleType {
+      return activeProfileForVehicleType(cityId: cityId, vehicleType: vt, on: Date())
+    }
+    return activeProfile(for: cityId, on: Date())
   }
 
   private var effectiveCityId: String {

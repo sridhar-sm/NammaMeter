@@ -3,6 +3,7 @@ import SwiftUI
 
 struct TripDetailView: View {
   @Environment(TripStore.self) private var tripStore
+  @Environment(SettingsStore.self) private var settingsStore
   let tripId: UUID
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var replayIndex: Int = 0
@@ -38,6 +39,9 @@ struct TripDetailView: View {
           routeMap(for: trip, coordinates: coordinates)
           replayControls(for: trip, coordinates: coordinates)
           rateSnapshot(for: trip)
+          if !settingsStore.whatIfFavorites.isEmpty {
+            whatIfCompareCard(for: trip)
+          }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 32)
@@ -101,7 +105,7 @@ struct TripDetailView: View {
       }
 
       HStack(spacing: 12) {
-        SummaryChip(title: "Fare", value: trip.fare.formatted(.currency(code: "INR")))
+        SummaryChip(title: "Fare", value: formatCurrency(trip.fare, code: trip.rateSnapshot.currencyCode ?? "INR"))
         SummaryChip(title: "Distance", value: "\((trip.distanceMeters / 1000).formatted(.number.precision(.fractionLength(2)))) km")
         SummaryChip(title: "Time", value: formattedElapsed(trip.duration))
       }
@@ -239,6 +243,28 @@ struct TripDetailView: View {
       }
     }
     .cardStyle()
+  }
+
+  private func whatIfCompareCard(for trip: Trip) -> some View {
+    NavigationLink {
+      TripComparisonView(trip: trip)
+    } label: {
+      HStack {
+        VStack(alignment: .leading, spacing: 2) {
+          Text("WhatIf Compare")
+            .font(FontPresets.Display.subhead)
+          Text("ಹೋಲಿಕೆ")
+            .font(FontPresets.Body.base)
+            .foregroundStyle(Theme.ink.opacity(0.7))
+        }
+        Spacer()
+        Image(systemName: "chevron.right")
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(Theme.ink.opacity(0.4))
+      }
+      .cardStyle()
+    }
+    .buttonStyle(.plain)
   }
 
   private func replayCoordinate(in coordinates: [CLLocationCoordinate2D]) -> CLLocationCoordinate2D? {

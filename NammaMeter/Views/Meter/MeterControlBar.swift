@@ -13,7 +13,7 @@ struct MeterControlBar: View {
       let horizontalPadding: CGFloat = 10
       let verticalPadding: CGFloat = 4
       let spacing: CGFloat = 6
-      let tileCount = CGFloat(4)
+      let tileCount = CGFloat(5)
       let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
       let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
       let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
@@ -26,6 +26,7 @@ struct MeterControlBar: View {
         tripToggleButton(metrics: metrics)
         waitToggleButton(metrics: metrics)
         nightConditionButton(metrics: metrics)
+        vehicleSelectorButton(metrics: metrics)
         meterSettingsButton(metrics: metrics)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -69,7 +70,19 @@ struct MeterControlBar: View {
       switch meterStore.tripState {
       case .forHire:
         let cityInfo = settingsStore.activeCityInfo
-        meterStore.startTrip(settings: settingsStore.settings, cityId: cityInfo.cityId, cityName: cityInfo.cityName)
+        let profile = settingsStore.activeProfileForCurrentSelection
+        meterStore.startTrip(
+          settings: settingsStore.settings,
+          cityId: cityInfo.cityId,
+          cityName: cityInfo.cityName,
+          surcharges: profile?.surcharges,
+          perMinuteWhenSlow: profile?.rates.perMinuteWhenSlow,
+          slowSpeedThresholdKph: profile?.rates.slowSpeedThresholdKph,
+          vehicleType: profile?.vehicleType,
+          currencyCode: profile?.cityKey.currencyCode,
+          whatIfFavorites: settingsStore.whatIfFavorites,
+          whatIfProfileLookup: { settingsStore.whatIfProfile(for: $0) }
+        )
       case .inProgress:
         meterStore.stopTrip(tripStore: tripStore)
       case .complete:
@@ -101,6 +114,65 @@ struct MeterControlBar: View {
     .accessibilityLabel(meterStore.isWaiting ? "Resume trip" : "Pause trip")
     .accessibilityIdentifier("meter.waitToggle")
   }
+
+  // MARK: - Vehicle selector
+
+  private func vehicleSelectorButton(metrics: ControlBarMetrics) -> some View {
+    let types = availableVehicleTypes
+    let hasMultipleTypes = types.count > 1
+    let defaultBg = colorScheme == .dark ? Theme.darkControlBackground.opacity(1.2) : Theme.card.opacity(0.9)
+    let bgColor = hasMultipleTypes ? Theme.mint.opacity(0.85) : defaultBg
+
+    return Button {
+      cycleVehicleType()
+    } label: {
+      ControlTile(background: bgColor, size: metrics.tileSize) {
+        Image(systemName: vehicleSymbol)
+          .font(.system(size: metrics.iconSize, weight: .semibold))
+          .foregroundStyle(Theme.ink)
+      }
+    }
+    .buttonStyle(.plain)
+    .disabled(meterStore.tripState == .complete || !hasMultipleTypes)
+    .opacity(meterStore.tripState == .complete || !hasMultipleTypes ? 0.6 : 1)
+    .accessibilityLabel("Vehicle type: \(vehicleDisplayName)")
+    .accessibilityIdentifier("meter.vehicleSelector")
+  }
+
+  private var vehicleSymbol: String {
+    let vt = settingsStore.selectedVehicleType
+      ?? settingsStore.activeProfileForCurrentSelection?.vehicleType
+      ?? VehicleTypeCatalog.autoRickshaw
+    return VehicleTypeCatalog.symbol(for: vt)
+  }
+
+  private var vehicleDisplayName: String {
+    let vt = settingsStore.selectedVehicleType
+      ?? settingsStore.activeProfileForCurrentSelection?.vehicleType
+      ?? VehicleTypeCatalog.autoRickshaw
+    return VehicleTypeCatalog.displayName(for: vt)
+  }
+
+  private var availableVehicleTypes: [String] {
+    let cityId = settingsStore.activeCityInfo.cityId
+    let group = settingsStore.availableCityGroups.first { $0.cityId == cityId }
+    return group?.vehicleTypes ?? [VehicleTypeCatalog.autoRickshaw]
+  }
+
+  private func cycleVehicleType() {
+    let types = availableVehicleTypes
+    guard types.count > 1 else { return }
+    let current = settingsStore.selectedVehicleType ?? types.first ?? VehicleTypeCatalog.autoRickshaw
+    let currentIndex = types.firstIndex(of: current) ?? 0
+    let nextIndex = (currentIndex + 1) % types.count
+    settingsStore.selectVehicleType(types[nextIndex])
+
+    if meterStore.tripState == .inProgress {
+      meterStore.switchVehicleType(settingsStore: settingsStore)
+    }
+  }
+
+  // MARK: - Helpers
 
   private var tripToggleAccessibilityLabel: String {
     switch meterStore.tripState {

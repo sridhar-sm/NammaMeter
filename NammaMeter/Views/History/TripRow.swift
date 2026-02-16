@@ -14,7 +14,7 @@ struct TripRow: View {
             .font(FontPresets.Display.label)
         }
         Spacer()
-        Text(trip.fare, format: .currency(code: "INR"))
+        Text(formatCurrency(trip.fare, code: trip.rateSnapshot.currencyCode ?? "INR"))
           .font(FontPresets.Display.label)
       }
 

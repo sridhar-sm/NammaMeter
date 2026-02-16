@@ -3,7 +3,7 @@ import SwiftUI
 struct CityManagementView: View {
   @Environment(SettingsStore.self) private var settingsStore
   @Environment(MeterStore.self) private var meterStore
-  @State private var cityToDelete: CityFareProfile?
+  @State private var cityToDelete: CityGroup?
   @State private var showDeleteConfirmation = false
 
   private var canEditSettings: Bool {
@@ -14,9 +14,13 @@ struct CityManagementView: View {
     ZStack {
       NammaBackground()
       List {
-        ForEach(settingsStore.availableCities) { city in
-          NavigationLink(destination: CityDetailView(cityId: city.cityId)) {
-            CityRow(city: city, isSelected: settingsStore.selectedCityId == city.cityId)
+        ForEach(settingsStore.availableCityGroups) { group in
+          NavigationLink(destination: CityDetailView(cityId: group.cityId)) {
+            CityRow(
+              group: group,
+              isSelected: settingsStore.selectedCityId == group.cityId,
+              hasFavorite: settingsStore.whatIfFavorites.contains { $0.cityId == group.cityId }
+            )
           }
         }
         .onDelete(perform: deleteCities)
@@ -46,8 +50,13 @@ struct CityManagementView: View {
         VStack(spacing: 2) {
           Text("Manage Cities")
             .font(FontPresets.Display.subhead)
-          Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
-            .font(FontPresets.Body.small)
+          if settingsStore.whatIfFavorites.isEmpty {
+            Text("ನಗರಗಳನ್ನು ನಿರ್ವಹಿಸಿ")
+              .font(FontPresets.Body.small)
+          } else {
+            Text("\(settingsStore.whatIfFavorites.count)/3 WhatIf favorites")
+              .font(FontPresets.Body.small)
+          }
         }
       }
     }
@@ -56,15 +65,15 @@ struct CityManagementView: View {
         cityToDelete = nil
       }
       Button("Delete", role: .destructive) {
-        if let city = cityToDelete {
-          settingsStore.deleteCity(city.cityId)
+        if let group = cityToDelete {
+          settingsStore.deleteCity(group.cityId)
         }
         cityToDelete = nil
       }
     } message: {
-      if let city = cityToDelete {
-        let count = settingsStore.fareProfiles(for: city.cityId).count
-        Text("This will delete \(city.name) and its \(count) fare card\(count == 1 ? "" : "s").")
+      if let group = cityToDelete {
+        let count = settingsStore.fareProfiles(for: group.cityId).count
+        Text("This will delete \(group.name) and its \(count) fare card\(count == 1 ? "" : "s").")
       }
     }
   }
@@ -72,38 +81,43 @@ struct CityManagementView: View {
   private func deleteCities(at offsets: IndexSet) {
     guard canEditSettings else { return }
     for offset in offsets {
-      let city = settingsStore.availableCities[offset]
-      let fareCount = settingsStore.fareProfiles(for: city.cityId).count
+      let group = settingsStore.availableCityGroups[offset]
+      let fareCount = settingsStore.fareProfiles(for: group.cityId).count
       if fareCount > 0 {
-        cityToDelete = city
+        cityToDelete = group
         showDeleteConfirmation = true
       } else {
-        settingsStore.deleteCity(city.cityId)
+        settingsStore.deleteCity(group.cityId)
       }
     }
   }
 }
 
 struct CityRow: View {
-  let city: CityFareProfile
+  let group: CityGroup
   let isSelected: Bool
+  var hasFavorite: Bool = false
 
   var body: some View {
     HStack {
       VStack(alignment: .leading, spacing: 2) {
-        Text(city.name)
-          .font(FontPresets.Display.label)
-        if let region = city.cityKey.region {
+        HStack(spacing: 4) {
+          Text(group.name)
+            .font(FontPresets.Display.label)
+          if hasFavorite {
+            Image(systemName: "star.fill")
+              .font(.system(size: 10))
+              .foregroundStyle(Color.orange)
+          }
+        }
+        if let region = group.cityKey.region {
           Text(region)
             .font(FontPresets.Body.small)
             .foregroundStyle(.secondary)
         }
-        HStack(spacing: 8) {
-          Text("Base: ₹\(city.rates.baseFare, specifier: "%.0f")")
-          Text("Per Km: ₹\(city.rates.perKmRate, specifier: "%.0f")")
-        }
-        .font(FontPresets.Body.xSmall)
-        .foregroundStyle(.secondary)
+        Text("\(group.vehicleTypes.count) vehicle type\(group.vehicleTypes.count == 1 ? "" : "s")")
+          .font(FontPresets.Body.xSmall)
+          .foregroundStyle(.secondary)
       }
       Spacer()
       if isSelected {

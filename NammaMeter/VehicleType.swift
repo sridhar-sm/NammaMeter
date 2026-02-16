@@ -19,6 +19,11 @@ enum VehicleTypeCatalog {
   static let cab = "cab"
   static let tuktuk = "tuktuk"
 
+  static let allTypes: [String] = [
+    autoRickshaw, taxi, taxiNonAC, taxiAC, taxiEconomy,
+    taxiMidrange, taxiPremium, cityTaxi, yellowTaxi, cab, tuktuk,
+  ]
+
   private static let knownTypes: [String: VehicleTypeInfo] = [
     autoRickshaw: VehicleTypeInfo(id: autoRickshaw, displayName: "Auto Rickshaw", symbolName: "car.side"),
     taxi: VehicleTypeInfo(id: taxi, displayName: "Taxi", symbolName: "car"),

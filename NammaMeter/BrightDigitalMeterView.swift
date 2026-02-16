@@ -8,6 +8,7 @@ struct BrightDigitalFullMeterPanel: View {
   let waitingDuration: TimeInterval
   let distanceMeters: Double
   let topInset: CGFloat
+  var cityVehicleLabel: String = ""
 
   private let faceTop = MeterColorSchemes.BrightDigital.faceTop
   private let faceBottom = MeterColorSchemes.BrightDigital.faceBottom
@@ -16,7 +17,7 @@ struct BrightDigitalFullMeterPanel: View {
     MeterShell(style: .brightDigital, topInset: topInset) { bodyWidth, bodyHeight in
       let faceWidth = bodyWidth * 0.92
       let faceHeight = bodyHeight * 0.86
-      let windowWidth = faceWidth * 0.92
+      let windowWidth = faceWidth * 0.96
       let windowHeight = faceHeight * 0.68
       let badgeWidth = faceWidth * 0.84
       let badgeHeight = faceHeight * 0.14
@@ -47,7 +48,9 @@ struct BrightDigitalFullMeterPanel: View {
             height: windowHeight
           )
           BrightDigitalBadge(width: badgeWidth, height: badgeHeight)
-            .offset(y: faceHeight * 0.02)
+          if !cityVehicleLabel.isEmpty {
+            MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: faceHeight * 0.045)
+          }
           Spacer(minLength: faceHeight * 0.04)
         }
         .frame(width: faceWidth, height: faceHeight)
@@ -74,7 +77,7 @@ struct BrightDigitalDisplayWindow: View {
   var body: some View {
     let lineWidth = max(1, width * 0.003)
     let cornerRadius = width * 0.02
-    let inset = width * 0.03
+    let inset = width * 0.015
     let contentWidth = width - inset * 2
     let contentHeight = height - inset * 2
     let rowHeight = contentHeight * 0.27
@@ -170,12 +173,6 @@ struct BrightDigitalDisplayWindow: View {
       .frame(width: contentWidth, height: contentHeight, alignment: .top)
       .offset(x: inset, y: inset)
       .clipShape(RoundedRectangle(cornerRadius: innerCornerRadius, style: .continuous))
-
-      RoundedRectangle(cornerRadius: innerCornerRadius, style: .continuous)
-        .stroke(Color.black.opacity(0.28), lineWidth: lineWidth)
-        .frame(width: contentWidth, height: contentHeight)
-        .offset(x: inset, y: inset)
-        .shadow(color: Color.black.opacity(0.2), radius: lineWidth * 2, x: 0, y: 2)
 
       RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         .stroke(Color.black.opacity(0.35), lineWidth: lineWidth)

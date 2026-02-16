@@ -9,6 +9,7 @@ struct GoldenEagleFullMeterPanel: View {
   let distanceMeters: Double
   let isNight: Bool
   let topInset: CGFloat
+  var cityVehicleLabel: String = ""
 
   var body: some View {
     MeterShell(style: .goldenEagle, topInset: topInset) { bodyWidth, bodyHeight in
@@ -23,16 +24,19 @@ struct GoldenEagleFullMeterPanel: View {
           distanceKm: distanceMeters / 1000,
           isNight: isNight,
           width: bodyWidth * 0.90,
-          height: bodyHeight * 0.70
+          height: bodyHeight * 0.62
         )
 
-        // Spacer to push manufacturer plate to center of remaining space
-        Spacer()
+        Spacer(minLength: bodyHeight * 0.01)
 
         // Manufacturer plate - shows company info at bottom
-        GoldenEagleManufacturerPlate(width: bodyWidth * 0.90, height: bodyHeight * 0.18)
+        GoldenEagleManufacturerPlate(width: bodyWidth * 0.90, height: bodyHeight * 0.16)
 
-        // Equal spacer below to center the plate
+        if !cityVehicleLabel.isEmpty {
+          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+            .padding(.top, bodyHeight * 0.01)
+        }
+
         Spacer()
       }
     }
@@ -101,7 +105,7 @@ struct GoldenEagleDisplayWindow: View {
         let infoHeight = h * 0.21
         let rowSpacing = h * 0.04
         let totalRowsHeight = fareHeight + infoHeight + infoHeight + (rowSpacing * 2)
-        let topPadding = max((h - totalRowsHeight) * 0.35, margin)
+        let topPadding = max((h - totalRowsHeight) * 0.5, margin)
         let fareY = topPadding
         let distY = fareY + fareHeight + rowSpacing
         let waitY = distY + infoHeight + rowSpacing
