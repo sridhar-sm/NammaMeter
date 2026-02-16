@@ -532,12 +532,25 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     roadGeocodeTask = Task { @MainActor [weak self] in
       guard let self else { return }
       do {
-        let placemarks = try await self.roadGeocoder.reverseGeocodeLocation(location)
+        let placemarks = try await self.reverseGeocodeLocation(location)
         guard !Task.isCancelled else { return }
         let road = Self.roadName(from: placemarks.first)
         self.currentRoadName = road ?? ""
       } catch {
         // Keep previous road name on geocoding failures.
+      }
+    }
+  }
+
+  @MainActor
+  private func reverseGeocodeLocation(_ location: CLLocation) async throws -> [CLPlacemark] {
+    try await withCheckedThrowingContinuation { continuation in
+      roadGeocoder.reverseGeocodeLocation(location) { placemarks, error in
+        if let error {
+          continuation.resume(throwing: error)
+          return
+        }
+        continuation.resume(returning: placemarks ?? [])
       }
     }
   }
