@@ -226,7 +226,7 @@ struct GoldenEagleFareRow: View {
   var body: some View {
     GoldenEagleDigitField(width: width, height: height, widthFactor: 3.5) { digitHeight in
       if tripState == .forHire {
-        GoldenEagleBlankFareDisplay(digitHeight: digitHeight, colorScheme: ledScheme)
+        GoldenEagleForHireFareDisplay(digitHeight: digitHeight, colorScheme: ledScheme)
       } else {
         FareDigitsDisplay(fare: fare, digitHeight: digitHeight, colorScheme: ledScheme)
       }
@@ -278,28 +278,37 @@ struct GoldenEagleWaitRow: View {
   }
 }
 
-struct GoldenEagleBlankFareDisplay: View {
+struct GoldenEagleForHireFareDisplay: View {
   let digitHeight: CGFloat
   var colorScheme: LEDColorScheme = .green
 
+  static let forHireValues: [LED7SegmentValue] = [
+    .blank,
+    .character("F"),
+    .character("o"),
+    .character("r"),
+    .blank
+  ]
+
   var body: some View {
-    let blanks = Array(repeating: LED7SegmentValue.blank, count: 3)
-    let paiseBlanks = Array(repeating: LED7SegmentValue.blank, count: 2)
+    let values = Self.forHireValues
 
     return HStack(spacing: digitHeight * 0.12) {
       LEDDigitGroup(
         digitCount: 3,
         height: digitHeight,
         colorScheme: colorScheme,
-        decimalPosition: 2,
-        values: blanks
+        values: Array(values.prefix(3))
       )
+
+      LEDDecimalPoint(isActive: false, colorScheme: colorScheme, size: digitHeight * 0.12)
+        .offset(y: digitHeight * 0.4)
 
       LEDDigitGroup(
         digitCount: 2,
         height: digitHeight,
         colorScheme: colorScheme,
-        values: paiseBlanks
+        values: Array(values.suffix(2))
       )
     }
   }
@@ -309,12 +318,15 @@ struct GoldenEagleHireDistanceDisplay: View {
   let digitHeight: CGFloat
   var colorScheme: LEDColorScheme = .green
 
+  static let forHireValues: [LED7SegmentValue] = [
+    .character("H"),
+    .character("I"),
+    .character("r"),
+    .character("E")
+  ]
+
   var body: some View {
-    let values: [LED7SegmentValue] = [
-      .character("H"),
-      .character("I"),
-      .character("r")
-    ]
+    let values = Self.forHireValues
 
     return HStack(spacing: digitHeight * 0.08) {
       LEDDigitGroup(
@@ -322,14 +334,14 @@ struct GoldenEagleHireDistanceDisplay: View {
         height: digitHeight,
         colorScheme: colorScheme,
         isSmall: true,
-        values: values
+        values: Array(values.prefix(3))
       )
 
       LEDDecimalPoint(isActive: false, colorScheme: colorScheme, size: digitHeight * 0.08)
         .offset(y: digitHeight * 0.35)
 
       LED7SegmentDigit(
-        value: .character("E"),
+        value: values[3],
         height: digitHeight,
         colorScheme: colorScheme,
         isSmall: true

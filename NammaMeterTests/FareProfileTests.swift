@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import XCTest
 @testable import NammaMeter
 
@@ -131,6 +132,26 @@ final class FareProfileTests: XCTestCase {
     XCTAssertEqual(store.selectedCityId, "mandya")
     XCTAssertNotEqual(store.settings.baseFare, bengaluruBaseFare)
     XCTAssertEqual(store.settings.baseFare, 30)
+  }
+
+  func testCitySelectionNotifiesObservers() async throws {
+    let url = try TestHelpers.makeTempURL(filename: "fare-profiles.json")
+    let store = SettingsStore(fileURL: url)
+    await TestHelpers.waitForProfiles(store)
+
+    let changeObserved = expectation(description: "city selection should notify observers")
+    changeObserved.assertForOverFulfill = false
+
+    withObservationTracking {
+      _ = store.selectedCityId
+    } onChange: {
+      changeObserved.fulfill()
+    }
+
+    store.selectCity("udupi")
+
+    await fulfillment(of: [changeObserved], timeout: 1.0)
+    XCTAssertEqual(store.selectedCityId, "udupi")
   }
 
   func testAvailableCitiesReturnsLatestProfiles() async throws {
