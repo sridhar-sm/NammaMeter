@@ -22,29 +22,52 @@ final class NeoLCDLayoutLogicTests: XCTestCase {
     XCTAssertEqual(CompassDirectionFormatter.direction(for: points), "--")
   }
 
-  func testFareRuleBuilderIncludesNightRuleOnlyWhenNightIsActive() {
-    let rules = NeoLCDFareRuleBuilder.activeRules(
-      settings: .bengaluruDefault,
-      tripState: .inProgress,
-      fare: 54,
-      distanceKm: 3.2,
-      isNight: true
-    )
+  func testFareRuleEvaluatorHighlightsNightRuleWhenActive() {
+    let profile = FareCatalog.entries.first(where: { $0.profile.cityId == "bengaluru" && $0.profile.vehicleType == VehicleTypeCatalog.autoRickshaw })!.profile
 
-    XCTAssertTrue(rules.contains { $0.contains("Night surcharge") })
+    var components = DateComponents()
+    components.year = 2026; components.month = 2; components.day = 16; components.hour = 23
+    let nightDate = Calendar.current.date(from: components)!
+
+    let context = FareRuleContext(
+      tripState: .inProgress,
+      distanceKm: 3.2,
+      elapsedTime: 600,
+      waitingTime: 0,
+      currentSpeedKph: 30,
+      tripDate: nightDate,
+      currentFare: 54
+    )
+    let results = FareRuleEvaluator.evaluate(profile: profile, context: context)
+    let nightRule = results.first(where: { $0.rule.kind == .surcharge })
+    XCTAssertNotNil(nightRule)
+    XCTAssertTrue(nightRule!.isActive, "Night surcharge should be active at 23:00")
   }
 
-  func testFareRuleBuilderOmitsNightAndWaitingRulesWhenInactive() {
-    let rules = NeoLCDFareRuleBuilder.activeRules(
-      settings: .bengaluruDefault,
-      tripState: .forHire,
-      fare: 36,
-      distanceKm: 0,
-      isNight: false
-    )
+  func testFareRuleEvaluatorNightAndWaitingInactiveAtForHire() {
+    let profile = FareCatalog.entries.first(where: { $0.profile.cityId == "bengaluru" && $0.profile.vehicleType == VehicleTypeCatalog.autoRickshaw })!.profile
 
-    XCTAssertFalse(rules.contains { $0.localizedCaseInsensitiveContains("night") })
-    XCTAssertFalse(rules.contains { $0.localizedCaseInsensitiveContains("waiting") })
+    var components = DateComponents()
+    components.year = 2026; components.month = 2; components.day = 16; components.hour = 14
+    let dayDate = Calendar.current.date(from: components)!
+
+    let context = FareRuleContext(
+      tripState: .forHire,
+      distanceKm: 0,
+      elapsedTime: 0,
+      waitingTime: 0,
+      currentSpeedKph: nil,
+      tripDate: dayDate,
+      currentFare: 0
+    )
+    let results = FareRuleEvaluator.evaluate(profile: profile, context: context)
+    let nightRule = results.first(where: { $0.rule.kind == .surcharge })
+    XCTAssertNotNil(nightRule)
+    XCTAssertFalse(nightRule!.isActive, "Night surcharge should be inactive at 14:00")
+
+    let waitingRule = results.first(where: { $0.rule.kind == .waitingCharge })
+    XCTAssertNotNil(waitingRule)
+    XCTAssertFalse(waitingRule!.isActive, "Waiting should be inactive at forHire")
   }
 
   func testTopBarStatusIncludesCityVehicleContextWhenPresent() {

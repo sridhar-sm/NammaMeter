@@ -39,6 +39,7 @@ struct TripDetailView: View {
           routeMap(for: trip, coordinates: coordinates)
           replayControls(for: trip, coordinates: coordinates)
           rateSnapshot(for: trip)
+          fareRulesApplied(for: trip)
           if !settingsStore.whatIfFavorites.isEmpty {
             whatIfCompareCard(for: trip)
           }
@@ -240,6 +241,72 @@ struct TripDetailView: View {
       HStack {
         RateLine(title: "Wait Interval", subtitle: "ನಿಲ್ಲಿಕೆ ಮಧ್ಯಂತರ", value: trip.rateSnapshot.waitIntervalMinutes)
         RateLine(title: "Per Interval", subtitle: "ಪ್ರತಿ ಮಧ್ಯಂತರ", value: trip.rateSnapshot.waitIntervalCharge)
+      }
+    }
+    .cardStyle()
+  }
+
+  private func fareRulesApplied(for trip: Trip) -> some View {
+    let context = FareRuleContext(
+      tripState: .complete,
+      distanceKm: trip.distanceMeters / 1000,
+      elapsedTime: trip.duration,
+      waitingTime: trip.waitingDuration,
+      currentSpeedKph: nil,
+      tripDate: trip.startDate,
+      currentFare: trip.fare
+    )
+    let evaluated = FareRuleEvaluator.evaluate(snapshot: trip.rateSnapshot, context: context)
+    let activeCount = evaluated.filter(\.isActive).count
+
+    return VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        VStack(alignment: .leading, spacing: 2) {
+          Text("Fare Rules Applied")
+            .font(FontPresets.Display.subhead)
+          Text("ಬಾಡಿಗೆ ನಿಯಮಗಳು")
+            .font(FontPresets.Body.base)
+            .foregroundStyle(Theme.ink.opacity(0.7))
+        }
+        Spacer()
+        Text("\(activeCount) of \(evaluated.count)")
+          .font(FontPresets.Display.label)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 6)
+          .background(Theme.lime.opacity(0.4))
+          .clipShape(Capsule())
+      }
+
+      ForEach(evaluated) { item in
+        HStack(spacing: 8) {
+          Circle()
+            .fill(item.isActive ? Color.green.opacity(0.8) : Theme.ink.opacity(0.2))
+            .frame(width: 8, height: 8)
+
+          VStack(alignment: .leading, spacing: 2) {
+            Text(item.rule.label)
+              .font(FontPresets.Body.small)
+              .foregroundStyle(item.isActive ? Theme.ink : Theme.ink.opacity(0.4))
+            Text(item.rule.description)
+              .font(FontPresets.Body.micro)
+              .foregroundStyle(item.isActive ? Theme.ink.opacity(0.7) : Theme.ink.opacity(0.3))
+          }
+
+          Spacer(minLength: 0)
+
+          if item.isActive && item.amount > 0 {
+            let code = trip.rateSnapshot.currencyCode ?? "INR"
+            Text(formatCurrency(item.amount, code: code))
+              .font(FontPresets.Display.label)
+              .foregroundStyle(Theme.ink)
+          }
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(
+          RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(item.isActive ? Theme.lime.opacity(0.15) : Color.clear)
+        )
       }
     }
     .cardStyle()

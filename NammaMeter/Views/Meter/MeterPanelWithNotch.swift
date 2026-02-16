@@ -94,7 +94,9 @@ struct MeterPanelWithNotch: View {
         cityVehicleLabel: cityVehicleLabel,
         points: meterStore.points,
         currentRoadName: meterStore.currentRoadName,
-        topInset: topInset
+        topInset: topInset,
+        surcharges: settingsStore.activeProfileForCurrentSelection?.surcharges,
+        currencyCode: settingsStore.activeProfileForCurrentSelection?.cityKey.currencyCode ?? "INR"
       )
     case .brightDigital:
       if meterRenderMode == .full {

@@ -62,7 +62,12 @@ NammaMeter/
 ├── TripStore.swift              # Historical trip storage
 │
 ├── Calculation/
-│   └── FareCalculator.swift     # Pure fare calculation logic
+│   ├── FareCalculator.swift     # Pure fare calculation logic
+│   ├── FareCalculationStrategy.swift # Calculation protocol & FareBreakdown
+│   ├── FareRule.swift            # FareRule, EvaluatedFareRule, FareRuleContext models
+│   ├── FareRuleEvaluator.swift   # Rule builder & snapshot evaluator engine
+│   ├── SurchargeCalculator.swift # Surcharge condition evaluation
+│   └── WhatIfCalculator.swift    # Cross-city fare comparison
 │
 ├── Location/                    # Location services
 │   ├── LocationPermissionCoordinator.swift
@@ -180,6 +185,7 @@ TabView
 | Component | Test File | Coverage |
 |-----------|-----------|----------|
 | Fare Calculation | FareCalculatorTests.swift | Comprehensive |
+| Fare Rule Engine | FareRuleEvaluatorTests.swift | Rule generation, evaluation, amounts |
 | Trip State Machine | TripStateMachineTests.swift | Comprehensive |
 | Meter Store | MeterStoreTests.swift | Comprehensive (150+ assertions) |
 | Trip Store | TripStoreTests.swift | Comprehensive (persistence, CRUD) |
