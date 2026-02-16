@@ -212,6 +212,50 @@ final class MeterSnapshotTests: XCTestCase {
     )
   }
 
+  func testDigitalComplete() {
+    let view = DigitalFullMeterPanel(
+      tripState: .complete,
+      fare: 156.00,
+      waitingDuration: 300,
+      distanceMeters: 5200,
+      elapsed: 1080,
+      currentSpeedKph: 0,
+      isNight: false,
+      fixedNow: Date(timeIntervalSince1970: 1_738_800_000)
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(
+      view,
+      size: snapshotSize,
+      colorScheme: .light,
+      record: isRecordingSnapshots
+    )
+  }
+
+  func testDigitalCompleteDarkMode() {
+    let view = DigitalFullMeterPanel(
+      tripState: .complete,
+      fare: 156.00,
+      waitingDuration: 300,
+      distanceMeters: 5200,
+      elapsed: 1080,
+      currentSpeedKph: 0,
+      isNight: false,
+      fixedNow: Date(timeIntervalSince1970: 1_738_800_000)
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(
+      view,
+      size: snapshotSize,
+      colorScheme: .dark,
+      record: isRecordingSnapshots
+    )
+  }
+
   // MARK: - Bright Digital Meter (Light Mode)
 
   func testBrightDigitalForHire() {
