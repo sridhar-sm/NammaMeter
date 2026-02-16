@@ -246,14 +246,14 @@ docs/app-store/
 ## 📞 Support & Reference
 
 ### URLs
-- **GitHub:** https://github.com/sridharsm/NammaMeter
+- **GitHub:** https://github.com/sridhar-sm/NammaMeter
 - **App Store:** [Link will be added after submission]
-- **Privacy Policy:** https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md
-- **Privacy Policy (Short):** https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/PRIVACY_POLICY_SHORT.txt
+- **Privacy Policy:** https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md
+- **Privacy Policy (Short):** https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/PRIVACY_POLICY_SHORT.txt
 
 ### Contact
 - **Developer:** Sridhar SM
-- **GitHub Support:** https://github.com/sridharsm/NammaMeter/issues
+- **GitHub Support:** https://github.com/sridhar-sm/NammaMeter/issues
 
 ---
 

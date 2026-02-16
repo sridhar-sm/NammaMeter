@@ -113,7 +113,7 @@ Download NammaMeter from the App Store:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/sridharsm/NammaMeter.git
+   git clone https://github.com/sridhar-sm/NammaMeter.git
    cd NammaMeter
    ```
 
@@ -143,13 +143,13 @@ All materials needed for App Store submission are in `docs/app-store/`:
 
 ## 🔗 Links
 
-- **GitHub Repository:** https://github.com/sridharsm/NammaMeter
+- **GitHub Repository:** https://github.com/sridhar-sm/NammaMeter
 - **Privacy Policy:**
   - [Full Version (Local)](docs/app-store/PRIVACY_POLICY.md) | [Short Summary](docs/app-store/PRIVACY_POLICY_SHORT.txt)
-  - [Full Version (Raw GitHub URL)](https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md)
+  - [Full Version (Raw GitHub URL)](https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/PRIVACY_POLICY.md)
 - **Legal Terms:**
   - [Legal & Rights (Local)](docs/app-store/LEGAL_AND_RIGHTS.md)
-  - [Legal & Rights (Raw GitHub URL)](https://raw.githubusercontent.com/sridharsm/NammaMeter/main/docs/app-store/LEGAL_AND_RIGHTS.md)
+  - [Legal & Rights (Raw GitHub URL)](https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/LEGAL_AND_RIGHTS.md)
 
 ## 📄 License
 
@@ -161,16 +161,16 @@ This is proprietary software. See [Legal & Rights](docs/app-store/LEGAL_AND_RIGH
 
 For issues, questions, or feature requests:
 
-- **GitHub Issues:** https://github.com/sridharsm/NammaMeter/issues
-- **GitHub Discussions:** https://github.com/sridharsm/NammaMeter/discussions
+- **GitHub Issues:** https://github.com/sridhar-sm/NammaMeter/issues
+- **GitHub Discussions:** https://github.com/sridhar-sm/NammaMeter/discussions
 
 ## 📞 Contact
 
 **Developer:** Sridhar SM
-**GitHub:** https://github.com/sridharsm/NammaMeter
+**GitHub:** https://github.com/sridhar-sm/NammaMeter
 
 ---
 
-**Last Updated:** February 10, 2026
+**Last Updated:** February 16, 2026
 **App Version:** 1.0
 **Status:** Ready for App Store Submission
