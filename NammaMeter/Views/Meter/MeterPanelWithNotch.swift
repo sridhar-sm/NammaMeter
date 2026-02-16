@@ -79,19 +79,23 @@ struct MeterPanelWithNotch: View {
         .padding(.horizontal, 12)
       }
     case .digital:
-      if meterRenderMode == .full {
-        DigitalFullMeterPanel(
-          tripState: meterStore.tripState,
-          fare: meterStore.fare,
-          cityVehicleLabel: cityVehicleLabel
-        )
-          .padding(.top, topInset + 8)
-          .padding(.horizontal, 12)
-      } else {
-        DigitalDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare)
-          .padding(.top, topInset + 8)
-          .padding(.horizontal, 12)
-      }
+      // Neo renders the same layout in both full and display modes.
+      DigitalFullMeterPanel(
+        tripState: meterStore.tripState,
+        fare: meterStore.fare,
+        waitingDuration: meterStore.waitingDuration,
+        distanceMeters: meterStore.distanceMeters,
+        elapsed: meterStore.elapsed,
+        currentSpeedKph: meterStore.currentSpeedKph,
+        isNight: meterStore.conditions.isNight,
+        isWaiting: meterStore.isWaiting,
+        settings: settingsStore.settings,
+        cityName: settingsStore.activeCityInfo.cityName,
+        cityVehicleLabel: cityVehicleLabel,
+        points: meterStore.points,
+        currentRoadName: meterStore.currentRoadName,
+        topInset: topInset
+      )
     case .brightDigital:
       if meterRenderMode == .full {
         BrightDigitalFullMeterPanel(

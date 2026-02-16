@@ -138,6 +138,7 @@ final class MeterStoreTests: XCTestCase {
 
     XCTAssertFalse(meterStore.isOnTrip)
     XCTAssertEqual(meterStore.tripState, .complete)
+    XCTAssertEqual(meterStore.currentSpeedKph, 0)
     XCTAssertEqual(tripStore.trips.count, 1)
 
     let savedTrip = tripStore.trips.first!
@@ -197,8 +198,18 @@ final class MeterStoreTests: XCTestCase {
     let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
     meterStore.refreshTimeBasedConditions(reference: dayDate)
 
-    // Process location within included km (1.5 km)
-    let start = CLLocation(latitude: 12.9716, longitude: 77.5946)
+    let startTime = Date()
+
+    // Process location within included km (1.5 km).
+    let start = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 8.5,
+      timestamp: startTime
+    )
     meterStore.processLocation(start)
 
     // Move ~1.5km (roughly 0.0135 degrees latitude)
@@ -207,7 +218,10 @@ final class MeterStoreTests: XCTestCase {
       altitude: 0,
       horizontalAccuracy: 10,
       verticalAccuracy: 10,
-      timestamp: Date()
+      course: 0,
+      speed: 8.5,
+      // ~30 km/h over ~1.5 km
+      timestamp: startTime.addingTimeInterval(180)
     )
     meterStore.processLocation(end)
 
@@ -224,13 +238,17 @@ final class MeterStoreTests: XCTestCase {
 
     meterStore.startTrip(settings: settings)
 
-    // Process location to simulate 5km trip
+    let startTime = Date()
+
+    // Process location to simulate 5km trip.
     let start = CLLocation(
       coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
       altitude: 0,
       horizontalAccuracy: 10,
       verticalAccuracy: 10,
-      timestamp: Date()
+      course: 0,
+      speed: 8.5,
+      timestamp: startTime
     )
     meterStore.processLocation(start)
 
@@ -240,7 +258,9 @@ final class MeterStoreTests: XCTestCase {
       altitude: 0,
       horizontalAccuracy: 10,
       verticalAccuracy: 10,
-      timestamp: Date()
+      course: 0,
+      speed: 8.5,
+      timestamp: startTime.addingTimeInterval(600)
     )
     meterStore.processLocation(end)
 
@@ -347,6 +367,7 @@ final class MeterStoreTests: XCTestCase {
     XCTAssertTrue(meterStore.isWaiting)
 
     // Process initial location
+    let startTime = Date()
     let start = CLLocation(
       coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
       altitude: 0,
@@ -354,7 +375,7 @@ final class MeterStoreTests: XCTestCase {
       verticalAccuracy: 10,
       course: 0,
       speed: 0,
-      timestamp: Date()
+      timestamp: startTime
     )
     meterStore.processLocation(start)
     XCTAssertTrue(meterStore.isWaiting)
@@ -367,7 +388,7 @@ final class MeterStoreTests: XCTestCase {
       verticalAccuracy: 10,
       course: 0,
       speed: 5.0, // 5 m/s = 18 km/h
-      timestamp: Date()
+      timestamp: startTime.addingTimeInterval(5)
     )
     meterStore.processLocation(moving)
 
@@ -488,6 +509,123 @@ final class MeterStoreTests: XCTestCase {
     meterStore.processLocation(location)
 
     XCTAssertEqual(meterStore.currentSpeedKph, 36, accuracy: 0.1)
+  }
+
+  func testLocationProcessingDerivesSpeedWhenReportedSpeedIsZero() {
+    let settings = MeterSettings.bengaluruDefault
+    meterStore.startTrip(settings: settings)
+
+    let now = Date()
+    let start = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 0,
+      timestamp: now
+    )
+    meterStore.processLocation(start)
+
+    let moved = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 12.9725, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 0,
+      timestamp: now.addingTimeInterval(10)
+    )
+    meterStore.processLocation(moved)
+
+    XCTAssertGreaterThan(meterStore.currentSpeedKph, 30)
+    XCTAssertLessThan(meterStore.currentSpeedKph, 40)
+  }
+
+  func testLocationProcessingIgnoresImplausibleJump() {
+    let settings = MeterSettings.bengaluruDefault
+    meterStore.startTrip(settings: settings)
+
+    let now = Date()
+    let start = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 5,
+      timestamp: now.addingTimeInterval(-1)
+    )
+    meterStore.processLocation(start)
+    XCTAssertEqual(meterStore.points.count, 1)
+
+    // ~63 km in 1 second would imply >200,000 km/h and should be discarded.
+    let jumped = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 13.5416, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 5,
+      timestamp: now
+    )
+    meterStore.processLocation(jumped)
+
+    XCTAssertEqual(meterStore.distanceMeters, 0, accuracy: 0.5)
+    XCTAssertEqual(meterStore.points.count, 1)
+  }
+
+  func testLocationProcessingIgnoresImplausibleJumpWithTimestampSkew() {
+    let settings = MeterSettings.bengaluruDefault
+    meterStore.startTrip(settings: settings)
+
+    let now = Date()
+    let start = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 5,
+      timestamp: now
+    )
+    meterStore.processLocation(start)
+    XCTAssertEqual(meterStore.points.count, 1)
+
+    // ~63 km jump with an artificially far-future timestamp should still be rejected,
+    // because callbacks are observed almost back-to-back in real time.
+    let jumped = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 13.5416, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 5,
+      timestamp: now.addingTimeInterval(3_600)
+    )
+    meterStore.processLocation(jumped)
+
+    XCTAssertEqual(meterStore.distanceMeters, 0, accuracy: 0.5)
+    XCTAssertEqual(meterStore.points.count, 1)
+  }
+
+  func testLocationProcessingIgnoresStaleLocation() {
+    let settings = MeterSettings.bengaluruDefault
+    meterStore.startTrip(settings: settings)
+
+    let stale = CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: 0,
+      timestamp: Date().addingTimeInterval(-120)
+    )
+    meterStore.processLocation(stale)
+
+    XCTAssertTrue(meterStore.points.isEmpty)
+    XCTAssertEqual(meterStore.distanceMeters, 0)
   }
 
   func testLocationProcessingWhenNotOnTripIsNoOp() {

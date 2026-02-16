@@ -48,6 +48,13 @@ final class NoopLocationProvider: LocationProviding {
 @MainActor
 @Observable
 final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
+  private enum LocationValidation {
+    static let maxAcceptedImpliedSpeedKph: Double = 140
+    static let maxDisplayedSpeedKph: Double = 140
+    static let minDistanceDeltaMeters: CLLocationDistance = 2
+    static let observedCadenceValidationThresholdMeters: CLLocationDistance = 5_000
+  }
+
   private(set) var stateMachine = TripStateMachine()
   private(set) var metrics = TripMetrics()
   var fare: Double = 0
@@ -55,6 +62,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   var currentSpeedKph: Double = 0
   var isWaiting = false
   var locationError: String?
+  var currentRoadName: String = ""
   var conditions: TripConditions = .clear {
     didSet {
       guard let currentSettings else { return }
@@ -77,6 +85,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var isUpdatingLocation = false
   @ObservationIgnored private let clock = ContinuousClock()
   @ObservationIgnored private var lastLocation: CLLocation?
+  @ObservationIgnored private var lastLocationObservedAt: Date?
   @ObservationIgnored private var currentSettings: MeterSettings?
   @ObservationIgnored private var rateSnapshot: RateSnapshot?
   @ObservationIgnored private var multiplier: Double = 1
@@ -85,6 +94,10 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var fareCalculator: FareCalculator?
   @ObservationIgnored private var currentSurcharges: [FareSurcharge]?
   @ObservationIgnored private var whatIfProfiles: [(WhatIfFavorite, CityFareProfile)] = []
+  @ObservationIgnored private var roadGeocodeTask: Task<Void, Never>?
+  @ObservationIgnored private var lastRoadGeocodeAt: Date?
+  @ObservationIgnored private var lastRoadGeocodeLocation: CLLocation?
+  @ObservationIgnored private let roadGeocoder = CLGeocoder()
 
   override convenience init() {
     if TestEnvironment.isRunningTests {
@@ -161,6 +174,12 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     waitingAccumulated = 0
     waitingStartedAt = nil
     lastLocation = nil
+    lastLocationObservedAt = nil
+    currentRoadName = ""
+    lastRoadGeocodeAt = nil
+    lastRoadGeocodeLocation = nil
+    roadGeocodeTask?.cancel()
+    roadGeocoder.cancelGeocode()
     locationError = nil
 
     let startTime = Date()
@@ -187,6 +206,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     stopWaiting()
     stopLocationUpdates()
     stopTicking()
+    currentSpeedKph = 0
 
     let endDate = Date()
     let snapshot = rateSnapshot ?? RateSnapshot(settings: currentSettings ?? .bengaluruDefault)
@@ -232,6 +252,12 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     waitingAccumulated = 0
     waitingStartedAt = nil
     lastLocation = nil
+    lastLocationObservedAt = nil
+    currentRoadName = ""
+    lastRoadGeocodeAt = nil
+    lastRoadGeocodeLocation = nil
+    roadGeocodeTask?.cancel()
+    roadGeocoder.cancelGeocode()
     fareCalculator = nil
     currentSettings = nil
     currentSurcharges = nil
@@ -396,22 +422,198 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   /// Process a location update. Exposed for testing with mock location providers.
   func processLocation(_ location: CLLocation) {
     guard isOnTrip else { return }
+    guard isFreshLocation(location) else {
+      Log.location.debug("Ignoring cached pre-trip location update")
+      return
+    }
+    let observedAt = Date()
+    var derivedSpeedKph: Double?
 
-    currentSpeedKph = max(location.speed, 0) * 3.6
-    let point = TripPoint(location: location)
-    points.append(point)
-
-    if let lastLocation {
-      let delta = location.distance(from: lastLocation)
+    if let previousLocation = lastLocation {
+      let delta = location.distance(from: previousLocation)
+      let observedDelta = lastLocationObservedAt.map { observedAt.timeIntervalSince($0) }
       if isWaiting && (location.speed >= 1.0 || delta > 8) {
         stopWaiting()
       }
-      if delta > 2 {
+      if delta > LocationValidation.minDistanceDeltaMeters {
+        guard isPlausibleDistanceJump(delta: delta, from: previousLocation, to: location, observedDelta: observedDelta) else { return }
         metrics.addDistance(delta)
       }
+
+      // Many simulator/route feeds do not provide per-point speed; derive from distance/time when absent.
+      if location.speed <= 0 {
+        let timestampDelta = location.timestamp.timeIntervalSince(previousLocation.timestamp)
+        if timestampDelta > 0 {
+          let effectiveDelta = effectiveTimeDelta(
+            delta: delta,
+            timestampDelta: timestampDelta,
+            observedDelta: observedDelta
+          )
+          let speedKph = (delta / effectiveDelta) * 3.6
+          derivedSpeedKph = min(speedKph, LocationValidation.maxDisplayedSpeedKph)
+        }
+      }
     }
+
+    let reportedSpeedKph = max(location.speed, 0) * 3.6
+    currentSpeedKph = min(reportedSpeedKph, LocationValidation.maxDisplayedSpeedKph)
+    if currentSpeedKph == 0, let derivedSpeedKph {
+      currentSpeedKph = derivedSpeedKph
+    }
+
+    let point = TripPoint(location: location)
+    points.append(point)
     lastLocation = location
+    lastLocationObservedAt = observedAt
+    refreshCurrentRoadName(using: location)
     recalcFare()
+  }
+
+  private func isFreshLocation(_ location: CLLocation) -> Bool {
+    if let tripStart = stateMachine.startTime {
+      guard location.timestamp >= tripStart.addingTimeInterval(-2) else { return false }
+    }
+
+    return true
+  }
+
+  private func isPlausibleDistanceJump(
+    delta: CLLocationDistance,
+    from previous: CLLocation,
+    to current: CLLocation,
+    observedDelta: TimeInterval?
+  ) -> Bool {
+    let timestampDelta = current.timestamp.timeIntervalSince(previous.timestamp)
+    guard timestampDelta > 0 else {
+      Log.location.debug("Ignoring location update with non-increasing timestamp; dt=\(timestampDelta, format: .fixed(precision: 3))s")
+      return false
+    }
+
+    let effectiveDelta = effectiveTimeDelta(
+      delta: delta,
+      timestampDelta: timestampDelta,
+      observedDelta: observedDelta
+    )
+
+    let impliedSpeedKph = (delta / effectiveDelta) * 3.6
+    guard impliedSpeedKph <= LocationValidation.maxAcceptedImpliedSpeedKph else {
+      Log.location.warning(
+        "Ignoring implausible jump; delta=\(delta, format: .fixed(precision: 2))m dt=\(effectiveDelta, format: .fixed(precision: 2))s tsDelta=\(timestampDelta, format: .fixed(precision: 2))s speed=\(impliedSpeedKph, format: .fixed(precision: 2))km/h"
+      )
+      return false
+    }
+
+    return true
+  }
+
+  private func effectiveTimeDelta(
+    delta: CLLocationDistance,
+    timestampDelta: TimeInterval,
+    observedDelta: TimeInterval?
+  ) -> TimeInterval {
+    // GPX/simulator feeds can provide timestamps that are far apart while callbacks arrive quickly.
+    // Apply observed-cadence validation only for very large jumps to avoid over-rejecting normal updates.
+    if delta >= LocationValidation.observedCadenceValidationThresholdMeters,
+      let observedDelta,
+      observedDelta > 0
+    {
+      return min(timestampDelta, max(observedDelta, 1))
+    }
+    return timestampDelta
+  }
+
+  private func refreshCurrentRoadName(using location: CLLocation) {
+    guard shouldLookupRoadName(using: location) else { return }
+    lastRoadGeocodeAt = Date()
+    lastRoadGeocodeLocation = location
+    roadGeocoder.cancelGeocode()
+    roadGeocodeTask?.cancel()
+
+    roadGeocodeTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      do {
+        let placemarks = try await self.roadGeocoder.reverseGeocodeLocation(location)
+        guard !Task.isCancelled else { return }
+        let road = Self.roadName(from: placemarks.first)
+        self.currentRoadName = road ?? ""
+      } catch {
+        // Keep previous road name on geocoding failures.
+      }
+    }
+  }
+
+  private func shouldLookupRoadName(using location: CLLocation) -> Bool {
+    let now = Date()
+    let isPeriodicUpdateDue = lastRoadGeocodeAt.map { now.timeIntervalSince($0) >= 60 } ?? true
+    let hasSignificantDirectionChange = headingChangeOverLast64Meters.map { $0 > 45 } ?? false
+    guard isPeriodicUpdateDue || hasSignificantDirectionChange else { return false }
+
+    let distanceSinceLastLookup = lastRoadGeocodeLocation.map { location.distance(from: $0) } ?? .greatestFiniteMagnitude
+    guard distanceSinceLastLookup >= 32 else { return false }
+
+    return currentSpeedKph >= 5 || !isWaiting
+  }
+
+  private var headingChangeOverLast64Meters: Double? {
+    guard points.count >= 3 else { return nil }
+    guard let currentHeading = heading(
+      from: points[points.count - 2].coordinate,
+      to: points[points.count - 1].coordinate
+    ) else {
+      return nil
+    }
+
+    var traversed: CLLocationDistance = 0
+    var index = points.count - 1
+    while index > 0 && traversed < 64 {
+      let newer = CLLocation(latitude: points[index].latitude, longitude: points[index].longitude)
+      let older = CLLocation(latitude: points[index - 1].latitude, longitude: points[index - 1].longitude)
+      traversed += newer.distance(from: older)
+      index -= 1
+    }
+
+    guard index > 0 else { return nil }
+    guard let priorHeading = heading(
+      from: points[index - 1].coordinate,
+      to: points[index].coordinate
+    ) else {
+      return nil
+    }
+
+    let delta = abs(currentHeading - priorHeading).truncatingRemainder(dividingBy: 360)
+    return delta > 180 ? 360 - delta : delta
+  }
+
+  private func heading(from start: CLLocationCoordinate2D, to end: CLLocationCoordinate2D) -> Double? {
+    let startLat = start.latitude * .pi / 180
+    let startLon = start.longitude * .pi / 180
+    let endLat = end.latitude * .pi / 180
+    let endLon = end.longitude * .pi / 180
+
+    let deltaLon = endLon - startLon
+    let y = sin(deltaLon) * cos(endLat)
+    let x = cos(startLat) * sin(endLat) - sin(startLat) * cos(endLat) * cos(deltaLon)
+    guard !(abs(x) < 0.000001 && abs(y) < 0.000001) else { return nil }
+
+    let radians = atan2(y, x)
+    let degrees = radians * 180 / .pi
+    return (degrees + 360).truncatingRemainder(dividingBy: 360)
+  }
+
+  private static func roadName(from placemark: CLPlacemark?) -> String? {
+    guard let placemark else { return nil }
+    let primary = [placemark.subThoroughfare, placemark.thoroughfare]
+      .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .filter { !$0.isEmpty }
+      .joined(separator: " ")
+
+    if !primary.isEmpty { return primary }
+
+    let fallback = [placemark.name, placemark.locality]
+      .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .first { !$0.isEmpty }
+
+    return fallback
   }
 
   func toggleWaiting() {
