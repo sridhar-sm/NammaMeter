@@ -44,7 +44,7 @@ NammaMeter tracks two separate version numbers:
 
 **Purpose:** Tracks `FareProfileSettings` structure changes
 
-**Current Version:** `2`
+**Current Version:** `3`
 
 **Defined in:** `FareProfileSettings.currentSchemaVersion`
 
@@ -77,7 +77,7 @@ if state.schemaVersion != FareProfileSettings.currentSchemaVersion {
 
 **Purpose:** Tracks which catalog profiles user has seen
 
-**Current Version:** `2`
+**Current Version:** `3`
 
 **Defined in:** `FareCatalog.currentVersion`
 

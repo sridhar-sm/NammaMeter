@@ -7,6 +7,7 @@ struct SuperFullMeterPanel: View {
   let fare: Double
   let digitStyle: DigitWheelStyle
   let topInset: CGFloat
+  var cityVehicleLabel: String = ""
   @State private var hirePulse = false
 
   private let caseTop = MeterColorSchemes.SuperMechanical.caseTop
@@ -107,6 +108,11 @@ struct SuperFullMeterPanel: View {
             // Manufacturer plate
             SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
               .offset(y: bodyHeight * 0.25)
+
+            if !cityVehicleLabel.isEmpty {
+              MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+                .offset(y: bodyHeight * 0.42)
+            }
           }
           .frame(width: bodyWidth, height: bodyHeight)
 

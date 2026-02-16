@@ -94,7 +94,7 @@ struct CityDetailView: View {
     } label: {
       Image(systemName: isFavorited ? "star.fill" : "star")
         .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(isFavorited ? Theme.mango : Theme.ink.opacity(0.3))
+        .foregroundStyle(isFavorited ? Color.orange : Theme.ink.opacity(0.3))
     }
     .buttonStyle(.plain)
     .disabled(!isFavorited && atCapacity)

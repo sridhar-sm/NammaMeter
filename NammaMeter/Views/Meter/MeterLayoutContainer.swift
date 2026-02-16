@@ -24,7 +24,7 @@ struct MeterLayoutContainer: View {
         .frame(height: metrics.referenceMeterHeight)
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
-        .gesture(meterStyleSwipeGesture)
+        .gesture(meterSwipeGesture)
 
         MeterControlBar(height: metrics.controlBarHeight, showMeterSettings: $showMeterSettings)
           .padding(.horizontal, 12)
@@ -39,14 +39,14 @@ struct MeterLayoutContainer: View {
 
   private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
 
-  private var meterStyleSwipeGesture: some Gesture {
+  private var meterSwipeGesture: some Gesture {
     DragGesture(minimumDistance: 24, coordinateSpace: .local)
       .onEnded { value in
         let horizontal = value.translation.width
         let vertical = value.translation.height
-        guard abs(horizontal) > abs(vertical) else { return }
-        guard abs(horizontal) > 32 else { return }
-        advanceMeterStyle(by: horizontal < 0 ? 1 : -1)
+        if abs(horizontal) > abs(vertical) && abs(horizontal) > 32 {
+          advanceMeterStyle(by: horizontal < 0 ? 1 : -1)
+        }
       }
   }
 
@@ -56,6 +56,7 @@ struct MeterLayoutContainer: View {
     let nextIndex = (currentIndex + offset + styles.count) % styles.count
     meterFaceStyle = styles[nextIndex]
   }
+
 }
 
 struct MeterLayoutMetrics: Equatable {

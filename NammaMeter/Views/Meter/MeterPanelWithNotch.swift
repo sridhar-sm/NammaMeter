@@ -2,10 +2,19 @@ import SwiftUI
 
 struct MeterPanelWithNotch: View {
   @Environment(MeterStore.self) private var meterStore
+  @Environment(SettingsStore.self) private var settingsStore
   let meterFaceStyle: MeterFaceStyle
   let meterRenderMode: MeterRenderMode
   let digitWheelStyle: DigitWheelStyle
   let topInset: CGFloat
+
+  private var cityVehicleLabel: String {
+    let cityName = settingsStore.activeCityInfo.cityName
+    let vt = settingsStore.selectedVehicleType
+      ?? settingsStore.activeProfileForCurrentSelection?.vehicleType
+      ?? VehicleTypeCatalog.autoRickshaw
+    return "\(cityName) · \(VehicleTypeCatalog.displayName(for: vt))"
+  }
 
   var body: some View {
     switch meterFaceStyle {
@@ -15,7 +24,8 @@ struct MeterPanelWithNotch: View {
           tripState: meterStore.tripState,
           fare: meterStore.fare,
           digitStyle: digitWheelStyle,
-          topInset: topInset
+          topInset: topInset,
+          cityVehicleLabel: cityVehicleLabel
         )
       } else {
         SuperDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
@@ -30,7 +40,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset
+          topInset: topInset,
+          cityVehicleLabel: cityVehicleLabel
         )
       } else {
         SuperElectronicFullMeterPanel(
@@ -39,7 +50,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset + 8
+          topInset: topInset + 8,
+          cityVehicleLabel: cityVehicleLabel
         )
         .padding(.horizontal, 12)
       }
@@ -51,7 +63,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset
+          topInset: topInset,
+          cityVehicleLabel: cityVehicleLabel
         )
       } else {
         GoldenEagleFullMeterPanel(
@@ -60,13 +73,18 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset + 8
+          topInset: topInset + 8,
+          cityVehicleLabel: cityVehicleLabel
         )
         .padding(.horizontal, 12)
       }
     case .digital:
       if meterRenderMode == .full {
-        DigitalFullMeterPanel(tripState: meterStore.tripState, fare: meterStore.fare)
+        DigitalFullMeterPanel(
+          tripState: meterStore.tripState,
+          fare: meterStore.fare,
+          cityVehicleLabel: cityVehicleLabel
+        )
           .padding(.top, topInset + 8)
           .padding(.horizontal, 12)
       } else {
@@ -81,7 +99,8 @@ struct MeterPanelWithNotch: View {
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
-          topInset: topInset
+          topInset: topInset,
+          cityVehicleLabel: cityVehicleLabel
         )
       } else {
         BrightDigitalFullMeterPanel(
@@ -89,7 +108,8 @@ struct MeterPanelWithNotch: View {
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
-          topInset: topInset + 8
+          topInset: topInset + 8,
+          cityVehicleLabel: cityVehicleLabel
         )
         .padding(.horizontal, 12)
       }

@@ -13,7 +13,7 @@ struct MeterControlBar: View {
       let horizontalPadding: CGFloat = 10
       let verticalPadding: CGFloat = 4
       let spacing: CGFloat = 6
-      let tileCount = CGFloat(4)
+      let tileCount = CGFloat(5)
       let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
       let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
       let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
@@ -25,6 +25,7 @@ struct MeterControlBar: View {
       HStack(spacing: spacing) {
         tripToggleButton(metrics: metrics)
         waitToggleButton(metrics: metrics)
+        nightConditionButton(metrics: metrics)
         vehicleSelectorButton(metrics: metrics)
         meterSettingsButton(metrics: metrics)
       }
@@ -54,26 +55,14 @@ struct MeterControlBar: View {
     .accessibilityIdentifier("meter.settingsButton")
   }
 
-  private func vehicleSelectorButton(metrics: ControlBarMetrics) -> some View {
-    let types = availableVehicleTypes
-    let hasMultipleTypes = types.count > 1
-    let defaultBg = colorScheme == .dark ? Theme.darkControlBackground.opacity(1.2) : Theme.card.opacity(0.9)
-    let bgColor = hasMultipleTypes ? Theme.mint.opacity(0.85) : defaultBg
-
-    return Button {
-      cycleVehicleType()
-    } label: {
-      ControlTile(background: bgColor, size: metrics.tileSize) {
-        Image(systemName: vehicleSymbol)
-          .font(.system(size: metrics.iconSize, weight: .semibold))
-          .foregroundStyle(Theme.ink)
-      }
-    }
-    .buttonStyle(.plain)
-    .disabled(meterStore.tripState == .complete || !hasMultipleTypes)
-    .opacity(meterStore.tripState == .complete || !hasMultipleTypes ? 0.6 : 1)
-    .accessibilityLabel("Vehicle type: \(vehicleDisplayName)")
-    .accessibilityIdentifier("meter.vehicleSelector")
+  private func nightConditionButton(metrics: ControlBarMetrics) -> some View {
+    ConditionTileButton(
+      systemImage: "moon.stars.fill",
+      label: "Night",
+      isOn: bindingFor(\.isNight),
+      isInteractive: false,
+      metrics: metrics
+    )
   }
 
   private func tripToggleButton(metrics: ControlBarMetrics) -> some View {
@@ -126,7 +115,29 @@ struct MeterControlBar: View {
     .accessibilityIdentifier("meter.waitToggle")
   }
 
-  // MARK: - Vehicle selector helpers
+  // MARK: - Vehicle selector
+
+  private func vehicleSelectorButton(metrics: ControlBarMetrics) -> some View {
+    let types = availableVehicleTypes
+    let hasMultipleTypes = types.count > 1
+    let defaultBg = colorScheme == .dark ? Theme.darkControlBackground.opacity(1.2) : Theme.card.opacity(0.9)
+    let bgColor = hasMultipleTypes ? Theme.mint.opacity(0.85) : defaultBg
+
+    return Button {
+      cycleVehicleType()
+    } label: {
+      ControlTile(background: bgColor, size: metrics.tileSize) {
+        Image(systemName: vehicleSymbol)
+          .font(.system(size: metrics.iconSize, weight: .semibold))
+          .foregroundStyle(Theme.ink)
+      }
+    }
+    .buttonStyle(.plain)
+    .disabled(meterStore.tripState == .complete || !hasMultipleTypes)
+    .opacity(meterStore.tripState == .complete || !hasMultipleTypes ? 0.6 : 1)
+    .accessibilityLabel("Vehicle type: \(vehicleDisplayName)")
+    .accessibilityIdentifier("meter.vehicleSelector")
+  }
 
   private var vehicleSymbol: String {
     let vt = settingsStore.selectedVehicleType
@@ -161,7 +172,7 @@ struct MeterControlBar: View {
     }
   }
 
-  // MARK: - Other helpers
+  // MARK: - Helpers
 
   private var tripToggleAccessibilityLabel: String {
     switch meterStore.tripState {
@@ -172,5 +183,12 @@ struct MeterControlBar: View {
     case .complete:
       return "Reset trip"
     }
+  }
+
+  private func bindingFor(_ keyPath: WritableKeyPath<TripConditions, Bool>) -> Binding<Bool> {
+    Binding(
+      get: { meterStore.conditions[keyPath: keyPath] },
+      set: { meterStore.conditions[keyPath: keyPath] = $0 }
+    )
   }
 }

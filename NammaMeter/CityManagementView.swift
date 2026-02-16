@@ -107,7 +107,7 @@ struct CityRow: View {
           if hasFavorite {
             Image(systemName: "star.fill")
               .font(.system(size: 10))
-              .foregroundStyle(Theme.mango)
+              .foregroundStyle(Color.orange)
           }
         }
         if let region = group.cityKey.region {

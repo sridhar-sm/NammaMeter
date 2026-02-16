@@ -99,6 +99,7 @@ final class SettingsStore {
   // which would create a new profile and trigger another sync, creating an infinite loop.
   @ObservationIgnored private var isSyncingFromProfile = false
 
+  private var _favoritesVersion = 0
   @ObservationIgnored private var state: FareProfileSettings
 
   init(fileURL: URL = SettingsStore.defaultURL) {
@@ -207,18 +208,21 @@ final class SettingsStore {
   // MARK: - WhatIf Favorites
 
   var whatIfFavorites: [WhatIfFavorite] {
-    state.whatIfFavorites
+    _ = _favoritesVersion
+    return state.whatIfFavorites
   }
 
   func addWhatIfFavorite(_ favorite: WhatIfFavorite) {
     guard state.whatIfFavorites.count < 3 else { return }
     guard !state.whatIfFavorites.contains(where: { $0.id == favorite.id }) else { return }
     state.whatIfFavorites.append(favorite)
+    _favoritesVersion += 1
     scheduleSave()
   }
 
   func removeWhatIfFavorite(_ favorite: WhatIfFavorite) {
     state.whatIfFavorites.removeAll { $0.id == favorite.id }
+    _favoritesVersion += 1
     scheduleSave()
   }
 
