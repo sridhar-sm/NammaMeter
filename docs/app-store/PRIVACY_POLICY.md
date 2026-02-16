@@ -1,7 +1,7 @@
 # NammaMeter Privacy Policy
 
 **Effective Date:** February 8, 2026
-**Last Updated:** February 8, 2026
+**Last Updated:** February 16, 2026
 **App Version:** 1.0+
 
 ---
@@ -382,7 +382,7 @@ We may update this Privacy Policy to:
 For questions about this Privacy Policy or our privacy practices:
 
 **GitHub Repository:**
-https://github.com/sridharsm/NammaMeter
+https://github.com/sridhar-sm/NammaMeter
 
 **App Support:**
 Visit the GitHub repository for issues, discussions, and support
@@ -603,7 +603,7 @@ Your privacy is important to us. Thank you for using NammaMeter.
 ---
 
 **Document Version:** 1.0
-**Last Updated:** February 8, 2026
+**Last Updated:** February 16, 2026
 **Status:** Ready for App Store Submission
 **Approval:** For use in NammaMeter v1.0+
 

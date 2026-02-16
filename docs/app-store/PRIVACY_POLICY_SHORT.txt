@@ -111,7 +111,7 @@ CONTACT
 =======
 
 For privacy questions:
-GitHub: https://github.com/sridharsm/NammaMeter
+GitHub: https://github.com/sridhar-sm/NammaMeter
 
 KEY POINTS
 ==========
