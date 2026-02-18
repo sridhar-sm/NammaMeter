@@ -257,11 +257,13 @@ Download NammaMeter today and experience the confidence that comes with accurate
 
 ### What Makes NammaMeter Unique
 1. **Four Professional Meter Styles** - Not just one generic meter
-2. **Multi-City Support** - Unlimited cities with independent configurations
-3. **Night Mode Pricing** - Automatic surcharge detection
-4. **Complete Offline** - No internet required
-5. **Open Source Transparency** - GitHub repository available
-6. **No Subscriptions** - One-time download, no recurring charges
+2. **Fare Rules Engine** - See exactly which fare rules apply in real time
+3. **Fare Breakdown** - Itemised charges displayed on trip completion
+4. **Multi-City Support** - Unlimited cities with independent configurations
+5. **Night Mode Pricing** - Automatic surcharge detection
+6. **Complete Offline** - No internet required
+7. **Open Source Transparency** - GitHub repository available
+8. **No Subscriptions** - One-time download, no recurring charges
 
 ### Positioning Statement
 ```
@@ -289,26 +291,36 @@ Thank you for choosing NammaMeter. We're committed to providing the most
 accurate, reliable auto rickshaw meter for professionals and passengers worldwide.
 ```
 
+### v1.1 Release Notes (Current)
+
+#### v1.1 - Fare Transparency & Refined Layouts
+```
+Version 1.1 - Fare Transparency & Refined Layouts
+✓ Fare rules engine with active rule highlighting
+✓ Fare breakdown on trip completion
+✓ Simplified square meter layouts
+✓ Landscape orientation support
+✓ Cleaner UI with removed visual decorations
+```
+
 ### Update Release Notes (Future)
 
-#### v1.1 - Enhanced Analytics
+#### v1.2 - Enhanced Analytics & Export
 ```
-Version 1.1 - Better Insights
-✓ Trip statistics and summaries
-✓ Weekly and monthly earnings reports
-✓ Enhanced trip filtering and search
+Version 1.2 - Better Insights & Export
+✓ Additional city profiles
+✓ Enhanced trip analytics
+✓ Export trip data as PDF/CSV
 ✓ Performance improvements
-✓ Bug fixes
 ```
 
-#### v1.2 - Export & Sharing
+#### v1.3 - Sharing & Multi-language
 ```
-Version 1.2 - Share & Export
-✓ Export trips as PDF or CSV
+Version 1.3 - Share & Connect
+✓ Multi-language support
 ✓ Trip sharing capabilities
-✓ Enhanced trip details
-✓ New meter customization options
-✓ Improved performance
+✓ Apple Watch companion app
+✓ Cloud backup option
 ```
 
 ---

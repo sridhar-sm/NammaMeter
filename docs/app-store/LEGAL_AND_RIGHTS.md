@@ -1,7 +1,7 @@
 # NammaMeter - Legal and Rights Documentation
 
 **Date:** February 8, 2026
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Ready for App Store Submission
 
 ---
@@ -478,8 +478,8 @@ By using NammaMeter, you acknowledge that:
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** February 16, 2026
+**Document Version:** 1.1
+**Last Updated:** February 17, 2026
 **Status:** ✅ Ready for App Store Submission
 
 For the most current version, visit: https://github.com/sridhar-sm/NammaMeter

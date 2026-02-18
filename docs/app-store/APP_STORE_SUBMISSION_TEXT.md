@@ -32,6 +32,8 @@ Choose your preferred meter display:
 
 💰 ACCURATE FARE CALCULATION
 • Real-time fare calculation based on distance and time
+• Fare rules engine with active rule highlighting
+• Itemised fare breakdown on trip completion
 • Support for multiple cities with city-specific rates
 • Automatic night fare multipliers
 • Waiting time charges with customizable intervals
@@ -52,6 +54,7 @@ Choose your preferred meter display:
 • Multiple meter display modes (Full view / Display only)
 • Digit wheel style options (Disk / Drum)
 • Light and dark mode themes
+• Portrait and landscape orientation support
 • City-specific fare configuration
 
 ⚙️ MULTI-CITY SUPPORT
@@ -125,6 +128,23 @@ https://raw.githubusercontent.com/sridhar-sm/NammaMeter/main/docs/app-store/PRIV
 
 ## Release Notes (Current Version)
 
+### Version 1.1
+```
+🚀 NammaMeter 1.1 - Fare Transparency & Refined Layouts
+
+NEW FEATURES:
+✓ Fare rules engine — see which fare rules apply during your trip in real time
+✓ Fare breakdown on trip completion — view itemised charges when a trip ends
+✓ Active rule highlighting — clearly shows base fare, distance, waiting, and surcharge components
+
+UI IMPROVEMENTS:
+✓ Simplified square meter layouts for a cleaner look
+✓ Landscape orientation support
+✓ Removed visual decorations for improved readability
+
+Thank you for using NammaMeter! Questions or feedback? Visit our GitHub repository.
+```
+
 ### Version 1.0
 ```
 🚀 Initial Release - NammaMeter is here!
@@ -175,14 +195,17 @@ Questions or feedback? Visit our GitHub repository or contact us directly.
 ### What Reviewers Should Test:
 1. Trip start/stop functionality
 2. Fare calculation accuracy
-3. Trip history recording
-4. Multiple meter style switching
-5. Light/dark mode switching
-6. City configuration
-7. Night mode activation at scheduled times
-8. GPS tracking (with location permission)
-9. Background functionality
-10. Data persistence across app launches
+3. Fare rules engine — active rule highlighting during a trip
+4. Fare breakdown display on trip completion (Neo/Digital meter)
+5. Trip history recording
+6. Multiple meter style switching
+7. Light/dark mode switching
+8. Portrait and landscape orientation
+9. City configuration
+10. Night mode activation at scheduled times
+11. GPS tracking (with location permission)
+12. Background functionality
+13. Data persistence across app launches
 
 ### Demo Account/Data:
 - Default city pre-configured: Bangalore
@@ -264,13 +287,18 @@ fare calculation discrepancies or disputes.
 
 ## Version Roadmap (Optional - for Release Notes)
 
-### Version 1.1 (Upcoming)
+### Version 1.1 (Current)
+- Fare rules engine with active rule highlighting
+- Fare breakdown on trip completion
+- Simplified square meter layouts
+- Landscape orientation support
+
+### Version 1.2 (Upcoming)
 - Additional city profiles
 - Enhanced trip analytics
 - Export trip data as PDF/CSV
-- Offline map caching
 
-### Version 1.2 (Planned)
+### Version 1.3 (Planned)
 - Multi-language support
 - Apple Watch companion app
 - Trip sharing capabilities
@@ -286,7 +314,7 @@ fare calculation discrepancies or disputes.
 
 ---
 
-**Last Updated:** February 16, 2026
-**App Version:** 1.0
+**Last Updated:** February 17, 2026
+**App Version:** 1.1
 **Minimum iOS:** 17.6+
 **Languages:** English, Kannada

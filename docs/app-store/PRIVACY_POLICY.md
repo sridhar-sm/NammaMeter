@@ -2,7 +2,7 @@
 
 **Effective Date:** February 8, 2026
 **Last Updated:** February 16, 2026
-**App Version:** 1.0+
+**App Version:** 1.1+
 
 ---
 
@@ -522,6 +522,7 @@ This Privacy Policy complies with:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | Feb 8, 2026 | Initial Privacy Policy for App Store submission |
+| 1.1 | Feb 17, 2026 | Updated for v1.1 release; no changes to data practices |
 
 ---
 
@@ -602,10 +603,10 @@ Your privacy is important to us. Thank you for using NammaMeter.
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** February 16, 2026
+**Document Version:** 1.1
+**Last Updated:** February 17, 2026
 **Status:** Ready for App Store Submission
-**Approval:** For use in NammaMeter v1.0+
+**Approval:** For use in NammaMeter v1.1+
 
 ---
 

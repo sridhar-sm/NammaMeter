@@ -1,6 +1,9 @@
 # NammaMeter App Store Screenshots
 
 Generated: February 8, 2026
+**Updated:** February 17, 2026
+
+> **Note (v1.1):** Meter layouts were simplified to square proportions, visual decorations were removed, and landscape orientation was added in v1.1. Screenshots below reflect the v1.0 layout and should be recaptured for the v1.1 submission. See "v1.1 Screenshot Updates Needed" at the end of this document.
 
 ## Overview
 
@@ -116,9 +119,28 @@ All screenshots were captured using:
 - All meter displays show the control bar with trip, wait, night, and settings buttons
 - Map view shows real-time location and route information
 
+## v1.1 Screenshot Updates Needed
+
+The following changes in v1.1 require new screenshots:
+
+### Layout Changes
+- **Square meter proportions** — meters are now square instead of the previous aspect ratio
+- **Removed decorations** — cleaner meter faces without ornamental elements
+- **Landscape support** — meters now work in landscape orientation on iPhone and iPad
+
+### New States to Capture
+- **Fare breakdown on trip completion** — Neo/Digital meter showing itemised fare when trip ends
+- **Active fare rule highlighting** — meter showing which fare rules are currently applying
+- **Landscape orientation** — iPhone meters in landscape mode (new capability)
+
+### Recommended New Screenshots
+1. Recapture all existing screenshots (1-10) with updated square meter layouts
+2. Add: Digital/Neo meter showing fare breakdown at trip completion (light + dark)
+3. Add: iPhone landscape meter view
+4. Add: Fare rule highlighting during active trip
+
 ## Future Enhancements
 
-- Add actual trip-in-progress screenshots with live data
 - Include screenshots showing trip history and analysis features
 - Add screenshots of location permission and onboarding flows
 - Create localized versions for different App Stores (India, etc.)

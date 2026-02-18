@@ -156,6 +156,6 @@ You can delete the app and all data anytime.
 
 For the full detailed privacy policy, see: PRIVACY_POLICY.md
 
-Version: 1.0
-Date: February 8, 2026
+Version: 1.1
+Date: February 17, 2026
 Status: Ready for App Store

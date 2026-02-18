@@ -25,6 +25,8 @@ Choose your preferred meter display:
 
 💰 ACCURATE FARE CALCULATION
 • Real-time fare calculation based on distance and time
+• Fare rules engine with active rule highlighting
+• Itemised fare breakdown on trip completion
 • Support for multiple cities with custom rates
 • Automatic night fare multipliers
 • Waiting time charges with customizable intervals
@@ -45,6 +47,7 @@ Choose your preferred meter display:
 • Multiple meter display modes
 • Digit wheel style options
 • Light and dark mode themes
+• Portrait and landscape orientation support
 • City-specific fare configuration
 
 ⚙️ MULTI-CITY SUPPORT
@@ -76,23 +79,22 @@ SUPPORT URL:
 https://github.com/sridhar-sm/NammaMeter
 
 ================================================================================
-RELEASE NOTES (for v1.0):
+RELEASE NOTES (for v1.1):
 ================================================================================
 
-🚀 Initial Release - NammaMeter is here!
+🚀 NammaMeter 1.1 - Fare Transparency & Refined Layouts
 
-We're excited to introduce NammaMeter, the smart auto rickshaw fare calculator that brings precision and transparency to every ride.
+NEW FEATURES:
+✓ Fare rules engine — see which fare rules apply during your trip in real time
+✓ Fare breakdown on trip completion — view itemised charges when a trip ends
+✓ Active rule highlighting — clearly shows base fare, distance, waiting, and surcharge components
 
-✓ Four professional meter display styles
-✓ Multi-city fare configuration
-✓ Real-time GPS-based distance tracking
-✓ Automatic night fare multipliers
-✓ Waiting time charge tracking
-✓ Complete trip history with analytics
-✓ Light and dark mode themes
-✓ Full offline functionality
+UI IMPROVEMENTS:
+✓ Simplified square meter layouts for a cleaner look
+✓ Landscape orientation support
+✓ Removed visual decorations for improved readability
 
-Thank you for choosing NammaMeter!
+Thank you for using NammaMeter!
 
 ================================================================================
 REVIEW NOTES (for App Review):
@@ -133,6 +135,7 @@ Your smart auto rickshaw fare calculator is here. 🚕💰
 
 ✓ 4 professional meter styles
 ✓ Real-time GPS tracking
+✓ Fare rules engine & fare breakdown
 ✓ Multi-city fare support
 ✓ Night mode pricing
 ✓ Complete trip history
