@@ -25,7 +25,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testSuperMechanicalInProgress() {
@@ -37,7 +37,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testSuperMechanicalComplete() {
@@ -49,7 +49,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testSuperMechanicalDrumStyle() {
@@ -61,7 +61,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   // MARK: - Super Electronic Meter (Light Mode)
@@ -77,7 +77,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testSuperElectronicInProgress() {
@@ -91,7 +91,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testSuperElectronicNightMode() {
@@ -105,7 +105,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   // MARK: - Golden Eagle Meter (Light Mode)
@@ -121,7 +121,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testGoldenEagleInProgress() {
@@ -135,7 +135,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   // MARK: - Digital Meter (Light Mode)
@@ -259,7 +259,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testBrightDigitalInProgress() {
@@ -272,7 +272,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   // MARK: - Edge Cases (Light Mode)
@@ -286,7 +286,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   func testSuperElectronicLongTrip() {
@@ -300,7 +300,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
 
   // MARK: - Dark Mode Validation
@@ -314,7 +314,7 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark, record: isRecordingSnapshots)
   }
 
   func testSuperElectronicDarkMode() {
@@ -328,6 +328,6 @@ final class MeterSnapshotTests: XCTestCase {
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
 
-    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark)
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark, record: isRecordingSnapshots)
   }
 }
