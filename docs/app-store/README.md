@@ -291,10 +291,11 @@ After submission, monitor:
 
 | Version | Date | Status |
 |---------|------|--------|
+| 1.1 | Feb 17, 2026 | Fare rules engine, fare breakdown, layout improvements |
 | 1.0 | Feb 8, 2026 | Initial release - Ready for submission |
 
 ---
 
-**Last Updated:** February 16, 2026
-**Status:** ✅ Ready for App Store Submission
+**Last Updated:** February 17, 2026
+**Status:** ✅ Ready for App Store Submission (v1.1)
 **Next Step:** Host Privacy Policy & Terms of Service at HTTPS URLs

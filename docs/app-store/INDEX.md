@@ -272,18 +272,23 @@ docs/app-store/
 - [ ] Legal review completed
 
 ### After Launch (v1.0)
-- [ ] Monitor App Store reviews
-- [ ] Respond to user feedback
-- [ ] Track download analytics
-- [ ] Plan v1.1 features
+- [x] Monitor App Store reviews
+- [x] Respond to user feedback
+- [x] Track download analytics
+- [x] Plan v1.1 features
 
-### v1.1 Release (Planned)
-- [ ] Enhanced analytics
-- [ ] Trip export (PDF/CSV)
-- [ ] Additional city profiles
-- [ ] Performance improvements
+### v1.1 Release (Current)
+- [x] Fare rules engine with active rule highlighting
+- [x] Fare breakdown on trip completion
+- [x] Simplified square meter layouts
+- [x] Landscape orientation support
 
 ### v1.2 Release (Planned)
+- [ ] Additional city profiles
+- [ ] Enhanced trip analytics
+- [ ] Export trip data as PDF/CSV
+
+### v1.3 Release (Planned)
 - [ ] Multi-language support
 - [ ] Apple Watch companion app
 - [ ] Trip sharing capabilities
@@ -340,7 +345,7 @@ After Launch:
 - All character limits verified and within bounds
 - All screenshots optimized for App Store
 - All marketing copy professional and tested
-- All information current as of February 8, 2026
+- All information current as of February 17, 2026
 
 ---
 
@@ -384,5 +389,5 @@ Good luck with your NammaMeter launch! 🎉
 ---
 
 **Created:** February 8, 2026
-**Version:** 1.0 - Complete
+**Version:** 1.1 - Updated
 **Status:** ✅ Ready for Submission
