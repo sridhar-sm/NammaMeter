@@ -7,14 +7,13 @@ struct BrightDigitalFullMeterPanel: View {
   let fare: Double
   let waitingDuration: TimeInterval
   let distanceMeters: Double
-  let topInset: CGFloat
   var cityVehicleLabel: String = ""
 
   private let faceTop = MeterColorSchemes.BrightDigital.faceTop
   private let faceBottom = MeterColorSchemes.BrightDigital.faceBottom
 
   var body: some View {
-    MeterShell(style: .brightDigital, topInset: topInset) { bodyWidth, bodyHeight in
+    MeterShell(style: .brightDigital) { bodyWidth, bodyHeight in
       let faceWidth = bodyWidth * 0.92
       let faceHeight = bodyHeight * 0.86
       let windowWidth = faceWidth * 0.96

@@ -20,8 +20,7 @@ final class MeterSnapshotTests: XCTestCase {
     let view = SuperFullMeterPanel(
       tripState: .forHire,
       fare: 0,
-      digitStyle: .disk,
-      topInset: 60
+      digitStyle: .disk
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -33,8 +32,7 @@ final class MeterSnapshotTests: XCTestCase {
     let view = SuperFullMeterPanel(
       tripState: .inProgress,
       fare: 126.50,
-      digitStyle: .disk,
-      topInset: 60
+      digitStyle: .disk
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -46,8 +44,7 @@ final class MeterSnapshotTests: XCTestCase {
     let view = SuperFullMeterPanel(
       tripState: .complete,
       fare: 256.00,
-      digitStyle: .disk,
-      topInset: 60
+      digitStyle: .disk
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -59,8 +56,7 @@ final class MeterSnapshotTests: XCTestCase {
     let view = SuperFullMeterPanel(
       tripState: .inProgress,
       fare: 88.00,
-      digitStyle: .drum,
-      topInset: 60
+      digitStyle: .drum
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -76,8 +72,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 0,
       waitingDuration: 0,
       distanceMeters: 0,
-      isNight: false,
-      topInset: 60
+      isNight: false
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -91,8 +86,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 126.50,
       waitingDuration: 300, // 5 minutes
       distanceMeters: 3500,
-      isNight: false,
-      topInset: 60
+      isNight: false
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -106,8 +100,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 189.00,
       waitingDuration: 600,
       distanceMeters: 5000,
-      isNight: true,
-      topInset: 60
+      isNight: true
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -123,8 +116,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 0,
       waitingDuration: 0,
       distanceMeters: 0,
-      isNight: false,
-      topInset: 60
+      isNight: false
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -138,8 +130,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 156.00,
       waitingDuration: 420,
       distanceMeters: 4200,
-      isNight: false,
-      topInset: 60
+      isNight: false
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -263,8 +254,7 @@ final class MeterSnapshotTests: XCTestCase {
       tripState: .forHire,
       fare: 0,
       waitingDuration: 0,
-      distanceMeters: 0,
-      topInset: 60
+      distanceMeters: 0
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -277,8 +267,7 @@ final class MeterSnapshotTests: XCTestCase {
       tripState: .inProgress,
       fare: 112.00,
       waitingDuration: 180,
-      distanceMeters: 2800,
-      topInset: 60
+      distanceMeters: 2800
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -292,8 +281,7 @@ final class MeterSnapshotTests: XCTestCase {
     let view = SuperFullMeterPanel(
       tripState: .complete,
       fare: 9999.99,
-      digitStyle: .disk,
-      topInset: 60
+      digitStyle: .disk
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -307,8 +295,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 850.00,
       waitingDuration: 3600, // 1 hour
       distanceMeters: 25000, // 25 km
-      isNight: false,
-      topInset: 60
+      isNight: false
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -322,8 +309,7 @@ final class MeterSnapshotTests: XCTestCase {
     let view = SuperFullMeterPanel(
       tripState: .inProgress,
       fare: 126.50,
-      digitStyle: .disk,
-      topInset: 60
+      digitStyle: .disk
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))
@@ -337,8 +323,7 @@ final class MeterSnapshotTests: XCTestCase {
       fare: 189.00,
       waitingDuration: 600,
       distanceMeters: 5000,
-      isNight: true,
-      topInset: 60
+      isNight: true
     )
     .frame(width: 390, height: 500)
     .background(Color(red: 0.95, green: 0.94, blue: 0.92))

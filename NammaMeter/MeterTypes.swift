@@ -131,20 +131,10 @@ enum MeterDimensions {
 /// Dimension ratios for the Super Mechanical meter
 enum SuperMeterDimensions {
   static var widthRatio: CGFloat { MeterDimensions.widthRatio }
-  static let bodyAspect: CGFloat = 1.1
-  static let canopyRatio: CGFloat = 0.18
-  static let baseRatio: CGFloat = 0.14
-  static let canopyOverlap: CGFloat = 0.85
+  static let bodyAspect: CGFloat = 1.0
 
-  /// Calculate the natural height of the meter given a container width
   static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    let bodyHeight = bodyWidth * bodyAspect
-    let canopyHeight = bodyHeight * canopyRatio
-    // Base disabled - uncomment to re-enable
-    // let baseHeight = bodyHeight * baseRatio
-    return bodyHeight + canopyHeight * canopyOverlap
-    // With base: return bodyHeight + canopyHeight * canopyOverlap + baseHeight
+    containerWidth * widthRatio * bodyAspect
   }
 }
 
@@ -153,11 +143,10 @@ enum SuperMeterDimensions {
 /// Dimension ratios for the Super Electronic meter
 enum SuperElectronicDimensions {
   static var widthRatio: CGFloat { MeterDimensions.widthRatio }
-  static let bodyAspect: CGFloat = 1.1
+  static let bodyAspect: CGFloat = 1.0
 
   static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
+    containerWidth * widthRatio * bodyAspect
   }
 }
 
@@ -166,11 +155,10 @@ enum SuperElectronicDimensions {
 /// Dimension ratios for the Golden Eagle meter
 enum GoldenEagleDimensions {
   static var widthRatio: CGFloat { MeterDimensions.widthRatio }
-  static let bodyAspect: CGFloat = 1.12
+  static let bodyAspect: CGFloat = 1.0
 
   static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
+    containerWidth * widthRatio * bodyAspect
   }
 }
 
@@ -179,11 +167,10 @@ enum GoldenEagleDimensions {
 /// Dimension ratios for the Bright Digital meter
 enum BrightDigitalDimensions {
   static var widthRatio: CGFloat { MeterDimensions.widthRatio }
-  static let bodyAspect: CGFloat = 1.08
+  static let bodyAspect: CGFloat = 1.0
 
   static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
+    containerWidth * widthRatio * bodyAspect
   }
 }
 
@@ -192,11 +179,10 @@ enum BrightDigitalDimensions {
 /// Dimension ratios for the Neo Digital meter
 enum DigitalDimensions {
   static var widthRatio: CGFloat { MeterDimensions.widthRatio }
-  static let bodyAspect: CGFloat = GoldenEagleDimensions.bodyAspect
+  static let bodyAspect: CGFloat = 1.0
 
   static func naturalHeight(for containerWidth: CGFloat) -> CGFloat {
-    let bodyWidth = containerWidth * widthRatio
-    return bodyWidth * bodyAspect
+    containerWidth * widthRatio * bodyAspect
   }
 }
 
@@ -288,16 +274,13 @@ extension MeterShellStyle {
 /// Container that handles geometry scaling and shell rendering for meter panels
 struct MeterShell<Content: View>: View {
   let style: MeterShellStyle
-  let topInset: CGFloat
   @ViewBuilder let content: (_ bodyWidth: CGFloat, _ bodyHeight: CGFloat) -> Content
 
   init(
     style: MeterShellStyle,
-    topInset: CGFloat = 0,
     @ViewBuilder content: @escaping (_ bodyWidth: CGFloat, _ bodyHeight: CGFloat) -> Content
   ) {
     self.style = style
-    self.topInset = topInset
     self.content = content
   }
 
@@ -335,12 +318,6 @@ struct MeterShell<Content: View>: View {
       }
       .frame(width: bodyWidth, height: bodyHeight)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.alignment)
-      // DEBUG: Temporary border to visualize MeterShell bounds (uncomment for debugging)
-      // .overlay(
-      //   RoundedRectangle(cornerRadius: 8, style: .continuous)
-      //     .stroke(Color.red, lineWidth: 2)
-      // )
-      .offset(y: style.alignment == .top ? topInset : 0)
     }
   }
 }

@@ -3,35 +3,44 @@ import SwiftUI
 struct MeterPagerView: View {
   @Environment(MeterStore.self) private var meterStore
   @Binding var pagerSelection: Int
-  let height: CGFloat
+  var height: CGFloat? = nil
 
   var body: some View {
-    TabView(selection: $pagerSelection) {
-      mapPage
-        .tag(0)
-      tripDetailsPage
-        .tag(1)
-      ForEach(Array(meterStore.whatIfResults.enumerated()), id: \.element.favorite.id) { index, result in
-        meterPageContainer {
-          WhatIfComparisonPage(
-            result: result,
-            primaryFare: meterStore.fare,
-            primaryCurrencyCode: meterStore.activeCurrencyCode
-          )
+    GeometryReader { geo in
+      TabView(selection: $pagerSelection) {
+        mapPage
+          .tag(0)
+        tripDetailsPage
+          .tag(1)
+        ForEach(Array(meterStore.whatIfResults.enumerated()), id: \.element.favorite.id) { index, result in
+          meterPageContainer {
+            WhatIfComparisonPage(
+              result: result,
+              primaryFare: meterStore.fare,
+              primaryCurrencyCode: meterStore.activeCurrencyCode
+            )
+          }
+          .tag(2 + index)
         }
-        .tag(2 + index)
       }
-    }
-    .tabViewStyle(.page(indexDisplayMode: .always))
-    .indexViewStyle(.page(backgroundDisplayMode: .always))
-    .frame(height: max(height, 0))
-    .background(PageSwipeDisabler().allowsHitTesting(false))
-    .onChange(of: meterStore.whatIfResults.count) { _, newCount in
-      let maxPage = 1 + newCount
-      if pagerSelection > maxPage {
-        pagerSelection = 1
+      .tabViewStyle(.page(indexDisplayMode: .always))
+      .indexViewStyle(.page(backgroundDisplayMode: .always))
+      .background(PageSwipeDisabler().allowsHitTesting(false))
+      .onChange(of: meterStore.whatIfResults.count) { _, newCount in
+        let maxPage = 1 + newCount
+        if pagerSelection > maxPage {
+          pagerSelection = 1
+        }
       }
+      .frame(width: geo.size.width, height: geo.size.height)
     }
+    .contentShape(Rectangle())
+    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    .overlay(
+      RoundedRectangle(cornerRadius: 24, style: .continuous)
+        .stroke(Color.white.opacity(0.4), lineWidth: 1)
+    )
+    .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
   }
 
   private var mapPage: some View {
@@ -97,12 +106,7 @@ struct MeterPagerView: View {
       content()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Theme.card.opacity(0.95))
-    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-    .overlay(
-      RoundedRectangle(cornerRadius: 24, style: .continuous)
-        .stroke(Color.white.opacity(0.4), lineWidth: 1)
-    )
-    .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
   }
 }
