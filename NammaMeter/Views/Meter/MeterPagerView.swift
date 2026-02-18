@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MeterPagerView: View {
   @Environment(MeterStore.self) private var meterStore
+  @Environment(SettingsStore.self) private var settingsStore
   @Binding var pagerSelection: Int
   var height: CGFloat? = nil
 
@@ -10,25 +11,39 @@ struct MeterPagerView: View {
       TabView(selection: $pagerSelection) {
         mapPage
           .tag(0)
-        tripDetailsPage
-          .tag(1)
-        ForEach(Array(meterStore.whatIfResults.enumerated()), id: \.element.favorite.id) { index, result in
-          meterPageContainer {
-            WhatIfComparisonPage(
-              result: result,
-              primaryFare: meterStore.fare,
-              primaryCurrencyCode: meterStore.activeCurrencyCode
-            )
+
+        if meterStore.tripState == .forHire {
+          ForEach(Array(forHirePages.enumerated()), id: \.element.id) { index, item in
+            meterPageContainer {
+              FareRulesPreviewPage(profile: item.profile)
+            }
+            .tag(1 + index)
           }
-          .tag(2 + index)
+        } else {
+          tripDetailsPage
+            .tag(1)
+          ForEach(Array(meterStore.whatIfResults.enumerated()), id: \.element.favorite.id) { index, result in
+            meterPageContainer {
+              WhatIfComparisonPage(
+                result: result,
+                primaryFare: meterStore.fare,
+                primaryCurrencyCode: meterStore.activeCurrencyCode
+              )
+            }
+            .tag(2 + index)
+          }
         }
       }
       .tabViewStyle(.page(indexDisplayMode: .always))
       .indexViewStyle(.page(backgroundDisplayMode: .always))
       .background(PageSwipeDisabler().allowsHitTesting(false))
-      .onChange(of: meterStore.whatIfResults.count) { _, newCount in
-        let maxPage = 1 + newCount
-        if pagerSelection > maxPage {
+      .onChange(of: pageCount) { _, newCount in
+        if pagerSelection >= newCount {
+          pagerSelection = min(1, newCount - 1)
+        }
+      }
+      .onChange(of: meterStore.tripState) { _, _ in
+        if pagerSelection > 1 {
           pagerSelection = 1
         }
       }
@@ -42,6 +57,31 @@ struct MeterPagerView: View {
     )
     .shadow(color: Theme.pastelShadow(), radius: 12, x: 0, y: 6)
   }
+
+  // MARK: - ForHire Pages
+
+  private var forHirePages: [ForHirePageItem] {
+    var pages: [ForHirePageItem] = []
+    if let profile = settingsStore.activeProfileForCurrentSelection {
+      pages.append(ForHirePageItem(id: "current", profile: profile))
+    }
+    for fav in settingsStore.whatIfFavorites {
+      if let profile = settingsStore.whatIfProfile(for: fav) {
+        pages.append(ForHirePageItem(id: fav.id, profile: profile))
+      }
+    }
+    return pages
+  }
+
+  private var pageCount: Int {
+    if meterStore.tripState == .forHire {
+      return 1 + forHirePages.count
+    } else {
+      return 2 + meterStore.whatIfResults.count
+    }
+  }
+
+  // MARK: - Trip Pages
 
   private var mapPage: some View {
     meterPageContainer {
@@ -109,4 +149,11 @@ struct MeterPagerView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Theme.card.opacity(0.95))
   }
+}
+
+// MARK: - Supporting Types
+
+private struct ForHirePageItem: Identifiable {
+  let id: String
+  let profile: CityFareProfile
 }
