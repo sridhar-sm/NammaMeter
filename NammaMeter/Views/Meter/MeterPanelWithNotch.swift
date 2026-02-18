@@ -6,7 +6,6 @@ struct MeterPanelWithNotch: View {
   let meterFaceStyle: MeterFaceStyle
   let meterRenderMode: MeterRenderMode
   let digitWheelStyle: DigitWheelStyle
-  let topInset: CGFloat
 
   private var cityVehicleLabel: String {
     let cityName = settingsStore.activeCityInfo.cityName
@@ -24,12 +23,10 @@ struct MeterPanelWithNotch: View {
           tripState: meterStore.tripState,
           fare: meterStore.fare,
           digitStyle: digitWheelStyle,
-          topInset: topInset,
           cityVehicleLabel: cityVehicleLabel
         )
       } else {
         SuperDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
-          .padding(.top, topInset + 8)
           .padding(.horizontal, 12)
       }
     case .superElectronic:
@@ -40,7 +37,6 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset,
           cityVehicleLabel: cityVehicleLabel
         )
       } else {
@@ -50,7 +46,6 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset + 8,
           cityVehicleLabel: cityVehicleLabel
         )
         .padding(.horizontal, 12)
@@ -63,7 +58,6 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset,
           cityVehicleLabel: cityVehicleLabel
         )
       } else {
@@ -73,13 +67,11 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          topInset: topInset + 8,
           cityVehicleLabel: cityVehicleLabel
         )
         .padding(.horizontal, 12)
       }
     case .digital:
-      // Neo renders the same layout in both full and display modes.
       DigitalFullMeterPanel(
         tripState: meterStore.tripState,
         fare: meterStore.fare,
@@ -94,7 +86,6 @@ struct MeterPanelWithNotch: View {
         cityVehicleLabel: cityVehicleLabel,
         points: meterStore.points,
         currentRoadName: meterStore.currentRoadName,
-        topInset: topInset,
         surcharges: settingsStore.activeProfileForCurrentSelection?.surcharges,
         currencyCode: settingsStore.activeProfileForCurrentSelection?.cityKey.currencyCode ?? "INR"
       )
@@ -105,7 +96,6 @@ struct MeterPanelWithNotch: View {
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
-          topInset: topInset,
           cityVehicleLabel: cityVehicleLabel
         )
       } else {
@@ -114,7 +104,6 @@ struct MeterPanelWithNotch: View {
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
-          topInset: topInset + 8,
           cityVehicleLabel: cityVehicleLabel
         )
         .padding(.horizontal, 12)

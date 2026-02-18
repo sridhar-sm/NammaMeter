@@ -8,11 +8,10 @@ struct GoldenEagleFullMeterPanel: View {
   let waitingDuration: TimeInterval
   let distanceMeters: Double
   let isNight: Bool
-  let topInset: CGFloat
   var cityVehicleLabel: String = ""
 
   var body: some View {
-    MeterShell(style: .goldenEagle, topInset: topInset) { bodyWidth, bodyHeight in
+    MeterShell(style: .goldenEagle) { bodyWidth, bodyHeight in
       VStack(spacing: 0) {
         Spacer()
 
@@ -579,8 +578,7 @@ struct PlateScrew: View {
       fare: 30.5,
       waitingDuration: 132,
       distanceMeters: 2100,
-      isNight: false,
-      topInset: 60
+      isNight: false
     )
     .frame(height: 460)
   }

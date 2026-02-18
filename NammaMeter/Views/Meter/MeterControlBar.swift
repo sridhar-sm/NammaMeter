@@ -7,33 +7,54 @@ struct MeterControlBar: View {
   @Environment(MeterStore.self) private var meterStore
   let height: CGFloat
   @Binding var showMeterSettings: Bool
+  var isLandscape: Bool = false
 
   var body: some View {
     GeometryReader { geo in
-      let horizontalPadding: CGFloat = 10
-      let verticalPadding: CGFloat = 4
+      let padding: CGFloat = isLandscape ? 4 : 10
       let spacing: CGFloat = 6
       let tileCount = CGFloat(5)
-      let availableWidth = max(geo.size.width - (horizontalPadding * 2), 0)
-      let availableHeight = max(geo.size.height - (verticalPadding * 2), 0)
-      let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
-      let metrics = ControlBarMetrics(
-        tileSize: CGSize(width: tileWidth, height: availableHeight),
-        iconSize: min(14, max(12, tileWidth * 0.35))
-      )
 
-      HStack(spacing: spacing) {
-        tripToggleButton(metrics: metrics)
-        waitToggleButton(metrics: metrics)
-        nightConditionButton(metrics: metrics)
-        vehicleSelectorButton(metrics: metrics)
-        meterSettingsButton(metrics: metrics)
+      if isLandscape {
+        let availableWidth = max(geo.size.width - (padding * 2), 0)
+        let availableHeight = max(geo.size.height - (padding * 2), 0)
+        let tileHeight = max((availableHeight - spacing * (tileCount - 1)) / tileCount, 0)
+        let metrics = ControlBarMetrics(
+          tileSize: CGSize(width: availableWidth, height: tileHeight),
+          iconSize: min(14, max(12, availableWidth * 0.35))
+        )
+
+        VStack(spacing: spacing) {
+          tripToggleButton(metrics: metrics)
+          waitToggleButton(metrics: metrics)
+          nightConditionButton(metrics: metrics)
+          vehicleSelectorButton(metrics: metrics)
+          meterSettingsButton(metrics: metrics)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .padding(padding)
+      } else {
+        let availableWidth = max(geo.size.width - (padding * 2), 0)
+        let availableHeight = max(geo.size.height - (CGFloat(4) * 2), 0)
+        let tileWidth = max((availableWidth - spacing * (tileCount - 1)) / tileCount, 0)
+        let metrics = ControlBarMetrics(
+          tileSize: CGSize(width: tileWidth, height: availableHeight),
+          iconSize: min(14, max(12, tileWidth * 0.35))
+        )
+
+        HStack(spacing: spacing) {
+          tripToggleButton(metrics: metrics)
+          waitToggleButton(metrics: metrics)
+          nightConditionButton(metrics: metrics)
+          vehicleSelectorButton(metrics: metrics)
+          meterSettingsButton(metrics: metrics)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .padding(.horizontal, padding)
+        .padding(.vertical, 4)
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-      .padding(.horizontal, horizontalPadding)
-      .padding(.vertical, verticalPadding)
     }
-    .frame(height: height)
+    .frame(width: isLandscape ? 56 : nil, height: isLandscape ? nil : height)
     .background(colorScheme == .dark ? Theme.darkControlBackground : Theme.card.opacity(0.92))
     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     .shadow(color: Theme.pastelShadow(), radius: 8, x: 0, y: 4)
@@ -89,7 +110,21 @@ struct MeterControlBar: View {
         meterStore.resetToForHire()
       }
     } label: {
-      MiniTripStateSign(tripState: meterStore.tripState, metrics: metrics)
+      let bgColor: Color = switch meterStore.tripState {
+      case .forHire: Theme.coral.opacity(0.85)
+      case .inProgress: Theme.mint.opacity(0.85)
+      case .complete: Theme.mango.opacity(0.85)
+      }
+      let iconName: String = switch meterStore.tripState {
+      case .forHire: "play.fill"
+      case .inProgress: "stop.fill"
+      case .complete: "arrow.counterclockwise"
+      }
+      ControlTile(background: bgColor, size: metrics.tileSize) {
+        Image(systemName: iconName)
+          .font(.system(size: metrics.iconSize, weight: .semibold))
+          .foregroundStyle(Theme.ink)
+      }
     }
     .buttonStyle(.plain)
     .accessibilityLabel(tripToggleAccessibilityLabel)

@@ -9,32 +9,45 @@ struct MeterLayoutContainer: View {
 
   var body: some View {
     GeometryReader { geo in
-      let topInset = safeAreaTop
-      let bottomPadding = MeterLayoutMetrics.bottomPadding
-      let spacing = MeterLayoutMetrics.spacing
-      let metrics = MeterLayoutMetrics(containerSize: geo.size)
+      let metrics = MeterLayoutMetrics(containerSize: geo.size, safeAreaTop: safeAreaTop)
 
-      VStack(spacing: spacing) {
-        MeterPanelWithNotch(
-          meterFaceStyle: meterFaceStyle,
-          meterRenderMode: meterRenderMode,
-          digitWheelStyle: digitWheelStyle,
-          topInset: topInset
-        )
-        .frame(height: metrics.referenceMeterHeight)
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        .gesture(meterSwipeGesture)
+      if metrics.isLandscape {
+        HStack(spacing: MeterLayoutMetrics.spacing) {
+          meterPanel
+            .frame(width: metrics.meterSide, height: metrics.meterSide)
 
-        MeterControlBar(height: metrics.controlBarHeight, showMeterSettings: $showMeterSettings)
-          .padding(.horizontal, 12)
+          VStack(spacing: MeterLayoutMetrics.spacing) {
+            MeterPagerView(pagerSelection: $pagerSelection)
+            MeterControlBar(height: metrics.controlBarHeight, showMeterSettings: $showMeterSettings)
+          }
+        }
+        .padding(.top, MeterLayoutMetrics.landscapeTopPadding)
+        .frame(width: geo.size.width, height: geo.size.height, alignment: .leading)
+      } else {
+        VStack(spacing: MeterLayoutMetrics.spacing) {
+          meterPanel
+            .frame(height: metrics.meterSide)
+            .frame(maxWidth: .infinity)
 
-        MeterPagerView(pagerSelection: $pagerSelection, height: metrics.fixedMapHeight)
-          .padding(.horizontal, 12)
+          MeterPagerView(pagerSelection: $pagerSelection, height: metrics.fixedMapHeight)
+
+          MeterControlBar(height: metrics.controlBarHeight, showMeterSettings: $showMeterSettings)
+        }
+        .padding(.top, safeAreaTop)
+        .padding(.horizontal, MeterLayoutMetrics.uniformPadding)
+        .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
       }
-      .padding(.bottom, bottomPadding)
-      .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
     }
+  }
+
+  private var meterPanel: some View {
+    MeterPanelWithNotch(
+      meterFaceStyle: meterFaceStyle,
+      meterRenderMode: meterRenderMode,
+      digitWheelStyle: digitWheelStyle
+    )
+    .contentShape(Rectangle())
+    .gesture(meterSwipeGesture)
   }
 
   private var safeAreaTop: CGFloat { windowSafeAreaInsets.top }
@@ -62,38 +75,32 @@ struct MeterLayoutContainer: View {
 struct MeterLayoutMetrics: Equatable {
   static let bottomPadding: CGFloat = 8
   static let spacing: CGFloat = 4
-  static let minMapHeight: CGFloat = 100
+  static let uniformPadding: CGFloat = 12
+  static let landscapeTopPadding: CGFloat = 8
 
   let controlBarHeight: CGFloat
-  let referenceMeterHeight: CGFloat
+  let meterSide: CGFloat
   let fixedMapHeight: CGFloat
-  let availableHeight: CGFloat
+  let isLandscape: Bool
 
-  init(containerSize: CGSize) {
-    let controlBarHeight: CGFloat = 56  // Fixed height with 48pt buttons + 4pt padding
-
-    let rawAvailableHeight = containerSize.height - Self.bottomPadding - controlBarHeight - (Self.spacing * 2)
-    let availableHeight = max(rawAvailableHeight, 0)
-
-    let maxMeterNaturalHeight = SuperMeterDimensions.naturalHeight(for: containerSize.width)
-    let maxAllowedMeterHeight = containerSize.height * 0.65
-
-    let cappedMeterHeight: CGFloat
-    if maxMeterNaturalHeight > maxAllowedMeterHeight {
-      // Meter exceeds 65%, clamp it
-      cappedMeterHeight = maxAllowedMeterHeight
-    } else {
-      // Meter fits within 65%
-      cappedMeterHeight = maxMeterNaturalHeight
-    }
-
-    let maxMeterHeight = max(availableHeight - Self.minMapHeight, 0)
-    let referenceMeterHeight = max(min(cappedMeterHeight, maxMeterHeight), 0)
-    let fixedMapHeight = max(availableHeight - referenceMeterHeight, 0)
-
+  init(containerSize: CGSize, safeAreaTop: CGFloat = 0) {
+    let landscape = containerSize.width > containerSize.height
+    self.isLandscape = landscape
+    let controlBarHeight: CGFloat = 56
     self.controlBarHeight = controlBarHeight
-    self.referenceMeterHeight = referenceMeterHeight
-    self.fixedMapHeight = fixedMapHeight
-    self.availableHeight = availableHeight
+
+    if landscape {
+      // Landscape: square meter sized from available height
+      let meterSide = max(containerSize.height - Self.landscapeTopPadding, 0)
+      self.meterSide = meterSide
+      self.fixedMapHeight = meterSide
+    } else {
+      // Portrait: square meter sized from available width
+      let meterSide = max(containerSize.width - Self.uniformPadding * 2, 0)
+      let usedHeight = safeAreaTop + meterSide + controlBarHeight + Self.spacing * 2
+      let fixedMapHeight = max(containerSize.height - usedHeight, 0)
+      self.meterSide = meterSide
+      self.fixedMapHeight = fixedMapHeight
+    }
   }
 }

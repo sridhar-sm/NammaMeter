@@ -79,7 +79,6 @@ struct DigitalFullMeterPanel: View {
   let cityVehicleLabel: String
   let points: [TripPoint]
   let currentRoadName: String
-  let topInset: CGFloat
   let fixedNow: Date?
   let surcharges: [FareSurcharge]?
   let currencyCode: String
@@ -101,7 +100,6 @@ struct DigitalFullMeterPanel: View {
     cityVehicleLabel: String = "",
     points: [TripPoint] = [],
     currentRoadName: String = "",
-    topInset: CGFloat = 0,
     fixedNow: Date? = nil,
     surcharges: [FareSurcharge]? = nil,
     currencyCode: String = "INR"
@@ -119,7 +117,6 @@ struct DigitalFullMeterPanel: View {
     self.cityVehicleLabel = cityVehicleLabel
     self.points = points
     self.currentRoadName = currentRoadName
-    self.topInset = topInset
     self.fixedNow = fixedNow
     self.surcharges = surcharges
     self.currencyCode = currencyCode
@@ -155,7 +152,7 @@ struct DigitalFullMeterPanel: View {
   }
 
   var body: some View {
-    MeterShell(style: .digital, topInset: topInset) { bodyWidth, bodyHeight in
+    MeterShell(style: .digital) { bodyWidth, bodyHeight in
       let faceWidth = bodyWidth * 0.93
       let faceHeight = bodyHeight * 0.9
       NeoLCDDisplayWindow(

@@ -8,14 +8,13 @@ struct SuperElectronicFullMeterPanel: View {
   let waitingDuration: TimeInterval
   let distanceMeters: Double
   let isNight: Bool
-  let topInset: CGFloat
   var cityVehicleLabel: String = ""
 
   private let metalPanel = MeterColorSchemes.SuperElectronic.metalPanel
   private let metalEdge = MeterColorSchemes.SuperElectronic.metalEdge
 
   var body: some View {
-    MeterShell(style: .superElectronic, topInset: topInset) { bodyWidth, bodyHeight in
+    MeterShell(style: .superElectronic) { bodyWidth, bodyHeight in
       VStack(spacing: bodyHeight * 0.02) {
         // Top brand plate
         SuperElectronicBrandPlate(width: bodyWidth * 0.85, height: bodyHeight * 0.08)
@@ -562,8 +561,7 @@ struct SuperElectronicManufacturerPlate: View {
       fare: 46.00,
       waitingDuration: 164,
       distanceMeters: 3300,
-      isNight: true,
-      topInset: 60
+      isNight: true
     )
     .frame(height: 450)
   }

@@ -6,7 +6,6 @@ struct SuperFullMeterPanel: View {
   let tripState: TripMeterState
   let fare: Double
   let digitStyle: DigitWheelStyle
-  let topInset: CGFloat
   var cityVehicleLabel: String = ""
   @State private var hirePulse = false
 
@@ -19,137 +18,72 @@ struct SuperFullMeterPanel: View {
 
   var body: some View {
     GeometryReader { geo in
-      // Calculate meter dimensions using shared constants
       let desiredBodyWidth = max(geo.size.width * SuperMeterDimensions.widthRatio, 0)
       let bodyHeightForWidth = desiredBodyWidth * SuperMeterDimensions.bodyAspect
-      let canopyHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.canopyRatio
-      // Base disabled - uncomment to re-enable
-      // let baseHeightForWidth = bodyHeightForWidth * SuperMeterDimensions.baseRatio
-      let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap
-      // With base: let totalHeightForWidth = bodyHeightForWidth + canopyHeightForWidth * SuperMeterDimensions.canopyOverlap + baseHeightForWidth
-
-      // Scale to fit available height
-      let rawScale = totalHeightForWidth > 0 ? geo.size.height / totalHeightForWidth : 0
+      let rawScale = bodyHeightForWidth > 0 ? geo.size.height / bodyHeightForWidth : 0
       let scale = rawScale.isFinite ? min(1, max(rawScale, 0)) : 0
       let bodyWidth = desiredBodyWidth * scale
       let bodyHeight = bodyHeightForWidth * scale
-      let canopyHeight = canopyHeightForWidth * scale
-      // Base disabled - uncomment to re-enable
-      // let baseHeight = baseHeightForWidth * scale
 
-      // Position meter so canopy bottom aligns with MeterShell top (at topInset)
-      let meterTopOffset = max(topInset - canopyHeight, 0.0)
-
-      ZStack(alignment: .top) {
-        VStack(spacing: -bodyHeight * 0.08) {
-          // Canopy with original proportions
-          SuperMeterCanopyShape()
-            .fill(
-              LinearGradient(
-                colors: [caseTop, caseBottom],
-                startPoint: .top,
-                endPoint: .bottom
-              )
+      ZStack {
+        // Outer casing
+        RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
+          .fill(
+            LinearGradient(
+              colors: [caseTop, caseBottom],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
             )
-            .frame(width: bodyWidth * 0.9, height: canopyHeight)
-            .overlay(
-              SuperMeterCanopyShape()
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.25), radius: 10, x: 0, y: 6)
-
-          // Main meter body
-          ZStack {
-            // Outer casing
+          )
+          .overlay(
             RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
-              .fill(
-                LinearGradient(
-                  colors: [caseTop, caseBottom],
-                  startPoint: .topLeading,
-                  endPoint: .bottomTrailing
-                )
-              )
-              .overlay(
-                RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
-                  .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
-              )
-              .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
+              .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
+          )
+          .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
 
-            // Inner white panel - wider than tall (landscape rectangle)
+        // Inner white panel
+        RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
+          .fill(metalPanel)
+          .padding(.horizontal, bodyWidth * 0.07)
+          .padding(.top, bodyHeight * 0.07)
+          .padding(.bottom, bodyHeight * 0.4)
+          .overlay(
             RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
-              .fill(metalPanel)
+              .stroke(metalEdge, lineWidth: 1)
               .padding(.horizontal, bodyWidth * 0.07)
               .padding(.top, bodyHeight * 0.07)
               .padding(.bottom, bodyHeight * 0.4)
-              .overlay(
-                RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
-                  .stroke(metalEdge, lineWidth: 1)
-                  .padding(.horizontal, bodyWidth * 0.07)
-                  .padding(.top, bodyHeight * 0.07)
-                  .padding(.bottom, bodyHeight * 0.4)
-              )
+          )
 
-            // Dial face content
-            SuperMeterFace(
-              bodyWidth: bodyWidth,
-              bodyHeight: bodyHeight,
-              tripState: tripState,
-              fare: fare,
-              displayEdge: displayEdge,
-              printInk: printInk,
-              pulse: hirePulse,
-              digitStyle: digitStyle
-            )
-            .padding(.horizontal, bodyWidth * 0.07)
-            .padding(.top, bodyHeight * 0.07)
-            .padding(.bottom, bodyHeight * 0.4)
-            .clipShape(RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous))
+        // Dial face content
+        SuperMeterFace(
+          bodyWidth: bodyWidth,
+          bodyHeight: bodyHeight,
+          tripState: tripState,
+          fare: fare,
+          displayEdge: displayEdge,
+          printInk: printInk,
+          pulse: hirePulse,
+          digitStyle: digitStyle
+        )
+        .padding(.horizontal, bodyWidth * 0.07)
+        .padding(.top, bodyHeight * 0.07)
+        .padding(.bottom, bodyHeight * 0.4)
+        .clipShape(RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous))
 
-            // Manufacturer plate
-            SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
-              .offset(y: bodyHeight * 0.25)
+        // Manufacturer plate
+        SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
+          .offset(y: bodyHeight * 0.25)
 
-            if !cityVehicleLabel.isEmpty {
-              MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
-                .offset(y: bodyHeight * 0.42)
-            }
-          }
-          .frame(width: bodyWidth, height: bodyHeight)
-
-          // Base mount - DISABLED (uncomment to re-enable)
-          // SuperMeterBaseView(width: bodyWidth * 0.62, height: baseHeight)
-          //   .offset(y: baseHeight * -0.05)
+        if !cityVehicleLabel.isEmpty {
+          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+            .offset(y: bodyHeight * 0.42)
         }
-        .offset(y: meterTopOffset)
       }
-      .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
-      // DEBUG: Temporary border to visualize Super Mechanical meter bounds (uncomment for debugging)
-      // .overlay(
-      //   Rectangle()
-      //     .stroke(Color.blue, lineWidth: 2)
-      // )
+      .frame(width: bodyWidth, height: bodyHeight)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     .hirePulse(tripState: tripState, pulse: $hirePulse)
-  }
-}
-
-// MARK: - Super Meter Canopy Shape
-
-/// Classic peaked canopy shape for the meter top
-struct SuperMeterCanopyShape: Shape {
-  func path(in rect: CGRect) -> Path {
-    var path = Path()
-    let peak = CGPoint(x: rect.midX, y: rect.minY)
-    let leftTop = CGPoint(x: rect.minX + rect.width * 0.12, y: rect.minY + rect.height * 0.35)
-    let rightTop = CGPoint(x: rect.maxX - rect.width * 0.12, y: rect.minY + rect.height * 0.35)
-
-    path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-    path.addLine(to: leftTop)
-    path.addQuadCurve(to: peak, control: CGPoint(x: rect.midX - rect.width * 0.18, y: rect.minY))
-    path.addQuadCurve(to: rightTop, control: CGPoint(x: rect.midX + rect.width * 0.18, y: rect.minY))
-    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-    path.closeSubpath()
-    return path
   }
 }
 
@@ -275,43 +209,6 @@ struct SuperMeterPlate: View {
             .foregroundStyle(printInk.opacity(0.6))
         }
       )
-  }
-}
-
-// MARK: - Super Meter Base View
-
-struct SuperMeterBaseView: View {
-  let width: CGFloat
-  let height: CGFloat
-
-  var body: some View {
-    ZStack {
-      RoundedRectangle(cornerRadius: height * 0.35, style: .continuous)
-        .fill(
-          LinearGradient(
-            colors: [
-              MeterColorSchemes.SuperMechanical.shadowTop,
-              MeterColorSchemes.SuperMechanical.shadowBottom
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-          )
-        )
-        .overlay(
-          RoundedRectangle(cornerRadius: height * 0.35, style: .continuous)
-            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-        )
-
-      HStack(spacing: width * 0.12) {
-        Capsule()
-          .fill(Color.black.opacity(0.7))
-          .frame(width: width * 0.12, height: height * 0.55)
-        Capsule()
-          .fill(Color.black.opacity(0.7))
-          .frame(width: width * 0.12, height: height * 0.55)
-      }
-    }
-    .frame(width: width, height: height)
   }
 }
 
