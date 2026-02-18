@@ -9,79 +9,51 @@ struct SuperFullMeterPanel: View {
   var cityVehicleLabel: String = ""
   @State private var hirePulse = false
 
-  private let caseTop = MeterColorSchemes.SuperMechanical.caseTop
-  private let caseBottom = MeterColorSchemes.SuperMechanical.caseBottom
   private let metalPanel = MeterColorSchemes.SuperMechanical.metalPanel
   private let metalEdge = MeterColorSchemes.SuperMechanical.metalEdge
   private let displayEdge = MeterColorSchemes.SuperMechanical.displayEdge
   private let printInk = MeterColorSchemes.SuperMechanical.printInk
 
   var body: some View {
-    GeometryReader { geo in
-      let desiredBodyWidth = max(geo.size.width * SuperMeterDimensions.widthRatio, 0)
-      let bodyHeightForWidth = desiredBodyWidth * SuperMeterDimensions.bodyAspect
-      let rawScale = bodyHeightForWidth > 0 ? geo.size.height / bodyHeightForWidth : 0
-      let scale = rawScale.isFinite ? min(1, max(rawScale, 0)) : 0
-      let bodyWidth = desiredBodyWidth * scale
-      let bodyHeight = bodyHeightForWidth * scale
-
-      ZStack {
-        // Outer casing
-        RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [caseTop, caseBottom],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: bodyWidth * 0.1, style: .continuous)
-              .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
-          )
-          .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
-
-        // Inner white panel
-        RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
-          .fill(metalPanel)
-          .padding(.horizontal, bodyWidth * 0.07)
-          .padding(.top, bodyHeight * 0.07)
-          .padding(.bottom, bodyHeight * 0.4)
-          .overlay(
-            RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
-              .stroke(metalEdge, lineWidth: 1)
-              .padding(.horizontal, bodyWidth * 0.07)
-              .padding(.top, bodyHeight * 0.07)
-              .padding(.bottom, bodyHeight * 0.4)
-          )
-
-        // Dial face content
-        SuperMeterFace(
-          bodyWidth: bodyWidth,
-          bodyHeight: bodyHeight,
-          tripState: tripState,
-          fare: fare,
-          displayEdge: displayEdge,
-          printInk: printInk,
-          pulse: hirePulse,
-          digitStyle: digitStyle
-        )
+    MeterShell(style: .superMechanical) { bodyWidth, bodyHeight in
+      // Inner white panel
+      RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
+        .fill(metalPanel)
         .padding(.horizontal, bodyWidth * 0.07)
         .padding(.top, bodyHeight * 0.07)
         .padding(.bottom, bodyHeight * 0.4)
-        .clipShape(RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous))
+        .overlay(
+          RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous)
+            .stroke(metalEdge, lineWidth: 1)
+            .padding(.horizontal, bodyWidth * 0.07)
+            .padding(.top, bodyHeight * 0.07)
+            .padding(.bottom, bodyHeight * 0.4)
+        )
 
-        // Manufacturer plate
-        SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
-          .offset(y: bodyHeight * 0.25)
+      // Dial face content
+      SuperMeterFace(
+        bodyWidth: bodyWidth,
+        bodyHeight: bodyHeight,
+        tripState: tripState,
+        fare: fare,
+        displayEdge: displayEdge,
+        printInk: printInk,
+        pulse: hirePulse,
+        digitStyle: digitStyle
+      )
+      .padding(.horizontal, bodyWidth * 0.07)
+      .padding(.top, bodyHeight * 0.07)
+      .padding(.bottom, bodyHeight * 0.4)
+      .clipShape(RoundedRectangle(cornerRadius: bodyWidth * 0.07, style: .continuous))
 
-        if !cityVehicleLabel.isEmpty {
-          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
-            .offset(y: bodyHeight * 0.42)
-        }
+      // Manufacturer plate
+      SuperMeterPlate(bodyWidth: bodyWidth, bodyHeight: bodyHeight, printInk: printInk, metalPanel: metalPanel, metalEdge: metalEdge)
+        .offset(y: bodyHeight * 0.25)
+
+      if !cityVehicleLabel.isEmpty {
+        MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+          .offset(y: bodyHeight * 0.42)
       }
-      .frame(width: bodyWidth, height: bodyHeight)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     .hirePulse(tripState: tripState, pulse: $hirePulse)
   }
@@ -259,12 +231,12 @@ struct MeterDisplayWindow: View {
     }
   }
 
-  private func formattedDigits() -> (digits: [String], paiseStartIndex: Int) {
+  func formattedDigits() -> (digits: [String], paiseStartIndex: Int) {
     let totalPaise = max(0, Int((fare * 100).rounded()))
     let rupees = totalPaise / 100
     let paise = totalPaise % 100
-    let rupeesString = String(format: "%02d", rupees % 100)
-    let paiseString = String(format: "%02d", paise)
+    let rupeesString = String(format: "%03d", rupees % 1000)
+    let paiseString = String(format: "%01d", paise / 10)
     let combined = rupeesString + paiseString
     return (combined.map { String($0) }, rupeesString.count)
   }
@@ -305,7 +277,7 @@ struct MeterDigitsRow: View {
   }
 
   private func gapSpacing(after index: Int, large: CGFloat, small: CGFloat) -> CGFloat {
-    index >= paiseStartIndex ? small : large
+    index == paiseStartIndex - 1 ? large : small
   }
 }
 
