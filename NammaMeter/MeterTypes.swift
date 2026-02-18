@@ -274,6 +274,7 @@ extension MeterShellStyle {
 /// Container that handles geometry scaling and shell rendering for meter panels
 struct MeterShell<Content: View>: View {
   let style: MeterShellStyle
+  @Environment(\.colorScheme) private var colorScheme
   @ViewBuilder let content: (_ bodyWidth: CGFloat, _ bodyHeight: CGFloat) -> Content
 
   init(
@@ -293,6 +294,9 @@ struct MeterShell<Content: View>: View {
       let bodyWidth = desiredWidth * scale
       let bodyHeight = bodyHeightForWidth * scale
       let cornerRadius = bodyWidth * style.cornerRadiusRatio
+      let effectiveStrokeOpacity = colorScheme == .dark
+        ? max(style.strokeOpacity, 0.35)
+        : style.strokeOpacity
 
       ZStack {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -305,7 +309,7 @@ struct MeterShell<Content: View>: View {
           )
           .overlay(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-              .stroke(Color.white.opacity(style.strokeOpacity), lineWidth: style.strokeLineWidth)
+              .stroke(Color.white.opacity(effectiveStrokeOpacity), lineWidth: style.strokeLineWidth)
           )
           .shadow(
             color: .black.opacity(style.shadowOpacity),

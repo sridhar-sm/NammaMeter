@@ -305,6 +305,33 @@ final class MeterSnapshotTests: XCTestCase {
 
   // MARK: - Dark Mode Validation
 
+  func testGoldenEagleDarkMode() {
+    let view = GoldenEagleFullMeterPanel(
+      tripState: .inProgress,
+      fare: 156.00,
+      waitingDuration: 420,
+      distanceMeters: 4200,
+      isNight: false
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark, record: isRecordingSnapshots)
+  }
+
+  func testBrightDigitalDarkMode() {
+    let view = BrightDigitalFullMeterPanel(
+      tripState: .inProgress,
+      fare: 112.00,
+      waitingDuration: 180,
+      distanceMeters: 2800
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark, record: isRecordingSnapshots)
+  }
+
   func testSuperMechanicalDarkMode() {
     let view = SuperFullMeterPanel(
       tripState: .inProgress,
