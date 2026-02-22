@@ -15,19 +15,23 @@ NEW FEATURES:
 - Fare rules engine — see which fare rules apply during your trip in real time
 - Fare breakdown on trip completion — view itemised charges when a trip ends
 - Active rule highlighting — clearly shows base fare, distance, waiting, and surcharge components
+- Browse fare rules before your trip — swipe through fare rules in the For Hire state for your city and saved favourites
 
 UI IMPROVEMENTS:
 - Simplified square meter layouts for a cleaner look
 - Landscape orientation support
 - Removed visual decorations for improved readability
+- Super Mechanical meter now supports fares up to ₹999 (3-digit rupee display)
+- Improved dark mode — meters now show a subtle border for better visibility against dark backgrounds
 ```
 
 ---
 
 ## Description Updates
 
-Two new bullet points added to the **ACCURATE FARE CALCULATION** section:
+Bullets added to **ACCURATE FARE CALCULATION** section:
 - "Fare rules engine with active rule highlighting"
+- "Browse fare rules before your trip in the For Hire state"
 - "Itemised fare breakdown on trip completion"
 
 One new bullet added to **CUSTOMIZABLE EXPERIENCE**:
@@ -43,6 +47,8 @@ Screenshots need to be **recaptured** before submitting v1.1. The meter layouts 
 - Visual **decorations removed** (cleaner look)
 - **Landscape mode** is new and should be shown
 - **Fare breakdown** at trip completion is a new state worth capturing
+- **Fare rules preview** in For Hire state is new and worth capturing
+- **Dark mode** screenshots now show a more defined meter edge — consider re-shooting
 
 See `SCREENSHOTS_MANIFEST.md` for the full list of recommended new screenshots.
 
@@ -78,3 +84,6 @@ The v1.1 features (fare rules, layout changes) don't change any data collection 
 | `e371974` | Simplify meter layout with square meters, landscape support, and remove decorations |
 | `317d07f` | Show fare breakdown on Neo meter when trip completes |
 | `eb285a1` | Add fare rules engine with active rule highlighting |
+| `3cbc1b3` | Super Mechanical meter: adopt MeterShell and update fare digits to 3R+1P |
+| `cbdc95d` | Dark mode: add thin white border around meter shell |
+| `31d48f6` | Show fare rules preview pages in forHire state for current and favourites |

@@ -26,6 +26,7 @@ Choose your preferred meter display:
 💰 ACCURATE FARE CALCULATION
 • Real-time fare calculation based on distance and time
 • Fare rules engine with active rule highlighting
+• Browse fare rules before your trip in the For Hire state
 • Itemised fare breakdown on trip completion
 • Support for multiple cities with custom rates
 • Automatic night fare multipliers
@@ -88,11 +89,14 @@ NEW FEATURES:
 ✓ Fare rules engine — see which fare rules apply during your trip in real time
 ✓ Fare breakdown on trip completion — view itemised charges when a trip ends
 ✓ Active rule highlighting — clearly shows base fare, distance, waiting, and surcharge components
+✓ Browse fare rules before your trip — swipe through fare rules in the For Hire state for your city and saved favourites
 
 UI IMPROVEMENTS:
 ✓ Simplified square meter layouts for a cleaner look
 ✓ Landscape orientation support
 ✓ Removed visual decorations for improved readability
+✓ Super Mechanical meter now supports fares up to ₹999 (3-digit rupee display)
+✓ Improved dark mode — meters now show a subtle border for better visibility against dark backgrounds
 
 Thank you for using NammaMeter!
 
