@@ -297,10 +297,13 @@ accurate, reliable auto rickshaw meter for professionals and passengers worldwid
 ```
 Version 1.1 - Fare Transparency & Refined Layouts
 ✓ Fare rules engine with active rule highlighting
+✓ Browse fare rules before your trip in the For Hire state
 ✓ Fare breakdown on trip completion
 ✓ Simplified square meter layouts
 ✓ Landscape orientation support
 ✓ Cleaner UI with removed visual decorations
+✓ Super Mechanical meter supports fares up to ₹999
+✓ Improved dark mode meter visibility
 ```
 
 ### Update Release Notes (Future)

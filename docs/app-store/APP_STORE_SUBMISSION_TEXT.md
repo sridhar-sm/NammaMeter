@@ -33,6 +33,7 @@ Choose your preferred meter display:
 💰 ACCURATE FARE CALCULATION
 • Real-time fare calculation based on distance and time
 • Fare rules engine with active rule highlighting
+• Browse fare rules before your trip in the For Hire state
 • Itemised fare breakdown on trip completion
 • Support for multiple cities with city-specific rates
 • Automatic night fare multipliers
@@ -136,11 +137,14 @@ NEW FEATURES:
 ✓ Fare rules engine — see which fare rules apply during your trip in real time
 ✓ Fare breakdown on trip completion — view itemised charges when a trip ends
 ✓ Active rule highlighting — clearly shows base fare, distance, waiting, and surcharge components
+✓ Browse fare rules before your trip — swipe through fare rules in the For Hire state for your city and saved favourites
 
 UI IMPROVEMENTS:
 ✓ Simplified square meter layouts for a cleaner look
 ✓ Landscape orientation support
 ✓ Removed visual decorations for improved readability
+✓ Super Mechanical meter now supports fares up to ₹999 (3-digit rupee display)
+✓ Improved dark mode — meters now show a subtle border for better visibility against dark backgrounds
 
 Thank you for using NammaMeter! Questions or feedback? Visit our GitHub repository.
 ```
@@ -289,16 +293,14 @@ fare calculation discrepancies or disputes.
 
 ### Version 1.1 (Current)
 - Fare rules engine with active rule highlighting
+- Browse fare rules in the For Hire state
 - Fare breakdown on trip completion
 - Simplified square meter layouts
 - Landscape orientation support
+- Super Mechanical meter 3-digit rupee support (up to ₹999)
+- Dark mode meter border for improved visibility
 
 ### Version 1.2 (Upcoming)
-- Additional city profiles
-- Enhanced trip analytics
-- Export trip data as PDF/CSV
-
-### Version 1.3 (Planned)
 - Multi-language support
 - Apple Watch companion app
 - Trip sharing capabilities
@@ -314,7 +316,7 @@ fare calculation discrepancies or disputes.
 
 ---
 
-**Last Updated:** February 17, 2026
+**Last Updated:** February 22, 2026
 **App Version:** 1.1
 **Minimum iOS:** 17.6+
 **Languages:** English, Kannada

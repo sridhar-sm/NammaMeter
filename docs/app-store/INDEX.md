@@ -279,9 +279,12 @@ docs/app-store/
 
 ### v1.1 Release (Current)
 - [x] Fare rules engine with active rule highlighting
+- [x] Browse fare rules in the For Hire state
 - [x] Fare breakdown on trip completion
 - [x] Simplified square meter layouts
 - [x] Landscape orientation support
+- [x] Super Mechanical meter 3-digit rupee support (up to ₹999)
+- [x] Dark mode meter border for improved visibility
 
 ### v1.2 Release (Planned)
 - [ ] Additional city profiles
@@ -345,7 +348,7 @@ After Launch:
 - All character limits verified and within bounds
 - All screenshots optimized for App Store
 - All marketing copy professional and tested
-- All information current as of February 17, 2026
+- All information current as of February 22, 2026
 
 ---
 
