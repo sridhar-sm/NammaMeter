@@ -416,4 +416,81 @@ final class MeterSnapshotTests: XCTestCase {
 
     SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
   }
+
+  // MARK: - Road Name in Bottom Bezel (inProgress only)
+
+  func testSuperMechanicalRoadNameInProgress() {
+    let view = SuperFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      digitStyle: .disk,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw",
+      currentRoadName: "MG Road"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testSuperMechanicalRoadNameHiddenWhenNotInProgress() {
+    let view = SuperFullMeterPanel(
+      tripState: .forHire,
+      fare: 0,
+      digitStyle: .disk,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw",
+      currentRoadName: "MG Road"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testSuperElectronicRoadNameInProgress() {
+    let view = SuperElectronicFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      waitingDuration: 180,
+      distanceMeters: 2800,
+      isNight: false,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw",
+      currentRoadName: "MG Road"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testGoldenEagleRoadNameInProgress() {
+    let view = GoldenEagleFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      waitingDuration: 180,
+      distanceMeters: 2800,
+      isNight: false,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw",
+      currentRoadName: "MG Road"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testBrightDigitalRoadNameInProgress() {
+    let view = BrightDigitalFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      waitingDuration: 180,
+      distanceMeters: 2800,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw",
+      currentRoadName: "MG Road"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
 }

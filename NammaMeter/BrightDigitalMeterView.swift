@@ -8,6 +8,7 @@ struct BrightDigitalFullMeterPanel: View {
   let waitingDuration: TimeInterval
   let distanceMeters: Double
   var cityVehicleLabel: String = ""
+  var currentRoadName: String = ""
 
   private let faceTop = MeterColorSchemes.BrightDigital.faceTop
   private let faceBottom = MeterColorSchemes.BrightDigital.faceBottom
@@ -55,6 +56,12 @@ struct BrightDigitalFullMeterPanel: View {
           MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(.top, bodyHeight * 0.02)
+        }
+
+        if tripState == .inProgress && !currentRoadName.isEmpty {
+          MeterCityVehicleLabel(text: currentRoadName, fontSize: bodyHeight * 0.03)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .padding(.bottom, bodyHeight * 0.02)
         }
       }
     }

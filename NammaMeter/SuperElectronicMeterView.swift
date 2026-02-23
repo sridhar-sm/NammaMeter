@@ -9,6 +9,7 @@ struct SuperElectronicFullMeterPanel: View {
   let distanceMeters: Double
   let isNight: Bool
   var cityVehicleLabel: String = ""
+  var currentRoadName: String = ""
 
   private let metalPanel = MeterColorSchemes.SuperElectronic.metalPanel
   private let metalEdge = MeterColorSchemes.SuperElectronic.metalEdge
@@ -45,6 +46,12 @@ struct SuperElectronicFullMeterPanel: View {
           MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(.top, bodyHeight * 0.02)
+        }
+
+        if tripState == .inProgress && !currentRoadName.isEmpty {
+          MeterCityVehicleLabel(text: currentRoadName, fontSize: bodyHeight * 0.03)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .padding(.bottom, bodyHeight * 0.02)
         }
       }
     }

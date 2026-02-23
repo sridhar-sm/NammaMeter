@@ -7,6 +7,7 @@ struct SuperFullMeterPanel: View {
   let fare: Double
   let digitStyle: DigitWheelStyle
   var cityVehicleLabel: String = ""
+  var currentRoadName: String = ""
   @State private var hirePulse = false
 
   private let metalPanel = MeterColorSchemes.SuperMechanical.metalPanel
@@ -54,6 +55,12 @@ struct SuperFullMeterPanel: View {
         MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
           .padding(.top, bodyHeight * 0.02)
+      }
+
+      if tripState == .inProgress && !currentRoadName.isEmpty {
+        MeterCityVehicleLabel(text: currentRoadName, fontSize: bodyHeight * 0.03)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+          .padding(.bottom, bodyHeight * 0.02)
       }
     }
     .hirePulse(tripState: tripState, pulse: $hirePulse)
