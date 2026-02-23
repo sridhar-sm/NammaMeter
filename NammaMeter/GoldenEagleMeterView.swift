@@ -12,31 +12,34 @@ struct GoldenEagleFullMeterPanel: View {
 
   var body: some View {
     MeterShell(style: .goldenEagle) { bodyWidth, bodyHeight in
-      VStack(spacing: 0) {
-        Spacer()
+      ZStack {
+        VStack(spacing: 0) {
+          Spacer()
 
-        // Display dial - shows fare, distance, wait time with LED segments
-        GoldenEagleDisplayWindow(
-          tripState: tripState,
-          fare: fare,
-          waitingDuration: waitingDuration,
-          distanceKm: distanceMeters / 1000,
-          isNight: isNight,
-          width: bodyWidth * 0.90,
-          height: bodyHeight * 0.62
-        )
+          // Display dial - shows fare, distance, wait time with LED segments
+          GoldenEagleDisplayWindow(
+            tripState: tripState,
+            fare: fare,
+            waitingDuration: waitingDuration,
+            distanceKm: distanceMeters / 1000,
+            isNight: isNight,
+            width: bodyWidth * 0.90,
+            height: bodyHeight * 0.62
+          )
 
-        Spacer(minLength: bodyHeight * 0.01)
+          Spacer(minLength: bodyHeight * 0.01)
 
-        // Manufacturer plate - shows company info at bottom
-        GoldenEagleManufacturerPlate(width: bodyWidth * 0.90, height: bodyHeight * 0.16)
+          // Manufacturer plate - shows company info at bottom
+          GoldenEagleManufacturerPlate(width: bodyWidth * 0.90, height: bodyHeight * 0.16)
+
+          Spacer()
+        }
 
         if !cityVehicleLabel.isEmpty {
           MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
-            .padding(.top, bodyHeight * 0.01)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, bodyHeight * 0.02)
         }
-
-        Spacer()
       }
     }
   }

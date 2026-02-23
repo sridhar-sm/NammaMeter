@@ -52,7 +52,8 @@ struct SuperFullMeterPanel: View {
 
       if !cityVehicleLabel.isEmpty {
         MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
-          .offset(y: bodyHeight * 0.42)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+          .padding(.top, bodyHeight * 0.02)
       }
     }
     .hirePulse(tripState: tripState, pulse: $hirePulse)
