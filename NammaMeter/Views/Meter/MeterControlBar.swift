@@ -101,6 +101,7 @@ struct MeterControlBar: View {
           slowSpeedThresholdKph: profile?.rates.slowSpeedThresholdKph,
           vehicleType: profile?.vehicleType,
           currencyCode: profile?.cityKey.currencyCode,
+          countryCode: profile?.cityKey.countryCode,
           whatIfFavorites: settingsStore.whatIfFavorites,
           whatIfProfileLookup: { settingsStore.whatIfProfile(for: $0) }
         )

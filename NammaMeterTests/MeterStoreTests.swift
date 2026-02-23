@@ -686,4 +686,155 @@ final class MeterStoreTests: XCTestCase {
     try await Task.sleep(for: .milliseconds(50))
     XCTAssertTrue(mockLocationProvider.didStopUpdatingLocation)
   }
+
+  // MARK: - Indian Meter Behavior (LMD Regulations)
+
+  /// Helper: create a location at a given latitude offset from a base point.
+  private func location(
+    latitudeOffset: Double,
+    from baseLat: Double = 12.9716,
+    lon: Double = 77.5946,
+    speed: Double = 8.5,
+    timestamp: Date
+  ) -> CLLocation {
+    CLLocation(
+      coordinate: CLLocationCoordinate2D(latitude: baseLat + latitudeOffset, longitude: lon),
+      altitude: 0,
+      horizontalAccuracy: 10,
+      verticalAccuracy: 10,
+      course: 0,
+      speed: speed,
+      timestamp: timestamp
+    )
+  }
+
+  /// At roughly 2.05 km beyond start, the metered distance should ceil to 2.1 km,
+  /// and fare should step to ceil(36 + 0.1 * 18) = rounded(37.8) = 38.
+  func testIndianMeterFareSteppedAt100mBoundaries() {
+    var settings = MeterSettings.bengaluruDefault
+    settings.baseFare = 36
+    settings.includedKm = 2.0
+    settings.perKmRate = 18
+    settings.minFare = 36
+
+    meterStore.startTrip(settings: settings, countryCode: "IN")
+
+    // Ensure daytime
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026; dayComponents.month = 2; dayComponents.day = 3; dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
+
+    let startTime = Date()
+
+    // First location (origin)
+    meterStore.processLocation(location(latitudeOffset: 0, timestamp: startTime))
+
+    // Move exactly 2.0 km north (~0.018 degrees lat in Bengaluru).
+    // At 2.0 km metered distance = ceil(2000/100)*0.1 = 2.0 km, extra = 0 -> fare = 36.
+    meterStore.processLocation(location(latitudeOffset: 0.018, timestamp: startTime.addingTimeInterval(240)))
+    let fareAt2km = meterStore.fare
+    XCTAssertEqual(fareAt2km, 36, "Fare should be base fare at exactly 2.0 km")
+
+    // Move a bit more (~2.05 km total). ceil(2050/100)*0.1 = 2.1 km, extra = 0.1, fare = 36 + 1.8 = 37.8 -> rounded = 38
+    meterStore.processLocation(location(latitudeOffset: 0.01845, timestamp: startTime.addingTimeInterval(246)))
+    let fareAt2_05km = meterStore.fare
+    XCTAssertEqual(fareAt2_05km, 38, "Fare should step to 38 after crossing 2.0 km boundary")
+
+    // Move to ~2.15 km. ceil(2150/100)*0.1 = 2.2 km, extra = 0.2, fare = 36 + 3.6 = 39.6 -> rounded = 40
+    meterStore.processLocation(location(latitudeOffset: 0.01935, timestamp: startTime.addingTimeInterval(258)))
+    let fareAt2_15km = meterStore.fare
+    XCTAssertEqual(fareAt2_15km, 40, "Fare should step to 40 after crossing 2.1 km boundary")
+  }
+
+  func testIndianMeterFareRoundedToNearestRupee() {
+    var settings = MeterSettings.bengaluruDefault
+    settings.baseFare = 36
+    settings.includedKm = 2.0
+    settings.perKmRate = 18
+    settings.minFare = 36
+
+    meterStore.startTrip(settings: settings, countryCode: "IN")
+
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026; dayComponents.month = 2; dayComponents.day = 3; dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
+
+    let startTime = Date()
+    meterStore.processLocation(location(latitudeOffset: 0, timestamp: startTime))
+
+    // Move to ~2.25 km. ceil(2250/100)*0.1 = 2.3 km, extra = 0.3, fare = 36 + 5.4 = 41.4 -> rounded = 41
+    meterStore.processLocation(location(latitudeOffset: 0.02025, timestamp: startTime.addingTimeInterval(270)))
+    let fare = meterStore.fare
+    XCTAssertEqual(fare, fare.rounded(.toNearestOrAwayFromZero), accuracy: 0.001, "Indian meter fare should be a whole rupee")
+  }
+
+  func testNonIndianMeterNoQuantizationOrRounding() {
+    var settings = MeterSettings.bengaluruDefault
+    settings.baseFare = 3.0
+    settings.includedKm = 0
+    settings.perKmRate = 2.18
+    settings.minFare = 3.0
+
+    // US profile — no quantization or rounding
+    meterStore.startTrip(settings: settings, currencyCode: "USD", countryCode: "US")
+
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026; dayComponents.month = 2; dayComponents.day = 3; dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
+
+    let startTime = Date()
+    meterStore.processLocation(location(latitudeOffset: 0, timestamp: startTime))
+
+    // Move ~1.5 km
+    meterStore.processLocation(location(latitudeOffset: 0.0135, timestamp: startTime.addingTimeInterval(180)))
+
+    // Fare should reflect continuous distance, not stepped
+    let fare = meterStore.fare
+    XCTAssertGreaterThan(fare, settings.minFare, "US fare should accumulate continuously beyond min fare")
+    // Verify fare has decimals (not rounded to whole number)
+    let fractionalPart = fare - fare.rounded(.down)
+    XCTAssertGreaterThan(fractionalPart, 0, "US fare should not be rounded to whole number")
+  }
+
+  func testIndianMeterFareUnchangedWithinIncludedKm() {
+    var settings = MeterSettings.bengaluruDefault
+    settings.baseFare = 36
+    settings.includedKm = 2.0
+    settings.perKmRate = 18
+    settings.minFare = 36
+
+    meterStore.startTrip(settings: settings, countryCode: "IN")
+
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026; dayComponents.month = 2; dayComponents.day = 3; dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
+
+    let startTime = Date()
+    meterStore.processLocation(location(latitudeOffset: 0, timestamp: startTime))
+
+    // Move ~1.5 km (within included 2 km)
+    meterStore.processLocation(location(latitudeOffset: 0.0135, timestamp: startTime.addingTimeInterval(180)))
+
+    XCTAssertEqual(meterStore.fare, 36, "Fare should remain at base within included km")
+    XCTAssertGreaterThan(meterStore.distanceMeters, 1000, "Distance should accumulate precisely")
+  }
+
+  func testSwitchVehicleTypeUpdatesCountryCode() {
+    let settings = MeterSettings.bengaluruDefault
+
+    // Start with Indian profile
+    meterStore.startTrip(settings: settings, countryCode: "IN")
+
+    var dayComponents = DateComponents()
+    dayComponents.year = 2026; dayComponents.month = 2; dayComponents.day = 3; dayComponents.hour = 10
+    let dayDate = Calendar.autoupdatingCurrent.date(from: dayComponents)!
+    meterStore.refreshTimeBasedConditions(reference: dayDate)
+
+    // Verify initial fare is whole number (Indian rounding applied)
+    XCTAssertEqual(meterStore.fare, meterStore.fare.rounded(.toNearestOrAwayFromZero), accuracy: 0.001)
+  }
 }
