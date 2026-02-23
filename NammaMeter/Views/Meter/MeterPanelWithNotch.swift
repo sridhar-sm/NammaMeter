@@ -23,7 +23,8 @@ struct MeterPanelWithNotch: View {
           tripState: meterStore.tripState,
           fare: meterStore.fare,
           digitStyle: digitWheelStyle,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
       } else {
         SuperDisplayPanel(tripState: meterStore.tripState, fare: meterStore.fare, digitStyle: digitWheelStyle)
@@ -37,7 +38,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
       } else {
         SuperElectronicFullMeterPanel(
@@ -46,7 +48,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
         .padding(.horizontal, 12)
       }
@@ -58,7 +61,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
       } else {
         GoldenEagleFullMeterPanel(
@@ -67,7 +71,8 @@ struct MeterPanelWithNotch: View {
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
           isNight: meterStore.conditions.isNight,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
         .padding(.horizontal, 12)
       }
@@ -96,7 +101,8 @@ struct MeterPanelWithNotch: View {
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
       } else {
         BrightDigitalFullMeterPanel(
@@ -104,7 +110,8 @@ struct MeterPanelWithNotch: View {
           fare: meterStore.fare,
           waitingDuration: meterStore.waitingDuration,
           distanceMeters: meterStore.distanceMeters,
-          cityVehicleLabel: cityVehicleLabel
+          cityVehicleLabel: cityVehicleLabel,
+          currentRoadName: meterStore.currentRoadName
         )
         .padding(.horizontal, 12)
       }
