@@ -3,12 +3,6 @@ import Foundation
 import Observation
 import OSLog
 
-enum TripMeterState {
-  case forHire
-  case inProgress
-  case complete
-}
-
 // MARK: - Location Provider Protocol
 
 protocol LocationProviding: AnyObject {

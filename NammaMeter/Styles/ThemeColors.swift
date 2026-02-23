@@ -12,10 +12,16 @@ enum ThemeColors {
 
   enum Text {
     static let primary = Theme.ink
+    #if os(iOS)
     static let secondary = Color(uiColor: .secondaryLabel)
     static let tertiary = Color(uiColor: .tertiaryLabel)
-    static let disabled = Color.black.opacity(0.4)
     static let hint = Color(uiColor: .secondaryLabel)
+    #else
+    static let secondary = Color.secondary
+    static let tertiary = Color.gray
+    static let hint = Color.secondary
+    #endif
+    static let disabled = Color.black.opacity(0.4)
   }
 
   enum Lines {

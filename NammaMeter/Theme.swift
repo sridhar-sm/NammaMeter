@@ -1,13 +1,18 @@
 import SwiftUI
 
 enum Theme {
+  #if os(iOS)
   static let ink = Color(uiColor: .label)
+  static let card = Color(uiColor: .secondarySystemBackground)
+  #else
+  static let ink = Color.primary
+  static let card = Color(white: 0.11)
+  #endif
   static let mango = Color(red: 1.0, green: 0.92, blue: 0.72)
   static let mint = Color(red: 0.72, green: 0.95, blue: 0.85)
   static let sky = Color(red: 0.73, green: 0.9, blue: 1.0)
   static let coral = Color(red: 1.0, green: 0.74, blue: 0.7)
   static let lime = Color(red: 0.8, green: 0.97, blue: 0.73)
-  static let card = Color(uiColor: .secondarySystemBackground)
   static let darkControlBackground = Color(red: 0.039, green: 0.039, blue: 0.039)
 
   static let backgroundGradient = LinearGradient(

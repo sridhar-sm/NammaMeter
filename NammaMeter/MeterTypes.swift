@@ -1,5 +1,8 @@
 import SwiftUI
+
+#if os(iOS)
 import UIKit
+#endif
 
 // MARK: - Meter Category
 
@@ -328,6 +331,7 @@ struct MeterShell<Content: View>: View {
 
 // MARK: - Safe Area Insets Helper
 
+#if os(iOS)
 @MainActor
 var windowSafeAreaInsets: UIEdgeInsets {
   UIApplication.shared.connectedScenes
@@ -336,6 +340,7 @@ var windowSafeAreaInsets: UIEdgeInsets {
     .first { $0.isKeyWindow }?
     .safeAreaInsets ?? .zero
 }
+#endif
 
 // MARK: - Hire Pulse Animation
 

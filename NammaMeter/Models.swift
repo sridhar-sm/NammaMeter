@@ -1,6 +1,16 @@
 import CoreLocation
 import Foundation
 
+// MARK: - Trip Meter State
+
+enum TripMeterState: Sendable {
+  case forHire
+  case inProgress
+  case complete
+}
+
+// MARK: - Trip Point
+
 struct TripPoint: Codable, Hashable, Identifiable, Sendable {
   let id: UUID
   let latitude: Double
