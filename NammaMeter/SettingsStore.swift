@@ -51,7 +51,9 @@ final class SettingsStore {
   }
 
   var selectedVehicleType: String? {
-    state.selectedVehicleType
+    didSet {
+      state.selectedVehicleType = selectedVehicleType
+    }
   }
 
   var availableCityGroups: [CityGroup] {
@@ -101,7 +103,7 @@ final class SettingsStore {
   // which would create a new profile and trigger another sync, creating an infinite loop.
   @ObservationIgnored private var isSyncingFromProfile = false
 
-  private var _favoritesVersion = 0
+  private(set) var _favoritesVersion = 0
   @ObservationIgnored private var state: FareProfileSettings
 
   init(fileURL: URL = SettingsStore.defaultURL) {
@@ -114,6 +116,7 @@ final class SettingsStore {
       catalogVersionApplied: 0
     )
     self.selectedCityId = self.state.selectedCityId
+    self.selectedVehicleType = self.state.selectedVehicleType
 
     // Load theme preference from UserDefaults during initialization
     // Falls back to "system" if no preference is stored
@@ -143,14 +146,14 @@ final class SettingsStore {
   func selectCity(_ cityId: String) {
     guard state.profiles.contains(where: { $0.cityId == cityId }) else { return }
     selectedCityId = cityId
-    state.selectedVehicleType = nil
+    selectedVehicleType = nil
     syncSettingsFromActiveProfile()
     scheduleSave()
     Log.fare.info("Selected city: \(cityId)")
   }
 
   func selectVehicleType(_ vehicleType: String) {
-    state.selectedVehicleType = vehicleType
+    selectedVehicleType = vehicleType
     syncSettingsFromActiveProfile()
     scheduleSave()
   }
@@ -295,6 +298,7 @@ final class SettingsStore {
     }
 
     selectedCityId = state.selectedCityId
+    selectedVehicleType = state.selectedVehicleType
 
     // Step 2: Bump schema version if needed
     // Future: Add version-specific migrations here (e.g., if schemaVersion == 1 { migrateV1toV2() })
@@ -432,15 +436,15 @@ final class SettingsStore {
         state.profiles.append(FareCatalog.defaultProfile)
       }
       selectedCityId = FareCatalog.defaultCityId
-      state.selectedVehicleType = nil
+      selectedVehicleType = nil
       didMutate = true
     }
 
     // Validate selectedVehicleType exists for selected city
-    if let vt = state.selectedVehicleType,
+    if let vt = selectedVehicleType,
        let cityId = selectedCityId,
        !state.profiles.contains(where: { $0.cityId == cityId && $0.vehicleType == vt }) {
-      state.selectedVehicleType = nil
+      selectedVehicleType = nil
       didMutate = true
     }
 
@@ -557,7 +561,7 @@ final class SettingsStore {
     commitTask?.cancel()
     let cityId = effectiveCityId
     let profile: CityFareProfile
-    if let vt = state.selectedVehicleType,
+    if let vt = selectedVehicleType,
        let vtProfile = activeProfileForVehicleType(cityId: cityId, vehicleType: vt, on: Date()) {
       profile = vtProfile
     } else {
@@ -581,7 +585,7 @@ final class SettingsStore {
 
   var activeProfileForCurrentSelection: CityFareProfile? {
     let cityId = effectiveCityId
-    if let vt = state.selectedVehicleType {
+    if let vt = selectedVehicleType {
       return activeProfileForVehicleType(cityId: cityId, vehicleType: vt, on: Date())
     }
     return activeProfile(for: cityId, on: Date())

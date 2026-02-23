@@ -23,19 +23,27 @@ final class AppContainer {
   let meterStore: MeterStore
   let screenAwakeManager: ScreenAwakeManager
   let exchangeRateProvider: ExchangeRateProvider
+  let connectivityService: PhoneConnectivityService
 
   init(
     settingsStore: SettingsStore = SettingsStore(),
     tripStore: TripStore = TripStore(),
     meterStore: MeterStore = MeterStore(),
     screenAwakeManager: ScreenAwakeManager = ScreenAwakeManager(),
-    exchangeRateProvider: ExchangeRateProvider = ExchangeRateProvider()
+    exchangeRateProvider: ExchangeRateProvider = ExchangeRateProvider(),
+    connectivityService: PhoneConnectivityService = PhoneConnectivityService()
   ) {
     self.settingsStore = settingsStore
     self.tripStore = tripStore
     self.meterStore = meterStore
     self.screenAwakeManager = screenAwakeManager
     self.exchangeRateProvider = exchangeRateProvider
+    self.connectivityService = connectivityService
+    connectivityService.configure(
+      meterStore: meterStore,
+      settingsStore: settingsStore,
+      tripStore: tripStore
+    )
   }
 }
 

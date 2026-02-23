@@ -8,9 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		A56CF52B2F37E8DA008DBCD0 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = SNAPSHOT_TESTING_DEP /* SnapshotTesting */; };
+		A59C8A622F4C24CD00ACC4E7 /* NammaMeterWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A59C8A582F4C24CC00ACC4E7 /* NammaMeterWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A59C8A602F4C24CD00ACC4E7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A5261D0E2EFC1AA700AABD5D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A59C8A572F4C24CC00ACC4E7;
+			remoteInfo = "NammaMeterWatch Watch App";
+		};
 		D1A0000300000000000000A3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A5261D0E2EFC1AA700AABD5D /* Project object */;
@@ -27,16 +35,69 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		A59C8A632F4C24CD00ACC4E7 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolder = Product;
+			files = (
+				A59C8A622F4C24CD00ACC4E7 /* NammaMeterWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		A49A67CF1EFF40B89B436DA6 /* NammaMeterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NammaMeterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5261D162EFC1AA700AABD5D /* NammaMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NammaMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59C8A582F4C24CC00ACC4E7 /* NammaMeterWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NammaMeterWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A0000100000000000000A1 /* NammaMeterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NammaMeterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A59C8A792F4C26E400ACC4E7 /* Exceptions for "NammaMeter" folder in "NammaMeterWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Calculation/FareCalculationStrategy.swift,
+				Calculation/FareCalculator.swift,
+				Calculation/FareRule.swift,
+				Calculation/FareRuleEvaluator.swift,
+				Calculation/SurchargeCalculator.swift,
+				Calculation/WhatIfCalculator.swift,
+				Components/DigitWheel/DigitWheelAnimationState.swift,
+				Components/DigitWheel/DigitWheelRenderer.swift,
+				Components/DigitWheel/MechanicalDigitWheel.swift,
+				FareProfiles.swift,
+				LEDDisplayComponents.swift,
+				Logging.swift,
+				MeterTypes.swift,
+				Models.swift,
+				Shared/WatchTransferTypes.swift,
+				State/TripMetrics.swift,
+				Styles/ThemeColors.swift,
+				SuperElectronicMeterView.swift,
+				SuperMechanicalMeterView.swift,
+				Surcharge.swift,
+				Theme.swift,
+				TimeFormatting.swift,
+				VehicleType.swift,
+			);
+			target = A59C8A572F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A5261D182EFC1AA700AABD5D /* NammaMeter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A59C8A792F4C26E400ACC4E7 /* Exceptions for "NammaMeter" folder in "NammaMeterWatch Watch App" target */,
+			);
 			path = NammaMeter;
+			sourceTree = "<group>";
+		};
+		A59C8A592F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "NammaMeterWatch Watch App";
 			sourceTree = "<group>";
 		};
 		D1A0000200000000000000A2 /* NammaMeterUITests */ = {
@@ -53,6 +114,11 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		A5261D132EFC1AA700AABD5D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		A59C8A552F4C24CC00ACC4E7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -77,6 +143,7 @@
 				A5261D182EFC1AA700AABD5D /* NammaMeter */,
 				EB9085CEBB0940BCAAFBC434 /* NammaMeterTests */,
 				D1A0000200000000000000A2 /* NammaMeterUITests */,
+				A59C8A592F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */,
 				A5261D172EFC1AA700AABD5D /* Products */,
 			);
 			indentWidth = 2;
@@ -89,6 +156,7 @@
 				A5261D162EFC1AA700AABD5D /* NammaMeter.app */,
 				A49A67CF1EFF40B89B436DA6 /* NammaMeterTests.xctest */,
 				D1A0000100000000000000A1 /* NammaMeterUITests.xctest */,
+				A59C8A582F4C24CC00ACC4E7 /* NammaMeterWatch Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -127,8 +195,12 @@
 				A5261D122EFC1AA700AABD5D /* Sources */,
 				A5261D132EFC1AA700AABD5D /* Frameworks */,
 				A5261D142EFC1AA700AABD5D /* Resources */,
+				A59C8A632F4C24CD00ACC4E7 /* Embed Watch Content */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				A59C8A612F4C24CD00ACC4E7 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A5261D182EFC1AA700AABD5D /* NammaMeter */,
@@ -136,6 +208,24 @@
 			name = NammaMeter;
 			productName = NammaMeter;
 			productReference = A5261D162EFC1AA700AABD5D /* NammaMeter.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A59C8A572F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A59C8A662F4C24CD00ACC4E7 /* Build configuration list for PBXNativeTarget "NammaMeterWatch Watch App" */;
+			buildPhases = (
+				A59C8A542F4C24CC00ACC4E7 /* Sources */,
+				A59C8A552F4C24CC00ACC4E7 /* Frameworks */,
+				A59C8A562F4C24CC00ACC4E7 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				A59C8A592F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */,
+			);
+			name = "NammaMeterWatch Watch App";
+			productName = "NammaMeterWatch Watch App";
+			productReference = A59C8A582F4C24CC00ACC4E7 /* NammaMeterWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
 		};
 		D1A0000800000000000000A8 /* NammaMeterUITests */ = {
@@ -175,6 +265,9 @@
 					A5261D152EFC1AA700AABD5D = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					A59C8A572F4C24CC00ACC4E7 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					D1A0000800000000000000A8 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = A5261D152EFC1AA700AABD5D;
@@ -201,6 +294,7 @@
 				A5261D152EFC1AA700AABD5D /* NammaMeter */,
 				4F81EC053778400FA0524DB5 /* NammaMeterTests */,
 				D1A0000800000000000000A8 /* NammaMeterUITests */,
+				A59C8A572F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */,
 			);
 		};
 /* End PBXProject section */
@@ -212,6 +306,11 @@
 			);
 		};
 		A5261D142EFC1AA700AABD5D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		A59C8A562F4C24CC00ACC4E7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -234,6 +333,11 @@
 			files = (
 			);
 		};
+		A59C8A542F4C24CC00ACC4E7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		D1A0000500000000000000A5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -246,6 +350,11 @@
 			isa = PBXTargetDependency;
 			target = A5261D152EFC1AA700AABD5D /* NammaMeter */;
 			targetProxy = F4069BEB393B4F44AE0590EB /* PBXContainerItemProxy */;
+		};
+		A59C8A612F4C24CD00ACC4E7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A59C8A572F4C24CC00ACC4E7 /* NammaMeterWatch Watch App */;
+			targetProxy = A59C8A602F4C24CD00ACC4E7 /* PBXContainerItemProxy */;
 		};
 		D1A0000400000000000000A4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -459,6 +568,74 @@
 			};
 			name = Release;
 		};
+		A59C8A642F4C24CD00ACC4E7 /* Debug configuration for PBXNativeTarget "NammaMeterWatch Watch App" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D7JXMA95NW;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = NammaMeterWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = sridharsm.NammaMeter;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sridharsm.NammaMeter.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		A59C8A652F4C24CD00ACC4E7 /* Release configuration for PBXNativeTarget "NammaMeterWatch Watch App" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D7JXMA95NW;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = NammaMeterWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = sridharsm.NammaMeter;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sridharsm.NammaMeter.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 		D1A0000900000000000000A9 /* Debug configuration for PBXNativeTarget "NammaMeterUITests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -550,6 +727,14 @@
 			buildConfigurations = (
 				A5261D222EFC1AA800AABD5D /* Debug configuration for PBXNativeTarget "NammaMeter" */,
 				A5261D232EFC1AA800AABD5D /* Release configuration for PBXNativeTarget "NammaMeter" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		A59C8A662F4C24CD00ACC4E7 /* Build configuration list for PBXNativeTarget "NammaMeterWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A59C8A642F4C24CD00ACC4E7 /* Debug configuration for PBXNativeTarget "NammaMeterWatch Watch App" */,
+				A59C8A652F4C24CD00ACC4E7 /* Release configuration for PBXNativeTarget "NammaMeterWatch Watch App" */,
 			);
 			defaultConfigurationName = Release;
 		};
