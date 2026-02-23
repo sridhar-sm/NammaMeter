@@ -93,6 +93,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
   @ObservationIgnored private var waitingAccumulated: TimeInterval = 0
   @ObservationIgnored private var fareCalculator: FareCalculator?
   @ObservationIgnored private var currentSurcharges: [FareSurcharge]?
+  @ObservationIgnored private var activeCountryCode: String?
   @ObservationIgnored private var whatIfProfiles: [(WhatIfFavorite, CityFareProfile)] = []
   @ObservationIgnored private var roadGeocodeTask: Task<Void, Never>?
   @ObservationIgnored private var lastRoadGeocodeAt: Date?
@@ -136,12 +137,14 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     slowSpeedThresholdKph: Double? = nil,
     vehicleType: String? = nil,
     currencyCode: String? = nil,
+    countryCode: String? = nil,
     whatIfFavorites: [WhatIfFavorite] = [],
     whatIfProfileLookup: ((WhatIfFavorite) -> CityFareProfile?)? = nil
   ) {
     guard tripState == .forHire else { return }
     currentSettings = settings
     currentSurcharges = surcharges
+    activeCountryCode = countryCode
     activeCurrencyCode = currencyCode ?? "INR"
     rateSnapshot = RateSnapshot(
       settings: settings,
@@ -188,7 +191,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
 
     refreshTimeBasedConditions(reference: startTime)
     multiplier = conditions.multiplier(using: settings)
-    fare = settings.minFare
+    fare = applyMeterRounding(settings.minFare)
     recalcFare()
 
     requestAuthorization()
@@ -234,6 +237,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     fareCalculator = nil
     currentSettings = nil
     currentSurcharges = nil
+    activeCountryCode = nil
     whatIfProfiles = []
     whatIfResults = []
 
@@ -261,6 +265,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     fareCalculator = nil
     currentSettings = nil
     currentSurcharges = nil
+    activeCountryCode = nil
     rateSnapshot = nil
     multiplier = 1
     locationError = nil
@@ -285,6 +290,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     )
 
     let cityInfo = settingsStore.activeCityInfo
+    activeCountryCode = profile?.cityKey.countryCode
     activeCurrencyCode = profile?.cityKey.currencyCode ?? "INR"
     rateSnapshot = RateSnapshot(
       settings: newSettings,
@@ -340,11 +346,31 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     recalcFare()
   }
 
+  // MARK: - Indian Meter Behavior (LMD Regulations)
+
+  private var usesIndianMeterBehavior: Bool {
+    activeCountryCode == "IN"
+  }
+
+  /// Distance quantized to 100m (ceil) for Indian meters; precise for others.
+  /// At 2050m -> ceil(20.5) = 21 -> 2.1 km (charge for partial 100m immediately).
+  private var meteredDistanceKm: Double {
+    if usesIndianMeterBehavior {
+      return ceil(metrics.distanceMeters / 100.0) * 0.1
+    }
+    return metrics.distanceKm
+  }
+
+  /// Round to nearest whole rupee for Indian meters; no-op for others.
+  private func applyMeterRounding(_ rawFare: Double) -> Double {
+    usesIndianMeterBehavior ? rawFare.rounded() : rawFare
+  }
+
   private func recalcFare() {
     guard let settings = currentSettings else { return }
     let calculator = fareCalculator ?? FareCalculator(settings: settings)
     let breakdown = calculator.calculateFare(
-      distanceKm: metrics.distanceKm,
+      distanceKm: meteredDistanceKm,
       elapsedTime: metrics.elapsedSeconds,
       waitingTime: metrics.waitingSeconds,
       currentSpeedKph: currentSpeedKph,
@@ -352,7 +378,7 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
       tripDate: Date(),
       isNight: conditions.isNight
     )
-    fare = breakdown.total
+    fare = applyMeterRounding(breakdown.total)
     recalcWhatIf()
   }
 
@@ -363,14 +389,25 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     }
     let now = Date()
     whatIfResults = whatIfProfiles.map { (fav, profile) in
-      WhatIfCalculator.calculate(
+      let isIndianProfile = profile.cityKey.countryCode == "IN"
+      let distanceForCalc = isIndianProfile ? meteredDistanceKm : metrics.distanceKm
+      let result = WhatIfCalculator.calculate(
         favorite: fav,
         profile: profile,
-        distanceKm: metrics.distanceKm,
+        distanceKm: distanceForCalc,
         elapsedTime: metrics.elapsedSeconds,
         waitingTime: metrics.waitingSeconds,
         tripDate: now,
         isNight: conditions.isNight
+      )
+      guard isIndianProfile else { return result }
+      return WhatIfResult(
+        favorite: result.favorite,
+        cityName: result.cityName,
+        vehicleType: result.vehicleType,
+        currencyCode: result.currencyCode,
+        fareInNativeCurrency: result.fareInNativeCurrency.rounded(),
+        fareBreakdown: result.fareBreakdown
       )
     }
   }
