@@ -47,12 +47,15 @@ struct BrightDigitalFullMeterPanel: View {
             height: windowHeight
           )
           BrightDigitalBadge(width: badgeWidth, height: badgeHeight)
-          if !cityVehicleLabel.isEmpty {
-            MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: faceHeight * 0.045)
-          }
           Spacer(minLength: faceHeight * 0.04)
         }
         .frame(width: faceWidth, height: faceHeight)
+
+        if !cityVehicleLabel.isEmpty {
+          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, bodyHeight * 0.02)
+        }
       }
     }
   }

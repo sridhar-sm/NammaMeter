@@ -15,34 +15,38 @@ struct SuperElectronicFullMeterPanel: View {
 
   var body: some View {
     MeterShell(style: .superElectronic) { bodyWidth, bodyHeight in
-      VStack(spacing: bodyHeight * 0.02) {
-        // Top brand plate
-        SuperElectronicBrandPlate(width: bodyWidth * 0.85, height: bodyHeight * 0.08)
+      ZStack {
+        VStack(spacing: bodyHeight * 0.02) {
+          // Top brand plate
+          SuperElectronicBrandPlate(width: bodyWidth * 0.85, height: bodyHeight * 0.08)
 
-        // Main LED display area
-        SuperElectronicLEDDisplay(
-          tripState: tripState,
-          fare: fare,
-          waitingDuration: waitingDuration,
-          distanceKm: distanceMeters / 1000,
-          isNight: isNight,
-          width: bodyWidth * 0.88,
-          height: bodyHeight * 0.52
-        )
+          // Main LED display area
+          SuperElectronicLEDDisplay(
+            tripState: tripState,
+            fare: fare,
+            waitingDuration: waitingDuration,
+            distanceKm: distanceMeters / 1000,
+            isNight: isNight,
+            width: bodyWidth * 0.88,
+            height: bodyHeight * 0.52
+          )
 
-        // Bottom manufacturer plate
-        SuperElectronicManufacturerPlate(
-          width: bodyWidth * 0.85,
-          height: bodyHeight * 0.14,
-          metalPanel: metalPanel,
-          metalEdge: metalEdge
-        )
+          // Bottom manufacturer plate
+          SuperElectronicManufacturerPlate(
+            width: bodyWidth * 0.85,
+            height: bodyHeight * 0.14,
+            metalPanel: metalPanel,
+            metalEdge: metalEdge
+          )
+        }
+        .padding(.vertical, bodyHeight * 0.06)
 
         if !cityVehicleLabel.isEmpty {
           MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, bodyHeight * 0.02)
         }
       }
-      .padding(.vertical, bodyHeight * 0.06)
     }
   }
 }

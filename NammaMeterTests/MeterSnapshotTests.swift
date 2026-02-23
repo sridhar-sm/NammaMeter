@@ -357,4 +357,63 @@ final class MeterSnapshotTests: XCTestCase {
 
     SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .dark, record: isRecordingSnapshots)
   }
+
+  // MARK: - City/Vehicle Label in Top Bezel
+
+  func testSuperMechanicalWithCityVehicleLabel() {
+    let view = SuperFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      digitStyle: .disk,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testSuperElectronicWithCityVehicleLabel() {
+    let view = SuperElectronicFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      waitingDuration: 180,
+      distanceMeters: 2800,
+      isNight: false,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testGoldenEagleWithCityVehicleLabel() {
+    let view = GoldenEagleFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      waitingDuration: 180,
+      distanceMeters: 2800,
+      isNight: false,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
+
+  func testBrightDigitalWithCityVehicleLabel() {
+    let view = BrightDigitalFullMeterPanel(
+      tripState: .inProgress,
+      fare: 126.50,
+      waitingDuration: 180,
+      distanceMeters: 2800,
+      cityVehicleLabel: "Bengaluru · Auto Rickshaw"
+    )
+    .frame(width: 390, height: 500)
+    .background(Color(red: 0.95, green: 0.94, blue: 0.92))
+
+    SnapshotTestHelpers.assertSwiftUIViewSnapshot(view, size: snapshotSize, colorScheme: .light, record: isRecordingSnapshots)
+  }
 }
