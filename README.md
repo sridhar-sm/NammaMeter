@@ -130,6 +130,10 @@ Download NammaMeter from the App Store:
    ```bash
    xcodebuild test -scheme NammaMeter
    ```
+   For cleaner simulator logs (while preserving real warnings/errors), you can run:
+   ```bash
+   scripts/run-xcodebuild-filtered.sh xcodebuild test -scheme NammaMeter
+   ```
 
 ## 📦 App Store Submission
 
