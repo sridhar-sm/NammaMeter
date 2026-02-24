@@ -837,4 +837,76 @@ final class MeterStoreTests: XCTestCase {
     // Verify initial fare is whole number (Indian rounding applied)
     XCTAssertEqual(meterStore.fare, meterStore.fare.rounded(.toNearestOrAwayFromZero), accuracy: 0.001)
   }
+
+  // MARK: - roadName(from:)
+
+  func testRoadNameReturnsThoroughfare() {
+    let placemark = makePlacemark(thoroughfare: "MG Road")
+    XCTAssertEqual(MeterStore.roadName(from: placemark), "MG Road")
+  }
+
+  func testRoadNameIgnoresSubThoroughfare() {
+    // subThoroughfare is the building/house number — must not appear in the result
+    let placemark = makePlacemark(thoroughfare: "MG Road", subThoroughfare: "42")
+    XCTAssertEqual(MeterStore.roadName(from: placemark), "MG Road")
+  }
+
+  func testRoadNameFallsBackToNameWhenNoThoroughfare() {
+    let placemark = makePlacemark(thoroughfare: nil, name: "Cubbon Park")
+    XCTAssertEqual(MeterStore.roadName(from: placemark), "Cubbon Park")
+  }
+
+  func testRoadNameFallsBackToLocalityWhenNoThoroughfareOrName() {
+    let placemark = makePlacemark(thoroughfare: nil, name: nil, locality: "Bengaluru")
+    XCTAssertEqual(MeterStore.roadName(from: placemark), "Bengaluru")
+  }
+
+  func testRoadNameReturnsNilForNilPlacemark() {
+    XCTAssertNil(MeterStore.roadName(from: nil))
+  }
+
+  func testRoadNameReturnsNilWhenAllFieldsEmpty() {
+    let placemark = makePlacemark(thoroughfare: nil, name: nil, locality: nil)
+    XCTAssertNil(MeterStore.roadName(from: placemark))
+  }
+
+  func testRoadNameTrimsWhitespace() {
+    let placemark = makePlacemark(thoroughfare: "  Residency Road  ")
+    XCTAssertEqual(MeterStore.roadName(from: placemark), "Residency Road")
+  }
+}
+
+// MARK: - Placemark factory
+
+private func makePlacemark(
+  thoroughfare: String? = nil,
+  subThoroughfare: String? = nil,
+  name: String? = nil,
+  locality: String? = nil
+) -> CLPlacemark {
+  StubPlacemark(thoroughfare: thoroughfare, subThoroughfare: subThoroughfare, name: name, locality: locality)
+}
+
+import MapKit
+
+private final class StubPlacemark: CLPlacemark {
+  private let _thoroughfare: String?
+  private let _subThoroughfare: String?
+  private let _name: String?
+  private let _locality: String?
+
+  init(thoroughfare: String?, subThoroughfare: String? = nil, name: String? = nil, locality: String? = nil) {
+    _thoroughfare = thoroughfare
+    _subThoroughfare = subThoroughfare
+    _name = name
+    _locality = locality
+    super.init(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D()))
+  }
+
+  required init?(coder: NSCoder) { fatalError() }
+
+  override var thoroughfare: String? { _thoroughfare }
+  override var subThoroughfare: String? { _subThoroughfare }
+  override var name: String? { _name }
+  override var locality: String? { _locality }
 }

@@ -644,12 +644,10 @@ final class MeterStore: NSObject, @preconcurrency CLLocationManagerDelegate {
     return (degrees + 360).truncatingRemainder(dividingBy: 360)
   }
 
-  private static func roadName(from placemark: CLPlacemark?) -> String? {
+  static func roadName(from placemark: CLPlacemark?) -> String? {
     guard let placemark else { return nil }
-    let primary = [placemark.subThoroughfare, placemark.thoroughfare]
-      .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-      .filter { !$0.isEmpty }
-      .joined(separator: " ")
+    let primary = placemark.thoroughfare?
+      .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
     if !primary.isEmpty { return primary }
 
