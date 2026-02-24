@@ -1,6 +1,7 @@
 import XCTest
 @testable import NammaMeter
 
+@MainActor
 final class GoldenEagleMeterViewTests: XCTestCase {
   func testForHireFareDisplayShowsForInMiddleSegments() {
     XCTAssertEqual(

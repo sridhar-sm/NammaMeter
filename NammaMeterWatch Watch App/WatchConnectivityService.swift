@@ -88,7 +88,7 @@ final class WatchConnectivityService: NSObject {
 
 extension WatchConnectivityService: WCSessionDelegate {
 
-  nonisolated func session(
+  func session(
     _ session: WCSession,
     activationDidCompleteWith activationState: WCSessionActivationState,
     error: Error?
@@ -98,52 +98,40 @@ extension WatchConnectivityService: WCSessionDelegate {
     } else {
       logger.info("WCSession activated")
     }
-    let reachable = session.isReachable
+    isPhoneReachable = session.isReachable
     let pendingContext = session.receivedApplicationContext
-    Task { @MainActor in
-      self.isPhoneReachable = reachable
-      if !pendingContext.isEmpty {
-        self.processApplicationContext(pendingContext)
-      }
+    if !pendingContext.isEmpty {
+      processApplicationContext(pendingContext)
     }
   }
 
-  nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
-    let reachable = session.isReachable
-    Task { @MainActor in
-      self.isPhoneReachable = reachable
-      logger.info("Phone reachability changed: \(reachable)")
-    }
+  func sessionReachabilityDidChange(_ session: WCSession) {
+    isPhoneReachable = session.isReachable
+    logger.info("Phone reachability changed: \(session.isReachable)")
   }
 
-  nonisolated func session(
+  func session(
     _ session: WCSession,
     didReceiveApplicationContext applicationContext: [String: Any]
   ) {
-    Task { @MainActor in
-      self.processApplicationContext(applicationContext)
-    }
+    processApplicationContext(applicationContext)
   }
 
-  nonisolated func session(
+  func session(
     _ session: WCSession,
     didReceiveMessage message: [String: Any]
   ) {
-    Task { @MainActor in
-      if message[WatchMessageKey.config] != nil {
-        self.processApplicationContext(message)
-      } else {
-        self.processTripUpdate(message)
-      }
+    if message[WatchMessageKey.config] != nil {
+      processApplicationContext(message)
+    } else {
+      processTripUpdate(message)
     }
   }
 
-  nonisolated func session(
+  func session(
     _ session: WCSession,
     didReceiveUserInfo userInfo: [String: Any] = [:]
   ) {
-    Task { @MainActor in
-      self.processTripSummary(userInfo)
-    }
+    processTripSummary(userInfo)
   }
 }

@@ -9,6 +9,7 @@ private let logger = Logger(subsystem: "sridharsm.NammaMeter", category: "PhoneC
 @Observable
 final class PhoneConnectivityService: NSObject {
 
+  private let watchConnectivityEnabled: Bool
   private(set) var isWatchReachable = false
   private var lastTripUpdateSent: Date = .distantPast
   private let throttleInterval: TimeInterval = 2.0
@@ -27,7 +28,12 @@ final class PhoneConnectivityService: NSObject {
   private var tripStore: TripStore?
 
   override init() {
+    watchConnectivityEnabled = !TestEnvironment.isRunningTests
     super.init()
+    guard watchConnectivityEnabled else {
+      logger.info("Skipping WatchConnectivity activation in test environment")
+      return
+    }
     guard WCSession.isSupported() else {
       logger.info("WatchConnectivity not supported on this device")
       return
@@ -46,6 +52,7 @@ final class PhoneConnectivityService: NSObject {
   // MARK: - Send Config
 
   func sendConfig(from settingsStore: SettingsStore) {
+    guard watchConnectivityEnabled else { return }
     guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
 
     let cityInfo = settingsStore.activeCityInfo
@@ -94,6 +101,7 @@ final class PhoneConnectivityService: NSObject {
   /// Send trip update to Watch if observable changes exceed display thresholds.
   /// Pass `force: true` for state transitions (start/stop/reset) to bypass throttle and thresholds.
   func sendTripUpdate(from meterStore: MeterStore, settingsStore: SettingsStore, force: Bool = false) {
+    guard watchConnectivityEnabled else { return }
     guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
     guard isWatchReachable else { return }
 
@@ -175,6 +183,7 @@ final class PhoneConnectivityService: NSObject {
   // MARK: - Send Completed Trip
 
   func sendCompletedTrip(_ trip: Trip) {
+    guard watchConnectivityEnabled else { return }
     guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
 
     let summary = WatchTripSummary(
@@ -323,4 +332,3 @@ extension PhoneConnectivityService: WCSessionDelegate {
     }
   }
 }
-
