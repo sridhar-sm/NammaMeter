@@ -22,6 +22,27 @@ final class NeoLCDLayoutLogicTests: XCTestCase {
     XCTAssertEqual(CompassDirectionFormatter.direction(for: points), "--")
   }
 
+  func testCompassDirectionFormatterFallsBackToEarlierMovingSegment() {
+    let now = Date()
+    let points = [
+      TripPoint(latitude: 12.9716, longitude: 77.5946, timestamp: now, speedMetersPerSecond: 3, horizontalAccuracy: 5),
+      TripPoint(latitude: 12.9716, longitude: 77.6046, timestamp: now.addingTimeInterval(1), speedMetersPerSecond: 3, horizontalAccuracy: 5),
+      TripPoint(latitude: 12.9716, longitude: 77.6046, timestamp: now.addingTimeInterval(2), speedMetersPerSecond: 0, horizontalAccuracy: 5)
+    ]
+
+    XCTAssertEqual(CompassDirectionFormatter.direction(for: points), "E")
+  }
+
+  func testCompassDirectionFormatterReturnsSouthDirection() {
+    let now = Date()
+    let points = [
+      TripPoint(latitude: 12.9716, longitude: 77.5946, timestamp: now, speedMetersPerSecond: 4, horizontalAccuracy: 5),
+      TripPoint(latitude: 12.9616, longitude: 77.5946, timestamp: now.addingTimeInterval(1), speedMetersPerSecond: 4, horizontalAccuracy: 5)
+    ]
+
+    XCTAssertEqual(CompassDirectionFormatter.direction(for: points), "S")
+  }
+
   func testFareRuleEvaluatorHighlightsNightRuleWhenActive() {
     let profile = FareCatalog.entries.first(where: { $0.profile.cityId == "bengaluru" && $0.profile.vehicleType == VehicleTypeCatalog.autoRickshaw })!.profile
 
@@ -183,5 +204,13 @@ final class NeoLCDLayoutLogicTests: XCTestCase {
       cityVehicleLabel: "Bengaluru · Auto Rickshaw"
     )
     XCTAssertEqual(header, "Bengaluru · Auto Rickshaw")
+  }
+
+  func testFareCardHeaderFallsBackToCityNameWhenContextEmpty() {
+    let header = NeoLCDHeaderFormatter.fareCardHeader(
+      cityName: "Bengaluru",
+      cityVehicleLabel: "   "
+    )
+    XCTAssertEqual(header, "Bengaluru")
   }
 }
