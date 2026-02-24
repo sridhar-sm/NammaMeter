@@ -6,16 +6,20 @@ import UIKit
 final class ScreenAwakeManagerTests: XCTestCase {
   var sut: ScreenAwakeManager!
 
-  override func setUp() {
-    super.setUp()
-    sut = ScreenAwakeManager()
-    UIApplication.shared.isIdleTimerDisabled = false
+  override func setUp() async throws {
+    try await super.setUp()
+    await MainActor.run {
+      sut = ScreenAwakeManager()
+      UIApplication.shared.isIdleTimerDisabled = false
+    }
   }
 
-  override func tearDown() {
-    super.tearDown()
-    UIApplication.shared.isIdleTimerDisabled = false
-    sut = nil
+  override func tearDown() async throws {
+    await MainActor.run {
+      UIApplication.shared.isIdleTimerDisabled = false
+      sut = nil
+    }
+    try await super.tearDown()
   }
 
   func testIdleTimerDisabledWhenEnabledAndInProgressAndAppActive() {

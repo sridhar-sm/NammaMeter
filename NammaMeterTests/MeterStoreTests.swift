@@ -889,7 +889,7 @@ private func makePlacemark(
 
 import MapKit
 
-private final class StubPlacemark: CLPlacemark {
+private final class StubPlacemark: CLPlacemark, @unchecked Sendable {
   private let _thoroughfare: String?
   private let _subThoroughfare: String?
   private let _name: String?

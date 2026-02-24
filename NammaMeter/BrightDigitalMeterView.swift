@@ -52,16 +52,15 @@ struct BrightDigitalFullMeterPanel: View {
         }
         .frame(width: faceWidth, height: faceHeight)
 
-        if !cityVehicleLabel.isEmpty {
-          MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: bodyHeight * 0.03)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, bodyHeight * 0.02)
-        }
-
-        if tripState == .inProgress && !currentRoadName.isEmpty {
-          MeterCityVehicleLabel(text: currentRoadName, fontSize: bodyHeight * 0.03)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .padding(.bottom, bodyHeight * 0.02)
+        if !cityVehicleLabel.isEmpty || (tripState == .inProgress && !currentRoadName.isEmpty) {
+          MeterContextBadges(
+            tripState: tripState,
+            cityVehicleLabel: cityVehicleLabel,
+            currentRoadName: currentRoadName,
+            fontSize: bodyHeight * 0.03,
+            topPadding: bodyHeight * 0.02,
+            bottomPadding: bodyHeight * 0.02
+          )
         }
       }
     }
