@@ -55,11 +55,27 @@ final class Phase5ComparisonTests: XCTestCase {
   }
 
   func testTripComparisonUsesCurrentRates() {
-    // Verify that calculateAll uses the profile we provide (current rates)
+    // Verify that WhatIf uses the profile we provide (current catalog rates)
     let favorite = WhatIfFavorite(cityId: "delhi", vehicleType: VehicleTypeCatalog.autoRickshaw)
     let profile = FareCatalog.entries.first {
       $0.profile.cityId == "delhi" && $0.profile.vehicleType == VehicleTypeCatalog.autoRickshaw
     }!.profile
+
+    let settings = MeterSettings(profile: profile)
+    let calculator = FareCalculator(
+      settings: settings,
+      perMinuteWhenSlow: profile.rates.perMinuteWhenSlow,
+      slowSpeedThresholdKph: profile.rates.slowSpeedThresholdKph
+    )
+    let expectedBreakdown = calculator.calculateFare(
+      distanceKm: 5.0,
+      elapsedTime: 1800,
+      waitingTime: 0,
+      currentSpeedKph: nil,
+      surcharges: profile.surcharges,
+      tripDate: Date(),
+      isNight: false
+    )
 
     let result = WhatIfCalculator.calculate(
       favorite: favorite,
@@ -71,8 +87,7 @@ final class Phase5ComparisonTests: XCTestCase {
       isNight: false
     )
 
-    // Delhi auto: base=25, includedKm=2, perKm=8, so fare = 25 + (5-2)*8 = 49
-    XCTAssertEqual(result.fareInNativeCurrency, 49)
+    XCTAssertEqual(result.fareInNativeCurrency, expectedBreakdown.total, accuracy: 0.0001)
     XCTAssertEqual(result.currencyCode, "INR")
     XCTAssertEqual(result.cityName, profile.name)
   }
