@@ -392,3 +392,26 @@ struct MeterCityVehicleLabel: View {
       .minimumScaleFactor(0.6)
   }
 }
+
+struct MeterContextBadges: View {
+  let tripState: TripMeterState
+  let cityVehicleLabel: String
+  let currentRoadName: String
+  let fontSize: CGFloat
+  let topPadding: CGFloat
+  let bottomPadding: CGFloat
+
+  var body: some View {
+    if !cityVehicleLabel.isEmpty {
+      MeterCityVehicleLabel(text: cityVehicleLabel, fontSize: fontSize)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, topPadding)
+    }
+
+    if tripState == .inProgress && !currentRoadName.isEmpty {
+      MeterCityVehicleLabel(text: currentRoadName, fontSize: fontSize)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .padding(.bottom, bottomPadding)
+    }
+  }
+}
